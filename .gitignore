@@ -1,0 +1,15 @@
+/node_modules
+/.next
+/out
+/build
+next-env.d.ts
+*.tsbuildinfo
+.env*
+.DS_Store
+/_legacy
+
+# Claude Code tooling (not part of the site)
+/.claude
+/.agents
+/skills-lock.json
+/.next-dev.log

@@ -1,0 +1,58 @@
+@import 'tailwindcss';
+
+/* ── IRON OASIS — Industrial-Brutalist token surface ──────────── */
+/* Strict Black / White / Zinc. No gold. No soft shadows. */
+@theme {
+  --color-black: #000000;
+  --color-white: #ffffff;
+
+  --color-zinc-950: #09090b;
+  --color-zinc-900: #18181b;
+  --color-zinc-800: #27272a;
+  --color-zinc-700: #3f3f46;
+  --color-zinc-500: #71717a;
+  --color-zinc-400: #a1a1aa;
+  --color-zinc-300: #d4d4d8;
+
+  --font-display: var(--font-bebas), 'Arial Narrow', sans-serif;
+  --font-mono: var(--font-space-mono), ui-monospace, monospace;
+
+  /* mechanical spring defaults consumed by Framer Motion configs */
+  --ease-mech: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--color-black);
+  color: var(--color-white);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: var(--font-mono);
+  overflow-x: hidden;
+}
+
+/* Lenis: disable native smooth so the JS smoother owns scroll */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped,
+html.lenis-stopped,
+html.lenis-stopped body {
+  overflow: hidden;
+}
+
+::selection {
+  background: var(--color-white);
+  color: var(--color-black);
+}

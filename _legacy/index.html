@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- SEO -->
+  <title>Iron Oasis Gym — Windsor's Only Private Gym | ironoasisgym.com</title>
+  <meta name="description" content="Iron Oasis is Windsor, Ontario's only private gym. Book the entire space for yourself. No crowds, no waiting, no gym anxiety. Open 24/7. $49/month.">
+  <link rel="canonical" href="https://ironoasisgym.com">
+  <meta property="og:title" content="Iron Oasis Gym — The Whole Gym. Just You.">
+  <meta property="og:description" content="Windsor's only private gym. Book the entire space. $49/month. Open 24/7.">
+  <meta property="og:url" content="https://ironoasisgym.com">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#000000">
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Iron Oasis Gym",
+    "description": "Windsor Ontario's only private gym. Members get the entire space to themselves when they book.",
+    "url": "https://ironoasisgym.com",
+    "address": { "@type": "PostalAddress", "addressLocality": "Windsor", "addressRegion": "Ontario", "addressCountry": "CA" },
+    "openingHoursSpecification": { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"], "opens": "00:00", "closes": "23:59" },
+    "priceRange": "$$"
+  }
+  </script>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Libraries (deferred so they never block LCP) -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+  <style>
+    :root{
+      --black:#000000;
+      --charcoal:#0a0a0a;
+      --steel:#141414;
+      --gold:#C9A84C;
+      --gold-light:#DFC070;
+      --chrome:#d0d0d0;
+      --off:#F5F5F0;
+      --muted:rgba(245,245,240,0.45);
+      --hair:rgba(255,255,255,0.07);
+    }
+
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{
+      background:var(--black);
+      color:var(--off);
+      font-family:'Inter',system-ui,sans-serif;
+      font-weight:400;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
+      overflow-x:hidden;
+    }
+    body.lock{overflow:hidden;height:100vh;}
+
+    h1,h2,h3{font-family:'Bebas Neue',sans-serif;font-weight:400;line-height:0.95;letter-spacing:0.01em;}
+
+    a{color:inherit;text-decoration:none;}
+    canvas{display:block;}
+
+    .gold-line{
+      width:100%;height:1px;
+      background:linear-gradient(to right,transparent,var(--gold),transparent);
+      opacity:0.6;
+    }
+
+    .label{
+      font-size:11px;font-weight:500;letter-spacing:0.35em;text-transform:uppercase;
+      color:var(--gold);
+    }
+
+    .divider{width:44px;height:2px;background:var(--gold);border:none;margin:28px 0;}
+
+    .btn{
+      display:inline-block;font-family:'Bebas Neue',sans-serif;font-size:18px;
+      letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;border:none;
+      transition:transform .35s ease,background .35s ease,color .35s ease,box-shadow .35s ease;
+    }
+    .btn-gold{background:var(--gold);color:#000;padding:16px 38px;}
+    .btn-gold:hover{background:var(--gold-light);transform:translateY(-2px);box-shadow:0 14px 40px rgba(201,168,76,0.28);}
+    .btn-outline{background:transparent;color:var(--gold);padding:15px 37px;border:1px solid var(--gold);}
+    .btn-outline:hover{background:var(--gold);color:#000;transform:translateY(-2px);}
+    .btn-black{background:#000;color:var(--gold);padding:16px 38px;}
+    .btn-black:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(0,0,0,0.4);}
+
+    /* ---------- NAV ---------- */
+    nav{
+      position:fixed;top:0;left:0;width:100%;z-index:500;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:20px 40px;opacity:0;pointer-events:none;
+      transition:opacity .8s ease,background .4s ease,border-color .4s ease,backdrop-filter .4s ease;
+      border-bottom:1px solid transparent;
+    }
+    nav.show{opacity:1;pointer-events:auto;}
+    nav.scrolled{
+      background:rgba(0,0,0,0.85);
+      backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+      border-bottom:1px solid rgba(201,168,76,0.1);
+    }
+    .nav-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:0.2em;color:var(--gold);}
+    .nav-links{display:flex;align-items:center;gap:34px;}
+    .nav-links a{font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);transition:color .3s;}
+    .nav-links a:hover{color:var(--off);}
+    .nav-links .btn{font-size:13px;padding:10px 22px;}
+
+    /* ---------- SPLASH ---------- */
+    #splash{position:fixed;inset:0;z-index:9999;background:#000;}
+    #splash-canvas{position:fixed;inset:0;}
+    .splash-text{
+      position:fixed;left:0;right:0;bottom:16%;text-align:center;
+      z-index:2;opacity:0;pointer-events:none;
+    }
+    .splash-wordmark{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,5vw,46px);letter-spacing:0.3em;color:var(--off);}
+    .splash-tag{margin-top:14px;font-size:12px;letter-spacing:0.4em;text-transform:uppercase;color:var(--muted);}
+    .scroll-hint{
+      position:fixed;left:50%;bottom:42px;transform:translateX(-50%);z-index:2;opacity:0;
+      display:flex;flex-direction:column;align-items:center;gap:12px;
+    }
+    .scroll-hint span{font-size:10px;letter-spacing:0.35em;text-transform:uppercase;color:var(--muted);}
+    .scroll-hint .line{width:1px;height:48px;background:linear-gradient(to bottom,var(--gold),transparent);animation:pulse 1.8s ease-in-out infinite;transform-origin:top;}
+    @keyframes pulse{0%,100%{transform:scaleY(0.4);opacity:0.4;}50%{transform:scaleY(1);opacity:1;}}
+
+    /* ---------- SCROLL BURST ---------- */
+    #scroll-burst{height:350vh;position:relative;}
+    #burst-sticky{position:sticky;top:0;height:100vh;overflow:hidden;}
+    #burst-canvas{position:absolute;inset:0;}
+    #burst-hero{
+      position:absolute;inset:0;z-index:2;opacity:0;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      text-align:center;padding:0 24px;
+    }
+    #burst-hero h1{font-size:clamp(52px,11vw,130px);color:var(--off);}
+    #burst-hero h1 .gold{color:var(--gold);}
+    #burst-hero p{margin-top:26px;font-size:11px;font-weight:400;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted);}
+    #burst-hero .btn{margin-top:38px;}
+
+    /* ---------- SECTION SHELL ---------- */
+    section.block{padding:140px 40px;position:relative;}
+    .wrap{max-width:1180px;margin:0 auto;}
+    .head-h2{font-size:clamp(40px,6vw,84px);color:var(--off);margin-top:18px;}
+
+    /* ---------- PAIN POINTS ---------- */
+    #pain{background:#000;}
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:60px;}
+    .card{background:var(--steel);padding:54px 38px 64px;position:relative;overflow:hidden;}
+    .card .top-rule{position:absolute;top:0;left:0;width:100%;height:2px;background:var(--gold);transform:scaleX(0);transform-origin:left;transition:transform .5s ease;}
+    .card:hover .top-rule{transform:scaleX(1);}
+    .card .ghost{position:absolute;top:18px;right:26px;font-family:'Bebas Neue',sans-serif;font-size:80px;color:var(--gold);opacity:0.07;line-height:1;}
+    .card .cdiv{width:32px;height:2px;background:var(--gold);margin-bottom:22px;}
+    .card h3{font-size:40px;color:var(--off);margin-bottom:16px;}
+    .card p{font-size:14px;line-height:1.7;color:var(--muted);max-width:280px;}
+
+    /* ---------- CONCEPT ---------- */
+    #concept{background:var(--charcoal);}
+    .concept-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;}
+    .concept-grid p{font-size:15px;line-height:1.8;color:var(--muted);max-width:520px;margin-bottom:20px;}
+    .price-block{background:var(--steel);border-top:2px solid var(--gold);padding:56px 48px;}
+    .price-block .big{font-family:'Bebas Neue',sans-serif;font-size:88px;color:var(--gold);line-height:0.9;}
+    .price-block .sub{font-size:11px;letter-spacing:0.35em;text-transform:uppercase;color:var(--muted);margin-top:8px;}
+    .price-block .pdiv{height:1px;background:var(--hair);margin:38px 0;}
+
+    /* ---------- HOW IT WORKS ---------- */
+    #how{background:var(--charcoal);}
+    .steps{margin-top:60px;}
+    .step{display:grid;grid-template-columns:72px 1fr;gap:32px;padding:40px 0;border-top:1px solid var(--hair);align-items:start;}
+    .step:last-child{border-bottom:1px solid var(--hair);}
+    .step .num{font-family:'Bebas Neue',sans-serif;font-size:80px;color:var(--gold);line-height:0.8;}
+    .step h3{font-size:44px;color:var(--off);margin-bottom:12px;}
+    .step p{font-size:14px;line-height:1.7;color:var(--muted);max-width:560px;}
+
+    /* ---------- 3D ACCENT ---------- */
+    #accent-3d{position:relative;height:60vh;min-height:460px;background:#000;overflow:hidden;}
+    #accent-canvas{position:absolute;inset:0;width:100%;height:100%;}
+    .accent-text{position:absolute;left:0;right:0;bottom:46px;text-align:center;z-index:2;pointer-events:none;}
+    .accent-text h2{font-size:clamp(34px,5vw,48px);color:var(--off);}
+    .accent-text .sub{margin-top:8px;font-size:12px;letter-spacing:0.4em;text-transform:uppercase;color:var(--muted);}
+
+    /* ---------- PRICING ---------- */
+    #pricing{background:#000;}
+    .plans{display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-top:60px;}
+    .plan{padding:60px 52px 64px;}
+    .plan.individual{background:var(--steel);}
+    .plan.duo{background:var(--gold);color:#000;}
+    .plan h3{font-size:28px;margin-bottom:30px;letter-spacing:0.08em;}
+    .plan.individual h3{color:var(--gold);}
+    .plan.duo h3{color:#000;}
+    .plan .price{font-family:'Bebas Neue',sans-serif;font-size:96px;line-height:0.85;}
+    .plan.individual .price{color:var(--off);}
+    .plan.duo .price{color:#000;}
+    .plan .psub{font-size:11px;letter-spacing:0.3em;text-transform:uppercase;margin-top:10px;}
+    .plan.individual .psub{color:var(--muted);}
+    .plan.duo .psub{color:rgba(0,0,0,0.55);}
+    .plan ul{list-style:none;margin:36px 0 40px;}
+    .plan li{display:flex;align-items:center;gap:16px;padding:11px 0;font-size:14px;}
+    .plan.individual li{color:var(--off);border-bottom:1px solid var(--hair);}
+    .plan.duo li{color:#000;border-bottom:1px solid rgba(0,0,0,0.12);}
+    .plan li .dash{width:20px;height:1px;flex:none;}
+    .plan.individual li .dash{background:var(--gold);}
+    .plan.duo li .dash{background:rgba(0,0,0,0.4);}
+
+    /* ---------- CTA ---------- */
+    #cta-section{
+      background:var(--charcoal);text-align:center;
+      border-top:1px solid rgba(201,168,76,0.15);
+      border-bottom:1px solid rgba(201,168,76,0.15);
+      padding:150px 40px;
+    }
+    #cta-section h2{font-size:clamp(44px,7vw,92px);color:var(--off);margin:18px 0 28px;}
+    #cta-section h2 .gold{color:var(--gold);}
+    #cta-section p{font-size:16px;line-height:1.7;color:var(--muted);max-width:400px;margin:0 auto 42px;}
+    #cta-section .btn{font-size:22px;padding:22px 64px;}
+
+    /* ---------- FOOTER ---------- */
+    footer{background:#000;border-top:1px solid rgba(255,255,255,0.05);padding:56px 40px;}
+    .foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;align-items:center;max-width:1180px;margin:0 auto;}
+    .foot .flogo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.2em;color:var(--gold);}
+    .foot .meta{font-size:12px;color:var(--muted);letter-spacing:0.05em;}
+
+    .geo{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;}
+
+    /* ---------- RESPONSIVE ---------- */
+    @media(max-width:900px){
+      .concept-grid{grid-template-columns:1fr;gap:48px;}
+    }
+    @media(max-width:768px){
+      nav{padding:16px 24px;}
+      .nav-links{display:none;}
+      .cards{grid-template-columns:1fr;}
+      .card p{max-width:none;}
+      section.block{padding:100px 24px;}
+    }
+    @media(max-width:640px){
+      .plans{grid-template-columns:1fr;}
+      section.block{padding:80px 24px;}
+      .plan{padding:48px 34px 54px;}
+      .step{grid-template-columns:56px 1fr;gap:20px;}
+      .step .num{font-size:58px;}
+      .step h3{font-size:36px;}
+    }
+    @media(max-width:480px){
+      #burst-hero h1{font-size:clamp(40px,13vw,48px);}
+      .price-block{padding:44px 32px;}
+    }
+
+    @media(prefers-reduced-motion:reduce){
+      html{scroll-behavior:auto;}
+      .scroll-hint .line{animation:none;}
+    }
+  </style>
+</head>
+<body class="lock">
+
+  <!-- GEO / AI-search block -->
+  <div class="geo">
+    Iron Oasis Gym is Windsor Ontario's only private gym. Members book the entire gym
+    for exclusive use. No shared equipment. No other members during your session.
+    Open 24 hours 7 days a week. $49 per month individual. $68 per month for two people.
+    Located in Windsor Ontario Canada. Book at ironoasisgym.com.
+  </div>
+
+  <!-- NAV -->
+  <nav id="nav">
+    <div class="nav-logo">IRON OASIS</div>
+    <div class="nav-links">
+      <a href="#pain">Why IO</a>
+      <a href="#how">How It Works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#cta-section" class="btn btn-gold">Book Now</a>
+    </div>
+  </nav>
+
+  <!-- 1. SPLASH -->
+  <div id="splash">
+    <canvas id="splash-canvas"></canvas>
+    <div class="splash-text" id="splash-text">
+      <div class="splash-wordmark">IRON OASIS</div>
+      <div class="splash-tag">The Whole Gym. Just You.</div>
+    </div>
+    <div class="scroll-hint" id="scroll-hint">
+      <div class="line"></div>
+      <span>Scroll</span>
+    </div>
+  </div>
+
+  <!-- 2. SCROLL BURST -->
+  <section id="scroll-burst">
+    <div id="burst-sticky">
+      <canvas id="burst-canvas"></canvas>
+      <div id="burst-hero">
+        <h1>THE WHOLE GYM.<br><span class="gold">JUST YOU.</span></h1>
+        <p>Windsor's Only Private Gym · 24/7 Access · $49/Month</p>
+        <a href="#cta-section" class="btn btn-gold">Book Your Private Session</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="gold-line"></div>
+
+  <!-- 3. PAIN POINTS -->
+  <section id="pain" class="block">
+    <div class="wrap">
+      <div class="label" data-anim="label">Why Iron Oasis</div>
+      <h2 class="head-h2" data-anim="h">No crowds.<br>No anxiety.<br>Just iron.</h2>
+      <div class="cards">
+        <div class="card" data-anim="card">
+          <div class="top-rule"></div>
+          <div class="ghost">01</div>
+          <div class="cdiv"></div>
+          <h3>No Crowds</h3>
+          <p>The entire gym is yours alone. No strangers between sets, no audience, no pressure. Just space to move.</p>
+        </div>
+        <div class="card" data-anim="card">
+          <div class="top-rule"></div>
+          <div class="ghost">02</div>
+          <div class="cdiv"></div>
+          <h3>No Waiting</h3>
+          <p>Every machine. Every rack. Every plate. All available, all the time. Your session runs on your clock.</p>
+        </div>
+        <div class="card" data-anim="card">
+          <div class="top-rule"></div>
+          <div class="ghost">03</div>
+          <div class="cdiv"></div>
+          <h3>No Anxiety</h3>
+          <p>Train how you want. Rest how long you need. Blast your music. The room answers to you and no one else.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="gold-line"></div>
+
+  <!-- 4. CONCEPT -->
+  <section id="concept" class="block">
+    <div class="wrap concept-grid">
+      <div>
+        <div class="label" data-anim="label">The Concept</div>
+        <h2 class="head-h2" data-anim="h">A 1-of-1 concept in Windsor.</h2>
+        <hr class="divider">
+        <p data-anim="body">Iron Oasis isn't a smaller version of a commercial gym — it's the opposite of one. You book a window, you get the entire facility, and you train like the place was built for you. Because for that hour, it was.</p>
+        <p data-anim="body">No memberships you share with five hundred strangers. No fighting for the squat rack at 6pm. Just a clean, fully-equipped private gym in Windsor that belongs to one person at a time.</p>
+        <a href="#pricing" class="btn btn-outline" data-anim="body">See Pricing</a>
+      </div>
+      <div class="price-block" data-anim="priceblock">
+        <div class="big">$49</div>
+        <div class="sub">Per Month · Individual</div>
+        <div class="pdiv"></div>
+        <div class="big">$68</div>
+        <div class="sub">Per Month · Two People ($34 Each)</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="gold-line"></div>
+
+  <!-- 5. HOW IT WORKS -->
+  <section id="how" class="block">
+    <div class="wrap">
+      <div class="label" data-anim="label">Process</div>
+      <h2 class="head-h2" data-anim="h">Three steps.<br>That's it.</h2>
+      <div class="steps">
+        <div class="step" data-anim="step">
+          <div class="num">01</div>
+          <div>
+            <h3>Book Your Session</h3>
+            <p>Pick your time online in seconds. Day or night — the gym is open 24/7, so your schedule never has to bend around ours.</p>
+          </div>
+        </div>
+        <div class="step" data-anim="step">
+          <div class="num">02</div>
+          <div>
+            <h3>Walk In, Unlock the Door</h3>
+            <p>Your code lets you in. No front desk, no check-in line, no small talk. Step inside and the space is already yours.</p>
+          </div>
+        </div>
+        <div class="step" data-anim="step">
+          <div class="num">03</div>
+          <div>
+            <h3>Train Without Limits</h3>
+            <p>Full equipment, full freedom, zero interruptions. Move at your pace and leave whenever you're done.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="gold-line"></div>
+
+  <!-- 6. 3D ACCENT -->
+  <section id="accent-3d">
+    <canvas id="accent-canvas"></canvas>
+    <div class="accent-text">
+      <h2>A 1-OF-1 PRIVATE GYM</h2>
+      <div class="sub">Windsor, Ontario</div>
+    </div>
+  </section>
+
+  <div class="gold-line"></div>
+
+  <!-- 7. PRICING -->
+  <section id="pricing" class="block">
+    <div class="wrap">
+      <div class="label" data-anim="label">Membership</div>
+      <h2 class="head-h2" data-anim="h">Less than a crowded gym.<br>More than private.</h2>
+      <div class="plans">
+        <div class="plan individual" data-anim="plan">
+          <h3>INDIVIDUAL</h3>
+          <div class="price">$49</div>
+          <div class="psub">Per Month · No Contract</div>
+          <ul>
+            <li><span class="dash"></span>The entire gym, every session</li>
+            <li><span class="dash"></span>24/7 keyless access</li>
+            <li><span class="dash"></span>Full strength &amp; cardio equipment</li>
+            <li><span class="dash"></span>No contracts, cancel anytime</li>
+            <li><span class="dash"></span>Windsor's only private facility</li>
+          </ul>
+          <a href="https://ironoasisgym.com" class="btn btn-outline">Get Started</a>
+        </div>
+        <div class="plan duo" data-anim="plan">
+          <h3>DUO</h3>
+          <div class="price">$68</div>
+          <div class="psub">Per Month · $34 Each</div>
+          <ul>
+            <li><span class="dash"></span>Bring one partner, every session</li>
+            <li><span class="dash"></span>24/7 keyless access for two</li>
+            <li><span class="dash"></span>Full strength &amp; cardio equipment</li>
+            <li><span class="dash"></span>No contracts, cancel anytime</li>
+            <li><span class="dash"></span>Just $34 each per month</li>
+          </ul>
+          <a href="https://ironoasisgym.com" class="btn btn-black">Get Started</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. CTA -->
+  <section id="cta-section">
+    <div class="label" data-anim="label">Windsor, Ontario</div>
+    <h2 data-anim="h">Ready to train<br><span class="gold">without the crowd?</span></h2>
+    <p data-anim="body">Book your first private session and feel what training alone in a full gym is actually like.</p>
+    <a href="https://ironoasisgym.com" class="btn btn-gold" data-anim="body">Book Your Private Session</a>
+  </section>
+
+  <!-- 9. FOOTER -->
+  <footer>
+    <div class="foot">
+      <div class="flogo">IRON OASIS GYM</div>
+      <div class="meta">Windsor, Ontario · ironoasisgym.com · Open 24/7</div>
+      <div class="meta">© 2025 Iron Oasis Gym</div>
+    </div>
+  </footer>
+
+  <script>
+  /* ============================================================
+     IRON OASIS — particle engine + scroll burst + 3D accent
+     ============================================================ */
+  (function(){
+    'use strict';
+
+    var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var isMobile = window.innerWidth <= 768;
+
+    /* ---------- canvases ---------- */
+    var sCV  = document.getElementById('splash-canvas');
+    var sCTX = sCV.getContext('2d');
+    var bCV  = document.getElementById('burst-canvas');
+    var bCTX = bCV.getContext('2d');
+
+    var W = window.innerWidth, H = window.innerHeight;
+    var CX = W / 2, CY = H / 2;
+    var DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+    function sizeCanvas(cv, ctx){
+      cv.width  = W * DPR;
+      cv.height = H * DPR;
+      cv.style.width  = W + 'px';
+      cv.style.height = H + 'px';
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+    sizeCanvas(sCV, sCTX);
+    sizeCanvas(bCV, bCTX);
+
+    var particles = [];
+    var renderMode = 'splash';   // 'splash' | 'burst' | 'off'
+    var rafActive  = false;
+
+    function clamp(v, a, b){ return v < a ? a : (v > b ? b : v); }
+    function easeInOutCubic(t){ return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
+
+    /* ---------- build particles from logo pixels ---------- */
+    function buildParticles(){
+      particles.length = 0;
+
+      var ocv = document.createElement('canvas');
+      ocv.width = 720; ocv.height = 300;
+      var octx = ocv.getContext('2d');
+      octx.fillStyle = '#000';
+      octx.fillRect(0,0,720,300);
+      octx.fillStyle = '#fff';
+      octx.textAlign = 'center';
+      octx.textBaseline = 'middle';
+      octx.font = 'bold 240px "Bebas Neue"';
+      octx.fillText('IO', 360, 158);
+
+      var img = octx.getImageData(0,0,720,300).data;
+      var step = isMobile ? 6 : 4;
+
+      // scale logo to ~72% of viewport width, centered
+      var targetW = W * 0.72;
+      var scale   = targetW / 720;
+      var offX    = CX - (720 * scale) / 2;
+      var offY    = CY - (300 * scale) / 2;
+
+      var maxDim   = Math.max(W, H);
+      var maxRadius = isMobile ? 1.5 : 2.2;
+      var burstMul = isMobile ? 0.8 : 1.0;
+
+      for(var y = 0; y < 300; y += step){
+        for(var x = 0; x < 720; x += step){
+          var idx = (y * 720 + x) * 4;
+          if(img[idx] > 130){
+            var ax = offX + x * scale;
+            var ay = offY + y * scale;
+
+            // scatter start — radial from center, 65–120% of maxDim
+            var ang  = Math.random() * Math.PI * 2;
+            var dist = maxDim * (0.65 + Math.random() * 0.55);
+            var sx = CX + Math.cos(ang) * dist;
+            var sy = CY + Math.sin(ang) * dist;
+
+            // burst exit — outward along angle from center
+            var bAngle = Math.atan2(ay - CY, ax - CX) + (Math.random() - 0.5) * 0.9;
+            var bDist  = maxDim * (0.55 + Math.random() * 0.55) * burstMul;
+            var ex = ax + Math.cos(bAngle) * bDist;
+            var ey = ay + Math.sin(bAngle) * bDist;
+
+            // colour — 25% gold, 75% chrome, with brightness jitter
+            var r,g,b;
+            if(Math.random() < 0.25){
+              var j = (Math.random() - 0.5) * 30;
+              r = clamp(201 + j, 150, 255);
+              g = clamp(168 + j, 120, 230);
+              b = clamp(76  + j, 40, 150);
+            } else {
+              var c = clamp(200 + (Math.random() - 0.5) * 55, 150, 255);
+              r = c; g = c; b = clamp(c + 6, 150, 255);
+            }
+
+            particles.push({
+              sx:sx, sy:sy, ax:ax, ay:ay, ex:ex, ey:ey,
+              cx:sx, cy:sy,
+              r:Math.round(r), g:Math.round(g), b:Math.round(b),
+              a:0,
+              sz:0.9 + Math.random() * (maxRadius - 0.9),
+              lag:Math.random()
+            });
+          }
+        }
+      }
+    }
+
+    /* ---------- render loop ---------- */
+    function loop(){
+      if(renderMode === 'off'){ rafActive = false; return; }
+      rafActive = true;
+
+      var ctx = renderMode === 'splash' ? sCTX : bCTX;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, W, H);
+
+      for(var i = 0; i < particles.length; i++){
+        var p = particles[i];
+        ctx.beginPath();
+        ctx.arc(p.cx, p.cy, p.sz, 0, 6.2832);
+        ctx.fillStyle = 'rgba(' + p.r + ',' + p.g + ',' + p.b + ',' + p.a + ')';
+        ctx.fill();
+      }
+      requestAnimationFrame(loop);
+    }
+    function ensureLoop(){ if(!rafActive) loop(); }
+
+    /* ---------- splash phase ---------- */
+    function runSplash(){
+      var i, p;
+
+      if(prefersReduced){
+        // snap straight to assembled state
+        for(i = 0; i < particles.length; i++){
+          p = particles[i]; p.cx = p.ax; p.cy = p.ay; p.a = 0.9;
+        }
+        ensureLoop();
+        document.getElementById('splash-text').style.transition = 'opacity .6s';
+        document.getElementById('splash-text').style.opacity = 1;
+        setTimeout(afterSplash, 700);
+        return;
+      }
+
+      ensureLoop();
+
+      var proxy = { t: 0 };
+      var tl = gsap.timeline();
+
+      tl.to(proxy, {
+        t: 1, duration: 2.2, ease: 'power2.inOut', delay: 0.15,
+        onUpdate: function(){
+          var gt = proxy.t;
+          for(var k = 0; k < particles.length; k++){
+            var pp = particles[k];
+            var lt = clamp((gt - pp.lag * 0.35) / 0.65, 0, 1);
+            var e  = easeInOutCubic(lt);
+            pp.cx = pp.sx + (pp.ax - pp.sx) * e;
+            pp.cy = pp.sy + (pp.ay - pp.sy) * e;
+            pp.a  = clamp(e * 1.1, 0, 1) * 0.95;
+          }
+        }
+      });
+
+      // HOLD 0.55s built into timeline position below
+      tl.to('#splash-text', { opacity: 1, y: 0, duration: 0.9, ease: 'power2.out' }, 3.1);
+      gsap.set('.splash-text', { y: 20 });
+      tl.to('#scroll-hint', { opacity: 1, duration: 0.7 }, 3.2);
+
+      tl.to('#splash', {
+        opacity: 0, duration: 0.75, ease: 'power2.inOut',
+        onStart: function(){
+          for(var k = 0; k < particles.length; k++){
+            var pp = particles[k]; pp.cx = pp.ax; pp.cy = pp.ay;
+          }
+        },
+        onComplete: afterSplash
+      }, 4.5);
+    }
+
+    function afterSplash(){
+      var splash = document.getElementById('splash');
+      splash.style.display = 'none';
+      document.body.classList.remove('lock');
+      document.getElementById('nav').classList.add('show');
+
+      renderMode = 'burst';
+      // copy assembled positions as the burst starting point
+      for(var i = 0; i < particles.length; i++){
+        var p = particles[i]; p.cx = p.ax; p.cy = p.ay; p.a = 0.9;
+      }
+      ensureLoop();
+      setupScrollBurst();
+      setupSectionAnims();
+    }
+
+    /* ---------- scroll burst ---------- */
+    function setupScrollBurst(){
+      ScrollTrigger.create({
+        trigger: '#scroll-burst', start: 'top top', end: 'bottom top', scrub: 1.5,
+        onUpdate: function(self){
+          var t = self.progress;
+          for(var i = 0; i < particles.length; i++){
+            var p = particles[i];
+            var lt = clamp((t - p.lag * 0.15) / 0.85, 0, 1);
+            var e  = lt * lt * lt;
+            p.cx = p.ax + (p.ex - p.ax) * e;
+            p.cy = p.ay + (p.ey - p.ay) * e;
+            p.a  = (0.55 + 0.45 * p.lag) * (1 - (t*t*t) * 0.85);
+          }
+        },
+        onLeave: function(){ renderMode = 'off'; },
+        onEnterBack: function(){ renderMode = 'burst'; ensureLoop(); }
+      });
+
+      // hero text fade-in across 50–80% progress
+      gsap.fromTo('#burst-hero',
+        { opacity: 0 },
+        {
+          opacity: 1, ease: 'none',
+          scrollTrigger: {
+            trigger: '#scroll-burst',
+            start: 'top top+=' + (window.innerHeight * 1.75),
+            end:   'top top+=' + (window.innerHeight * 2.8),
+            scrub: true
+          }
+        }
+      );
+    }
+
+    /* ---------- section scroll animations ---------- */
+    function setupSectionAnims(){
+      var groups = [
+        { sel: '[data-anim="label"]', vars:{ opacity:0, x:-20 }, dur:0.7, ease:'power2.out' },
+        { sel: '[data-anim="h"]',     vars:{ opacity:0, y:40 },  dur:1.0, ease:'power3.out' },
+        { sel: '[data-anim="body"]',  vars:{ opacity:0, y:20 },  dur:0.8, ease:'power2.out' },
+        { sel: '[data-anim="priceblock"]', vars:{ opacity:0, x:40 }, dur:0.9, ease:'power2.out' }
+      ];
+      groups.forEach(function(grp){
+        gsap.utils.toArray(grp.sel).forEach(function(el){
+          gsap.from(el, {
+            opacity: grp.vars.opacity,
+            x: grp.vars.x || 0,
+            y: grp.vars.y || 0,
+            duration: grp.dur, ease: grp.ease,
+            scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none reverse' }
+          });
+        });
+      });
+
+      // cards — stagger per section
+      gsap.from('[data-anim="card"]', {
+        opacity:0, y:50, duration:0.85, ease:'power2.out', stagger:0.15,
+        scrollTrigger:{ trigger:'#pain .cards', start:'top 85%', toggleActions:'play none none reverse' }
+      });
+
+      // steps — slide from left
+      gsap.from('[data-anim="step"]', {
+        opacity:0, x:-32, duration:0.8, ease:'power2.out', stagger:0.18,
+        scrollTrigger:{ trigger:'#how .steps', start:'top 85%', toggleActions:'play none none reverse' }
+      });
+
+      // plans — pop in
+      gsap.from('[data-anim="plan"]', {
+        opacity:0, y:36, duration:0.9, ease:'back.out(1.4)', stagger:0.2,
+        scrollTrigger:{ trigger:'#pricing .plans', start:'top 85%', toggleActions:'play none none reverse' }
+      });
+
+      ScrollTrigger.refresh();
+    }
+
+    /* ---------- nav scroll state ---------- */
+    window.addEventListener('scroll', function(){
+      var nav = document.getElementById('nav');
+      if(window.scrollY > 60) nav.classList.add('scrolled');
+      else nav.classList.remove('scrolled');
+    }, { passive: true });
+
+    /* ---------- resize ---------- */
+    var rzTimer;
+    window.addEventListener('resize', function(){
+      clearTimeout(rzTimer);
+      rzTimer = setTimeout(function(){
+        W = window.innerWidth; H = window.innerHeight;
+        CX = W/2; CY = H/2;
+        DPR = Math.min(window.devicePixelRatio || 1, 2);
+        isMobile = W <= 768;
+        sizeCanvas(sCV, sCTX);
+        sizeCanvas(bCV, bCTX);
+        buildParticles();
+        if(renderMode === 'burst'){
+          for(var i=0;i<particles.length;i++){ var p=particles[i]; p.cx=p.ax; p.cy=p.ay; p.a=0.9; }
+        }
+        if(window.ScrollTrigger) ScrollTrigger.refresh();
+      }, 200);
+    });
+
+    /* ============================================================
+       3D ACCENT — Three.js weight plate
+       ============================================================ */
+    function init3D(){
+      if(typeof THREE === 'undefined') return;
+      var canvas = document.getElementById('accent-canvas');
+      var section = document.getElementById('accent-3d');
+
+      var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setClearColor(0x000000, 1);
+
+      var scene = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x000000, 0.06);
+
+      function aSize(){ return { w: section.clientWidth, h: section.clientHeight }; }
+      var sz = aSize();
+      var camera = new THREE.PerspectiveCamera(42, sz.w / sz.h, 0.1, 100);
+      camera.position.set(0, 0, 5);
+      renderer.setSize(sz.w, sz.h, false);
+
+      // weight plate — ring extrude
+      var shape = new THREE.Shape();
+      shape.absarc(0, 0, 1.4, 0, Math.PI * 2, false);
+      var hole = new THREE.Path();
+      hole.absarc(0, 0, 0.15, 0, Math.PI * 2, true);
+      shape.holes.push(hole);
+      var geo = new THREE.ExtrudeGeometry(shape, { depth: 0.14, bevelEnabled: false, curveSegments: 64 });
+      geo.center();
+      var mat = new THREE.MeshStandardMaterial({ color: 0x1c1c1c, metalness: 0.95, roughness: 0.28, emissive: 0x070707 });
+      var plate = new THREE.Mesh(geo, mat);
+      plate.rotation.x = 0.35;
+      scene.add(plate);
+
+      // lighting — boosted so the steel plate reads with gold rim light
+      scene.add(new THREE.AmbientLight(0x0a0a1a, 0.45));
+      var goldSpot = new THREE.SpotLight(0xC9A84C, 6.5, 30, Math.PI / 4, 0.4);
+      goldSpot.position.set(-4, 6, 5);
+      scene.add(goldSpot);
+      var rimLight = new THREE.PointLight(0xE8F0FF, 3.0, 40);
+      rimLight.position.set(4, -2, 4);
+      scene.add(rimLight);
+      var keyLight = new THREE.DirectionalLight(0xDFC070, 1.4);
+      keyLight.position.set(2, 3, 6);
+      scene.add(keyLight);
+      var orb = new THREE.PointLight(0xC9A84C, 4.0, 12);
+      scene.add(orb);
+
+      var clock = new THREE.Clock();
+      var running = true;
+
+      // pause RAF when offscreen
+      if('IntersectionObserver' in window){
+        new IntersectionObserver(function(entries){
+          running = entries[0].isIntersecting;
+          if(running) animate();
+        }, { threshold: 0.01 }).observe(section);
+      }
+
+      function animate(){
+        if(!running) return;
+        requestAnimationFrame(animate);
+        plate.rotation.y += 0.006;
+        var t = clock.getElapsedTime();
+        orb.position.x = Math.sin(t * 0.5) * 3;
+        orb.position.z = Math.cos(t * 0.5) * 3;
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      // scroll-in scale
+      if(window.gsap && !prefersReduced){
+        gsap.from(plate.scale, {
+          x: 0, y: 0, z: 0, duration: 1.4, ease: 'back.out(1.7)',
+          scrollTrigger: { trigger: '#accent-3d', start: 'top 70%' }
+        });
+      }
+
+      window.addEventListener('resize', function(){
+        var s = aSize();
+        camera.aspect = s.w / s.h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(s.w, s.h, false);
+      });
+    }
+
+    /* ---------- boot ---------- */
+    function boot(){
+      if(typeof gsap !== 'undefined') gsap.registerPlugin(ScrollTrigger);
+      if(document.fonts && document.fonts.ready){
+        document.fonts.ready.then(function(){
+          buildParticles();
+          runSplash();
+          init3D();
+        });
+      } else {
+        buildParticles();
+        runSplash();
+        init3D();
+      }
+    }
+
+    // libraries are deferred; wait for window load so THREE/gsap exist
+    if(document.readyState === 'complete') boot();
+    else window.addEventListener('load', boot);
+  })();
+  </script>
+</body>
+</html>

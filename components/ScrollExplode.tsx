@@ -4,6 +4,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
+declare global {
+  interface Window { __timelines?: Record<string, gsap.core.Timeline> }
+}
+
 // ─── config ────────────────────────────────────────────────────────────────
 const FRAME_COUNT   = 121          // logo_000.webp … logo_120.webp
 const FRAMES_PATH   = '/frames/'   // → public/frames/
@@ -30,7 +34,11 @@ function ramp(p: number, start: number, end: number) {
   return Math.min(1, Math.max(0, (p - start) / (end - start)))
 }
 
-export default function ScrollExplode() {
+interface ScrollExplodeProps {
+  onPreloadGym?: () => void
+}
+
+export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
   const sectionRef = useRef<HTMLDivElement>(null)
   const canvasRef  = useRef<HTMLCanvasElement>(null)
   const cueRef     = useRef<HTMLDivElement>(null)
@@ -38,8 +46,12 @@ export default function ScrollExplode() {
   const line2Ref   = useRef<HTMLDivElement>(null)
   const imagesRef  = useRef<HTMLImageElement[]>([])
   const frameRef     = useRef(0)
-  const scrollLocked = useRef(false)   // tracks whether we own the overflow lock
-  const cueGoneRef   = useRef(false)   // scroll cue fades once, on first scroll
+  const scrollLocked  = useRef(false)   // tracks whether we own the overflow lock
+  const cueGoneRef    = useRef(false)   // scroll cue fades once, on first scroll
+  const scrubSTRef    = useRef<ScrollTrigger | null>(null)
+  const floatTweenRef = useRef<gsap.core.Tween | null>(null)
+  const lastTaglineProgressRef  = useRef<number>(-1)
+  const gymPreloadFiredRef      = useRef(false)
   const [loadPct, setLoadPct]   = useState(0)
   const [ready, setReady]       = useState(false)
   const [scrollVh, setScrollVh] = useState(SCROLL_VH)
@@ -89,7 +101,7 @@ export default function ScrollExplode() {
     const canvas = canvasRef.current
     if (!canvas) return
     const onResize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2) // cap at 2 (perf)
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5) // cap at 1.5 (perf)
       canvas.width  = Math.round(window.innerWidth  * dpr)
       canvas.height = Math.round(window.innerHeight * dpr)
       draw(frameRef.current)
@@ -107,18 +119,37 @@ export default function ScrollExplode() {
 
     const tick = () => {
       done++
-      setLoadPct(Math.round((done / FRAME_COUNT) * 100))
+      if (done % 10 === 0 || done === FRAME_COUNT) {
+        setLoadPct(Math.round((done / FRAME_COUNT) * 100))
+      }
       if (done === FRAME_COUNT) setReady(true)
     }
 
-    for (let i = 0; i < FRAME_COUNT; i++) {
-      const img = new Image()
-      img.src = `${FRAMES_PATH}logo_${pad(i)}.${FRAME_EXT}`
-      img.onload  = () => { (img.decode?.() ?? Promise.resolve()).finally(tick) }
-      img.onerror = tick
-      imgs[i] = img
+    const BATCH_SIZE = 10
+    const preloadFrames = async () => {
+      for (let batchStart = 0; batchStart < FRAME_COUNT; batchStart += BATCH_SIZE) {
+        const batchEnd = Math.min(batchStart + BATCH_SIZE, FRAME_COUNT)
+        const batchPromises: Promise<void>[] = []
+        for (let i = batchStart; i < batchEnd; i++) {
+          const img = new Image()
+          img.src = `${FRAMES_PATH}logo_${pad(i)}.${FRAME_EXT}`
+          imgs[i] = img
+          batchPromises.push(
+            new Promise<void>((resolve) => {
+              img.onload = () => {
+                ;(img.decode?.() ?? Promise.resolve())
+                  .catch(() => {})
+                  .finally(() => { tick(); resolve() })
+              }
+              img.onerror = () => { tick(); resolve() }
+            })
+          )
+        }
+        await Promise.all(batchPromises)
+      }
+      imagesRef.current = imgs
     }
-    imagesRef.current = imgs
+    preloadFrames()
   }, [])
 
   /* ── intro animate-in → hand off to scroll-scrub ───────────────────── */
@@ -147,11 +178,11 @@ export default function ScrollExplode() {
 
     const wireScrub = () => {
       ScrollTrigger.refresh()
-      ScrollTrigger.create({
+      scrubSTRef.current = ScrollTrigger.create({
         trigger: section,
         start:   'top top',
         end:     'bottom bottom',
-        scrub:   1,            // 1s smoothing — raise for silkier feel
+        scrub:   0.3,
         onUpdate(self) {
           if (self.progress > 0.001) fadeCue()
           // round * (FRAME_COUNT - 1): maps progress 0->0 and 1.0->120 exactly.
@@ -160,7 +191,15 @@ export default function ScrollExplode() {
             frameRef.current = idx
             draw(idx)
           }
-          updateTagline(self.progress) // tagline emerges from the explosion
+          const p = self.progress
+          if (Math.abs(p - lastTaglineProgressRef.current) > 0.002) {
+            lastTaglineProgressRef.current = p
+            updateTagline(p)
+          }
+          if (self.progress > 0.8 && !gymPreloadFiredRef.current) {
+            gymPreloadFiredRef.current = true
+            onPreloadGym?.()
+          }
         },
       })
     }
@@ -171,7 +210,8 @@ export default function ScrollExplode() {
       if (cue) gsap.set(cue, { opacity: 0.55 })
       wireScrub()
       return () => {
-        ScrollTrigger.getAll().forEach(t => t.kill())
+        scrubSTRef.current?.kill()
+        scrubSTRef.current = null
       }
     }
 
@@ -180,43 +220,50 @@ export default function ScrollExplode() {
     scrollLocked.current = true
 
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline()
-      // canvas begins invisible (inline opacity:0) so frame 0 never flashes static
-      tl.fromTo(
-        canvas,
-        { opacity: 0, scale: 0.86, filter: 'blur(12px)' },  // focus-pull start
-        {
-          opacity:  1,
-          scale:    1,
-          filter:   'blur(0px)',                            // ...materializes sharp
-          duration: INTRO_DUR,
-          ease:     'power3.out',
-          onComplete() {
-            document.body.style.overflow = ''
-            scrollLocked.current = false
-            wireScrub()
-          },
+      const introTl = gsap.timeline({
+        onComplete() {
+          document.body.style.overflow = ''
+          scrollLocked.current = false
+          wireScrub()
+          if (cue) {
+            gsap.fromTo(cue,
+              { opacity: 0, y: 8 },
+              { opacity: 0.55, y: 0, duration: 0.7, ease: 'power2.out' }
+            )
+          }
         },
+      })
+      const _w = window as Window & { __timelines?: Record<string, gsap.core.Timeline> }
+      _w.__timelines = _w.__timelines ?? {}
+      _w.__timelines['scrollExplodeIntro'] = introTl
+      introTl.fromTo(
+        canvas,
+        { opacity: 0, filter: 'blur(20px)', y: 60 },
+        { opacity: 1, filter: 'blur(0px)', y: 0, duration: 1.6, ease: 'power3.out', delay: 0.3 }
       )
-      if (cue) {
-        tl.fromTo(
-          cue,
-          { opacity: 0, y: 6 },
-          { opacity: 0.55, y: 0, duration: 0.6, ease: 'power2.out' },
-          '-=0.2',
-        )
-      }
     })
 
     return () => {
       ctx.revert()
-      ScrollTrigger.getAll().forEach(t => t.kill())
+      scrubSTRef.current?.kill()
+      scrubSTRef.current = null
+      if (window.__timelines) delete window.__timelines['scrollExplodeIntro']
       if (scrollLocked.current) {        // always release, even if onComplete never ran
         document.body.style.overflow = ''
         scrollLocked.current = false
       }
     }
   }, [ready, draw, updateTagline])
+
+  /* ── sine-yoyo float on .io-hero-headline__float ───────────────────── */
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const floatTween = gsap.to('.io-hero-headline__float', {
+      y: -12, duration: 2.2, ease: 'sine.inOut', yoyo: true, repeat: -1,
+    })
+    floatTweenRef.current = floatTween
+    return () => { floatTweenRef.current?.kill() }
+  }, [])
 
   /* ── render ─────────────────────────────────────────────────────────── */
   return (
@@ -256,10 +303,10 @@ export default function ScrollExplode() {
       )}
 
       {/* sticky canvas — fills viewport, holds while the section scrolls */}
-      <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden' }}>
+      <div style={{ position: 'sticky', top: 0, width: '100%', height: '100vh', overflow: 'hidden' }}>
         <canvas
           ref={canvasRef}
-          style={{ display: 'block', width: '100%', height: '100%', opacity: 0 }}
+          style={{ display: 'block', width: '100%', height: '100%', opacity: 0, mixBlendMode: 'difference' }}
         />
 
         {/* tagline — revealed by scroll progress, emerges as the logo explodes.
@@ -277,32 +324,34 @@ export default function ScrollExplode() {
             color: '#fff',
           }}
         >
-          <div
-            ref={line1Ref}
-            style={{
-              opacity: 0,
-              fontSize: 'clamp(28px, 5.5vw, 64px)',
-              fontWeight: 700,
-              letterSpacing: '0.08em',
-              lineHeight: 1.05,
-              willChange: 'opacity, transform',
-            }}
-          >
-            {TAGLINE_1}
-          </div>
-          <div
-            ref={line2Ref}
-            style={{
-              opacity: 0,
-              fontSize: 'clamp(28px, 5.5vw, 64px)',
-              fontWeight: 700,
-              letterSpacing: '0.08em',
-              lineHeight: 1.05,
-              color: 'rgba(255,255,255,0.55)',
-              willChange: 'opacity, transform',
-            }}
-          >
-            {TAGLINE_2}
+          <div className="io-hero-headline__float">
+            <div
+              ref={line1Ref}
+              style={{
+                opacity: 0,
+                fontSize: 'clamp(28px, 5.5vw, 64px)',
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                lineHeight: 1.05,
+                willChange: 'opacity, transform',
+              }}
+            >
+              {TAGLINE_1}
+            </div>
+            <div
+              ref={line2Ref}
+              style={{
+                opacity: 0,
+                fontSize: 'clamp(28px, 5.5vw, 64px)',
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                lineHeight: 1.05,
+                color: 'rgba(255,255,255,0.55)',
+                willChange: 'opacity, transform',
+              }}
+            >
+              {TAGLINE_2}
+            </div>
           </div>
         </div>
 

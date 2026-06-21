@@ -1,0 +1,277 @@
+'use client'
+
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { Environment, useGLTF } from '@react-three/drei'
+import * as THREE from 'three'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { NeoButton } from '@/app/components/NeoButton'
+
+useGLTF.setDecoderPath('/draco/')
+
+const MODEL_URL = '/gym-space-2k.glb'
+
+const BEATS = [
+  { heading: 'ENGINEERED ISOLATION.',  sub: 'Every angle considered.',       cta: false },
+  { heading: 'STRUCTURAL INTEGRITY.',  sub: 'Aesthetics meet mathematics.',   cta: false },
+  { heading: 'THE SOLO NODE.',         sub: '360 degrees of absolute focus.', cta: true  },
+]
+
+// GSAP → R3F invalidate bridge (GymSpin is a page singleton)
+let _invalidate: (() => void) | null = null
+
+// Spin proxy — GSAP scrubs rotationY; useFrame applies it each tick
+const spinProxy = { rotationY: -Math.PI / 4 }
+
+// ─── R3F sub-tree ─────────────────────────────────────────────────────────────
+
+function SpinModel() {
+  const { scene }   = useGLTF(MODEL_URL)
+  const clonedScene = useMemo(() => scene.clone(true), [scene])
+  const groupRef    = useRef<THREE.Group>(null)
+  const { camera, invalidate } = useThree()
+
+  useEffect(() => {
+    _invalidate = invalidate
+    return () => { _invalidate = null }
+  }, [invalidate])
+
+  useLayoutEffect(() => {
+    const box    = new THREE.Box3().setFromObject(clonedScene)
+    const size   = box.getSize(new THREE.Vector3())
+    const center = box.getCenter(new THREE.Vector3())
+    clonedScene.position.sub(center)
+
+    const maxDim = Math.max(size.x, size.y, size.z)
+    const persp  = camera as THREE.PerspectiveCamera
+    const fov    = (persp.fov * Math.PI) / 180
+    const dist   = ((maxDim / 2) / Math.tan(fov / 2)) * 1.4
+
+    camera.position.set(0, size.y * 0.08, dist)
+    camera.near = Math.max(dist / 100, 0.01)
+    camera.far  = dist * 100
+    camera.lookAt(0, 0, 0)
+    persp.updateProjectionMatrix()
+    invalidate()
+  }, [clonedScene, camera, invalidate])
+
+  useFrame(() => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y = spinProxy.rotationY
+    }
+  })
+
+  return (
+    <group ref={groupRef}>
+      <primitive object={clonedScene} />
+    </group>
+  )
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
+export default function GymSpin() {
+  const trackRef   = useRef<HTMLDivElement>(null)
+  const canvasWrap = useRef<HTMLDivElement>(null)
+  const textWrap   = useRef<HTMLDivElement>(null)
+  const parallaxEl = useRef<HTMLDivElement>(null)
+  const beatRefs   = useRef<(HTMLDivElement | null)[]>([])
+  const ctaRef     = useRef<HTMLDivElement>(null)
+
+  const [dpr] = useState(() =>
+    typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 1.5) : 1,
+  )
+
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger)
+    console.log('[GymSpin] useEffect firing, scrollTrackRef:', trackRef.current)
+
+    const ctx = gsap.context(() => {
+      // Reset proxy on each mount
+      spinProxy.rotationY = -Math.PI / 4
+
+      const tl = gsap.timeline({ paused: true })
+      ;(window as any).__timelines = { ...((window as any).__timelines ?? {}), gymSpin: tl }
+
+      // Spin arc: −π/4 → π/2 across the full 400vh scroll
+      tl.to(spinProxy, { rotationY: Math.PI / 2, duration: 1, ease: 'none' }, 0)
+
+      // Beat text — Spatial Z-Push entry + blur exit
+      BEATS.forEach((beat, i) => {
+        const el = beatRefs.current[i]
+        if (!el) return
+
+        const SLOT = 1 / BEATS.length                              // ~0.333 per beat
+        const ps   = i * SLOT
+        const exit = i < BEATS.length - 1 ? ps + SLOT * 0.65 : 0.92
+
+        // Entry: scale(1.05) blur(15px) y(40) → scale(1) blur(0) y(0)
+        tl.fromTo(
+          el,
+          { opacity: 0, scale: 1.05, filter: 'blur(15px)', y: 40 },
+          { opacity: 1, scale: 1,    filter: 'blur(0px)',  y: 0,   duration: 0.1,  ease: 'power2.out' },
+          ps,
+        )
+        // Exit
+        tl.fromTo(
+          el,
+          { opacity: 1, scale: 1,    filter: 'blur(0px)',  y: 0 },
+          { opacity: 0, scale: 0.95, filter: 'blur(6px)',  y: -30, duration: 0.08, ease: 'power2.in' },
+          exit,
+        )
+
+        // CTA co-animates with the final beat
+        if (!beat.cta) return
+        if (!ctaRef.current) return
+        tl.fromTo(
+          ctaRef.current,
+          { opacity: 0, y: 40, filter: 'blur(15px)' },
+          { opacity: 1, y: 0,  filter: 'blur(0px)', duration: 0.1, ease: 'power2.out' },
+          ps + 0.015,
+        )
+        tl.fromTo(
+          ctaRef.current,
+          { opacity: 1, y: 0,   filter: 'blur(0px)' },
+          { opacity: 0, y: -30, filter: 'blur(6px)', duration: 0.08, ease: 'power2.in' },
+          exit,
+        )
+      })
+
+      const show = () => {
+        if (!canvasWrap.current) return
+        canvasWrap.current.style.visibility = 'visible'
+        if (!textWrap.current) return
+        textWrap.current.style.visibility = 'visible'
+      }
+      const hide = () => {
+        if (!canvasWrap.current) return
+        canvasWrap.current.style.visibility = 'hidden'
+        if (!textWrap.current) return
+        textWrap.current.style.visibility = 'hidden'
+      }
+
+      if (!trackRef.current) {
+        console.error('[GymSpin] scrollTrackRef is null at ScrollTrigger init — aborting context')
+        return
+      }
+
+      ScrollTrigger.create({
+        trigger: trackRef.current,
+        start:   'top top',
+        end:     'bottom bottom',
+        scrub:   1.2,
+        onEnter:     show,
+        onLeave:     hide,
+        onEnterBack: show,
+        onLeaveBack: hide,
+        onUpdate(self) {
+          tl.progress(self.progress)
+          _invalidate?.()
+          if (!parallaxEl.current) return
+          // Motion Law 2: parallax written directly to DOM — no GSAP.to()
+          parallaxEl.current.style.transform = `translateY(${-self.progress * 120}px)`
+        },
+      })
+    })
+
+    return () => ctx.revert()
+  }, [])
+
+  return (
+    <>
+      {/* 400vh invisible scroll track */}
+      <div ref={trackRef} style={{ height: '400vh', position: 'relative', zIndex: 1 }} />
+
+      {/* Fixed Canvas — hidden until section is active */}
+      <div
+        ref={canvasWrap}
+        style={{ position: 'fixed', inset: 0, zIndex: 0, visibility: 'hidden' }}
+      >
+        <Canvas
+          frameloop="demand"
+          dpr={dpr}
+          camera={{ fov: 45, near: 0.1, far: 1000 }}
+          gl={{ powerPreference: 'high-performance', antialias: false }}
+          style={{ display: 'block', width: '100%', height: '100%' }}
+          onCreated={({ gl }) => gl.setClearColor('#000000', 1)}
+        >
+          <ambientLight intensity={0.15} />
+          <directionalLight position={[5, 8, 5]} intensity={3.0} />
+          <Suspense fallback={null}>
+            <Environment preset="apartment" />
+            <SpinModel />
+          </Suspense>
+        </Canvas>
+      </div>
+
+      {/* Fixed text layer */}
+      <div
+        ref={textWrap}
+        style={{ position: 'fixed', inset: 0, zIndex: 10, pointerEvents: 'none', visibility: 'hidden' }}
+      >
+        <div
+          ref={parallaxEl}
+          style={{ position: 'absolute', inset: 0, willChange: 'transform' }}
+        >
+          {BEATS.map((beat, i) => (
+            <div
+              key={i}
+              ref={el => { beatRefs.current[i] = el }}
+              style={{
+                position: 'absolute',
+                left: '3rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                opacity: 0,
+                willChange: 'transform, opacity, filter',
+              }}
+            >
+              <span
+                style={{
+                  display: 'block',
+                  fontWeight: 900,
+                  textTransform: 'uppercase',
+                  letterSpacing: '-0.04em',
+                  fontSize: 'clamp(3rem, 8vw, 8rem)',
+                  lineHeight: 0.9,
+                  color: 'white',
+                  mixBlendMode: 'difference',
+                }}
+              >
+                {beat.heading}
+              </span>
+              <span
+                style={{
+                  display: 'block',
+                  fontWeight: 400,
+                  fontSize: '1rem',
+                  color: 'rgba(255,255,255,0.7)',
+                  marginTop: '1rem',
+                  mixBlendMode: 'difference',
+                }}
+              >
+                {beat.sub}
+              </span>
+              {beat.cta && (
+                <div
+                  ref={ctaRef}
+                  style={{
+                    marginTop: '1.5rem',
+                    pointerEvents: 'auto',
+                    opacity: 0,
+                    willChange: 'transform, opacity, filter',
+                  }}
+                >
+                  <NeoButton variant="primary">GET ACCESS</NeoButton>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  )
+}
+
+useGLTF.preload(MODEL_URL)

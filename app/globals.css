@@ -21,10 +21,12 @@
   --ease-mech: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 }
 
 html {
@@ -55,4 +57,267 @@ html.lenis-stopped body {
 ::selection {
   background: var(--color-white);
   color: var(--color-black);
+}
+
+/* Reveal animations */
+/* Base hidden state for scroll-revealed elements. The IntersectionObserver
+   in RevealObserver.tsx adds `io-hl-visible` when each element enters view. */
+.io-reveal-up {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.io-reveal-up.io-hl-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.io-edit-heading {
+  opacity: 0;
+  letter-spacing: -0.02em;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.io-edit-heading.io-hl-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Fallback watchdog: if the observer never fires, RevealObserver adds
+   `io-fallback-visible` to <body> to force-show these reveal targets. */
+.io-fallback-visible .io-reveal-up,
+.io-fallback-visible .io-edit-heading {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .io-reveal-up,
+  .io-edit-heading {
+    transition: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   IRON OASIS — ATMOSPHERE + SECTION DESIGN SYSTEM
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Section wrapper ── */
+.io-editorial {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 90% 45% at 50% 0%,   rgba(255,255,255,0.045) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 35% at 50% 100%, rgba(255,255,255,0.018) 0%, transparent 60%),
+    #050505;
+}
+
+/* Top-edge hairline glow between sections */
+.io-editorial::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Subtle film grain — doesn't block content */
+.io-editorial::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.022;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* All direct children sit above grain layer */
+.io-editorial > * {
+  position: relative;
+  z-index: 3;
+}
+
+/* ── Stat numbers — large editorial counters ── */
+.io-stat-num {
+  font-family: Arial, sans-serif;
+  font-weight: 900;
+  font-size: clamp(48px, 8vw, 88px);
+  letter-spacing: -0.04em;
+  color: #fff;
+  line-height: 1;
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.16,1,0.3,1);
+}
+.io-stat-num.io-hl-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Rule label — horizontal divider with text ── */
+.io-rule {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.io-rule.io-hl-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Tier cards — replace the empty outlined boxes ── */
+.io-tier {
+  position: relative;
+  border: 1.5px solid rgba(255,255,255,0.14);
+  background:
+    linear-gradient(150deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.01) 45%, transparent 100%),
+    rgba(6,6,6,0.7);
+  padding: clamp(32px, 4vw, 48px);
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+/* Top-edge highlight */
+.io-tier::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.38), transparent);
+  pointer-events: none;
+}
+
+/* Hard-offset shadow on hover — brutalist lift */
+.io-tier:hover {
+  border-color: rgba(255,255,255,0.38);
+  box-shadow: 8px 8px 0 rgba(255,255,255,0.08);
+  transform: translateY(-4px) !important;
+}
+
+/* ── Photo hover scale ── */
+.io-photo-hover {
+  overflow: hidden;
+}
+.io-photo-hover img {
+  transition: transform 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+.io-photo-hover:hover img {
+  transform: scale(1.04);
+}
+
+/* ── Body text — confirm token ── */
+.io-body {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+  color: rgba(255,255,255,0.6);
+  font-size: clamp(14px, 1.4vw, 16px);
+  line-height: 1.6;
+  max-width: 60ch;
+}
+.io-body.io-hl-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Fallback: force all animated elements visible after 4s ── */
+.io-fallback-visible .io-stat-num,
+.io-fallback-visible .io-rule,
+.io-fallback-visible .io-body {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .io-editorial::after { display: none; }
+  .io-stat-num, .io-rule, .io-body { transition: none; opacity: 1; transform: none; }
+  .io-tier { transition: none; }
+  .io-photo-hover img { transition: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 1 — Editorial section wrappers (spacing layer)
+   ═══════════════════════════════════════════════════════════════ */
+.io-editorial {
+  position: relative;
+  width: 100%;
+  padding-block: clamp(5rem, 10vw, 9rem);
+  padding-inline: clamp(1.5rem, 5vw, 6rem);
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 2 — IntersectionObserver reveal animations
+   ═══════════════════════════════════════════════════════════════ */
+.io-reveal {
+  opacity: 0;
+  transform: translateY(2rem);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.io-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.io-reveal:nth-child(1) { transition-delay: 0s; }
+.io-reveal:nth-child(2) { transition-delay: 0.08s; }
+.io-reveal:nth-child(3) { transition-delay: 0.16s; }
+.io-reveal:nth-child(4) { transition-delay: 0.24s; }
+.io-reveal:nth-child(5) { transition-delay: 0.32s; }
+.io-reveal:nth-child(6) { transition-delay: 0.40s; }
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 3 — Brutalist tier cards
+   ═══════════════════════════════════════════════════════════════ */
+.io-tier {
+  position: relative;
+  border: 1px solid #262626;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  border-radius: 0px;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.io-tier:hover {
+  box-shadow: 10px 10px 0px white;
+  transform: translate(-2px, -2px);
+}
+
+.io-tier:active {
+  box-shadow: 3px 3px 0px white;
+  transform: translate(1px, 1px);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION 4 — Reduced motion fallbacks
+   ═══════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  .io-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .io-reveal:nth-child(n) {
+    transition-delay: 0s;
+  }
+
+  .io-tier,
+  .io-tier:hover,
+  .io-tier:active {
+    transition: none;
+    transform: none;
+  }
 }

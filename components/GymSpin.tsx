@@ -85,7 +85,6 @@ export default function GymSpin() {
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
-    console.log('[GymSpin] useEffect firing, scrollTrackRef:', trackRef.current)
 
     const ctx = gsap.context(() => {
       // Reset proxy on each mount
@@ -110,14 +109,14 @@ export default function GymSpin() {
         tl.fromTo(
           el,
           { opacity: 0, scale: 1.05, filter: 'blur(15px)', y: 40 },
-          { opacity: 1, scale: 1,    filter: 'blur(0px)',  y: 0,   duration: 0.1,  ease: 'power2.out' },
+          { opacity: 1, scale: 1,    filter: 'blur(0px)',  y: 0,   duration: 0.18, ease: 'power2.out' },
           ps,
         )
         // Exit
         tl.fromTo(
           el,
           { opacity: 1, scale: 1,    filter: 'blur(0px)',  y: 0 },
-          { opacity: 0, scale: 0.95, filter: 'blur(6px)',  y: -30, duration: 0.08, ease: 'power2.in' },
+          { opacity: 0, scale: 0.95, filter: 'blur(6px)',  y: -30, duration: 0.12, ease: 'power2.in' },
           exit,
         )
 
@@ -127,13 +126,13 @@ export default function GymSpin() {
         tl.fromTo(
           ctaRef.current,
           { opacity: 0, y: 40, filter: 'blur(15px)' },
-          { opacity: 1, y: 0,  filter: 'blur(0px)', duration: 0.1, ease: 'power2.out' },
+          { opacity: 1, y: 0,  filter: 'blur(0px)', duration: 0.18, ease: 'power2.out' },
           ps + 0.015,
         )
         tl.fromTo(
           ctaRef.current,
           { opacity: 1, y: 0,   filter: 'blur(0px)' },
-          { opacity: 0, y: -30, filter: 'blur(6px)', duration: 0.08, ease: 'power2.in' },
+          { opacity: 0, y: -30, filter: 'blur(6px)', duration: 0.12, ease: 'power2.in' },
           exit,
         )
       })

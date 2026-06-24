@@ -183,9 +183,14 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         start:   'top top',
         end:     'bottom bottom',
         scrub:   0.3,
+        onLeave() {
+          gsap.to(canvas, { opacity: 0, duration: 0.4, overwrite: 'auto' })
+        },
+        onEnterBack() {
+          gsap.to(canvas, { opacity: 1, duration: 0.4, overwrite: 'auto' })
+        },
         onUpdate(self) {
           if (self.progress > 0.001) fadeCue()
-          // round * (FRAME_COUNT - 1): maps progress 0->0 and 1.0->120 exactly.
           const idx = Math.round(self.progress * (FRAME_COUNT - 1))
           if (idx !== frameRef.current) {
             frameRef.current = idx
@@ -220,27 +225,34 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
     scrollLocked.current = true
 
     const ctx = gsap.context(() => {
-      const introTl = gsap.timeline({
-        onComplete() {
-          document.body.style.overflow = ''
-          scrollLocked.current = false
-          wireScrub()
-          if (cue) {
-            gsap.fromTo(cue,
-              { opacity: 0, y: 8 },
-              { opacity: 0.55, y: 0, duration: 0.7, ease: 'power2.out' }
-            )
-          }
-        },
-      })
+      const tl = gsap.timeline()
       const _w = window as Window & { __timelines?: Record<string, gsap.core.Timeline> }
       _w.__timelines = _w.__timelines ?? {}
-      _w.__timelines['scrollExplodeIntro'] = introTl
-      introTl.fromTo(
+      _w.__timelines['scrollExplodeIntro'] = tl
+      tl.fromTo(
         canvas,
-        { opacity: 0, filter: 'blur(20px)', y: 60 },
-        { opacity: 1, filter: 'blur(0px)', y: 0, duration: 1.6, ease: 'power3.out', delay: 0.3 }
+        { opacity: 0, scale: 0.86, filter: 'blur(12px)' },
+        {
+          opacity:  1,
+          scale:    1,
+          filter:   'blur(0px)',
+          duration: INTRO_DUR,
+          ease:     'power3.out',
+          onComplete() {
+            document.body.style.overflow = ''
+            scrollLocked.current = false
+            wireScrub()
+          },
+        }
       )
+      if (cue) {
+        tl.fromTo(
+          cue,
+          { opacity: 0, y: 6 },
+          { opacity: 0.55, y: 0, duration: 0.6, ease: 'power2.out' },
+          '-=0.2',
+        )
+      }
     })
 
     return () => {
@@ -267,10 +279,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
 
   /* ── render ─────────────────────────────────────────────────────────── */
   return (
-    <section
-      ref={sectionRef}
-      style={{ height: `${scrollVh}vh`, position: 'relative' }}
-    >
+    <>
       {/* preload overlay */}
       {!ready && (
         <div
@@ -302,108 +311,122 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         </div>
       )}
 
-      {/* sticky canvas — fills viewport, holds while the section scrolls */}
-      <div style={{ position: 'sticky', top: 0, width: '100%', height: '100vh', overflow: 'hidden' }}>
-        <canvas
-          ref={canvasRef}
-          style={{ display: 'block', width: '100%', height: '100%', opacity: 0, mixBlendMode: 'difference' }}
-        />
+      {/* canvas — position:fixed, stays pinned while the section scrolls */}
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: 'fixed', top: 0, left: 0,
+          width: '100vw', height: '100vh', zIndex: 0,
+          display: 'block', opacity: 0, mixBlendMode: 'difference',
+        }}
+      />
 
-        {/* tagline — revealed by scroll progress, emerges as the logo explodes.
-            Swap font-family to your brand heading font (e.g. 'Bebas Neue'). */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            bottom: '14%',
-            textAlign: 'center',
-            pointerEvents: 'none',
-            fontFamily: "'Bebas Neue', 'Oswald', system-ui, sans-serif",
-            color: '#fff',
-          }}
-        >
-          <div className="io-hero-headline__float">
-            <div
-              ref={line1Ref}
-              style={{
-                opacity: 0,
-                fontSize: 'clamp(28px, 5.5vw, 64px)',
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                lineHeight: 1.05,
-                willChange: 'opacity, transform',
-              }}
-            >
-              {TAGLINE_1}
-            </div>
-            <div
-              ref={line2Ref}
-              style={{
-                opacity: 0,
-                fontSize: 'clamp(28px, 5.5vw, 64px)',
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                lineHeight: 1.05,
-                color: 'rgba(255,255,255,0.55)',
-                willChange: 'opacity, transform',
-              }}
-            >
-              {TAGLINE_2}
-            </div>
-          </div>
-        </div>
-
-        {/* scroll cue — fades in after intro, fades out on first scroll */}
-        <div
-          ref={cueRef}
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            bottom: 32,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            opacity: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 10,
-            pointerEvents: 'none',
-          }}
-        >
-          <span
+      {/* tagline — revealed by scroll progress */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          bottom: '14%',
+          textAlign: 'center',
+          pointerEvents: 'none',
+          fontFamily: 'Arial, sans-serif',
+          fontWeight: 900,
+          letterSpacing: '-0.02em',
+          lineHeight: '0.9',
+          color: '#fff',
+          zIndex: 2,
+        }}
+      >
+        <div className="io-hero-headline__float">
+          <div
+            ref={line1Ref}
             style={{
-              color: '#fff',
-              fontSize: 9,
-              letterSpacing: '0.35em',
-              fontFamily: 'monospace',
-              textTransform: 'uppercase',
-              textIndent: '0.35em',
+              opacity: 0,
+              fontSize: 'clamp(28px, 5.5vw, 64px)',
+              fontWeight: 900,
+              letterSpacing: '0.08em',
+              lineHeight: 1.05,
+              willChange: 'opacity, transform',
             }}
           >
-            Scroll
-          </span>
-          <span className="io-scroll-line" />
-          <style>{`
-            .io-scroll-line {
-              width: 1px;
-              height: 38px;
-              background: linear-gradient(to bottom, #fff, rgba(255,255,255,0));
-              transform-origin: top;
-              animation: ioScrollPulse 1.8s ease-in-out infinite;
-            }
-            @keyframes ioScrollPulse {
-              0%   { transform: scaleY(0.3); opacity: 0.3; }
-              50%  { transform: scaleY(1);   opacity: 1;   }
-              100% { transform: scaleY(0.3); opacity: 0.3; }
-            }
-            @media (prefers-reduced-motion: reduce) {
-              .io-scroll-line { animation: none; }
-            }
-          `}</style>
+            {TAGLINE_1}
+          </div>
+          <div
+            ref={line2Ref}
+            style={{
+              opacity: 0,
+              fontSize: 'clamp(28px, 5.5vw, 64px)',
+              fontWeight: 900,
+              letterSpacing: '0.08em',
+              lineHeight: 1.05,
+              color: 'rgba(255,255,255,0.55)',
+              willChange: 'opacity, transform',
+            }}
+          >
+            {TAGLINE_2}
+          </div>
         </div>
       </div>
-    </section>
+
+      {/* scroll cue — fades in after intro, fades out on first scroll */}
+      <div
+        ref={cueRef}
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          bottom: '32px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          opacity: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 10,
+          pointerEvents: 'none',
+          fontFamily: 'Arial, sans-serif',
+          fontSize: '9px',
+          letterSpacing: '0.2em',
+          textTransform: 'uppercase',
+          color: '#fff',
+          zIndex: 2,
+        }}
+      >
+        <span
+          style={{
+            color: '#fff', fontSize: 9,
+            letterSpacing: '0.35em', fontFamily: 'monospace',
+            textTransform: 'uppercase', textIndent: '0.35em',
+          }}
+        >
+          Scroll
+        </span>
+        <span className="io-scroll-line" />
+        <style>{`
+          .io-scroll-line {
+            width: 1px;
+            height: 38px;
+            background: linear-gradient(to bottom, #fff, rgba(255,255,255,0));
+            transform-origin: top;
+            animation: ioScrollPulse 1.8s ease-in-out infinite;
+          }
+          @keyframes ioScrollPulse {
+            0%   { transform: scaleY(0.3); opacity: 0.3; }
+            50%  { transform: scaleY(1);   opacity: 1;   }
+            100% { transform: scaleY(0.3); opacity: 0.3; }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .io-scroll-line { animation: none; }
+          }
+        `}</style>
+      </div>
+
+      {/* scroll-height ruler — ScrollTrigger target, no visual role */}
+      <section
+        ref={sectionRef}
+        style={{ height: `${scrollVh}vh` }}
+      />
+    </>
   )
 }

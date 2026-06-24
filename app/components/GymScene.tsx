@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Environment, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
@@ -110,6 +110,18 @@ export default function GymScene() {
   const progressRef   = useRef(0)
   const waypointsRef  = useRef<WayPoint[]>([])
   const invalidateRef = useRef<() => void>(() => {})
+  const [inView, setInView] = useState(false)
+
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0 },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     const section = sectionRef.current
@@ -141,28 +153,30 @@ export default function GymScene() {
           overflow: 'hidden',
         }}
       >
-        <Canvas
-          frameloop="demand"
-          camera={{ fov: 45, near: 0.1, far: 1000 }}
-          gl={{ antialias: false, powerPreference: 'high-performance' }}
-          style={{ background: '#000', display: 'block', width: '100%', height: '100%' }}
-          onCreated={({ gl }) => {
-            gl.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault() }, false)
-            gl.domElement.addEventListener('webglcontextrestored', () => {}, false)
-          }}
-        >
-          <ambientLight intensity={0.6} />
-          <directionalLight position={[5, 5, 5]} intensity={1.2} />
-          <Suspense fallback={null}>
-            <Environment preset="apartment" />
-            <Model waypointsRef={waypointsRef} />
-            <CameraRig
-              waypointsRef={waypointsRef}
-              progressRef={progressRef}
-              invalidateRef={invalidateRef}
-            />
-          </Suspense>
-        </Canvas>
+        {inView && (
+          <Canvas
+            frameloop="demand"
+            camera={{ fov: 45, near: 0.1, far: 1000 }}
+            gl={{ antialias: false, powerPreference: 'high-performance' }}
+            style={{ background: '#000', display: 'block', width: '100%', height: '100%' }}
+            onCreated={({ gl }) => {
+              gl.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault() }, false)
+              gl.domElement.addEventListener('webglcontextrestored', () => {}, false)
+            }}
+          >
+            <ambientLight intensity={0.6} />
+            <directionalLight position={[5, 5, 5]} intensity={1.2} />
+            <Suspense fallback={null}>
+              <Environment preset="apartment" />
+              <Model waypointsRef={waypointsRef} />
+              <CameraRig
+                waypointsRef={waypointsRef}
+                progressRef={progressRef}
+                invalidateRef={invalidateRef}
+              />
+            </Suspense>
+          </Canvas>
+        )}
       </div>
     </section>
   )

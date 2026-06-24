@@ -82,6 +82,18 @@ export default function GymSpin() {
   const [dpr] = useState(() =>
     typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 1.5) : 1,
   )
+  const [inView, setInView] = useState(false)
+
+  useEffect(() => {
+    const el = trackRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { threshold: 0 },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
@@ -187,21 +199,23 @@ export default function GymSpin() {
         ref={canvasWrap}
         style={{ position: 'fixed', inset: 0, zIndex: 0, visibility: 'hidden' }}
       >
-        <Canvas
-          frameloop="demand"
-          dpr={dpr}
-          camera={{ fov: 45, near: 0.1, far: 1000 }}
-          gl={{ powerPreference: 'high-performance', antialias: false }}
-          style={{ display: 'block', width: '100%', height: '100%' }}
-          onCreated={({ gl }) => gl.setClearColor('#000000', 1)}
-        >
-          <ambientLight intensity={0.15} />
-          <directionalLight position={[5, 8, 5]} intensity={3.0} />
-          <Suspense fallback={null}>
-            <Environment preset="apartment" />
-            <SpinModel />
-          </Suspense>
-        </Canvas>
+        {inView && (
+          <Canvas
+            frameloop="demand"
+            dpr={dpr}
+            camera={{ fov: 45, near: 0.1, far: 1000 }}
+            gl={{ powerPreference: 'high-performance', antialias: false }}
+            style={{ display: 'block', width: '100%', height: '100%' }}
+            onCreated={({ gl }) => gl.setClearColor('#000000', 1)}
+          >
+            <ambientLight intensity={0.15} />
+            <directionalLight position={[5, 8, 5]} intensity={3.0} />
+            <Suspense fallback={null}>
+              <Environment preset="apartment" />
+              <SpinModel />
+            </Suspense>
+          </Canvas>
+        )}
       </div>
 
       {/* Fixed text layer */}

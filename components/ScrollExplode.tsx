@@ -100,16 +100,28 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const onResize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.5) // cap at 1.5 (perf)
+
+    const setSize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5)
       canvas.width  = Math.round(window.innerWidth  * dpr)
       canvas.height = Math.round(window.innerHeight * dpr)
       draw(frameRef.current)
-      ScrollTrigger.refresh()
+      // ScrollTrigger auto-refreshes on resize; manual call would desync Lenis
     }
-    onResize()
+
+    let rafId = 0
+    const onResize = () => {
+      if (scrollLocked.current) return
+      cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(setSize)
+    }
+
+    setSize()
     window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      cancelAnimationFrame(rafId)
+    }
   }, [draw])
 
   /* ── preload all frames (decode before marking ready → no flash) ────── */
@@ -177,7 +189,6 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
     }
 
     const wireScrub = () => {
-      ScrollTrigger.refresh()
       scrubSTRef.current = ScrollTrigger.create({
         trigger: section,
         start:   'top top',

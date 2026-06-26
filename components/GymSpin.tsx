@@ -154,6 +154,8 @@ export default function GymSpin() {
         canvasWrap.current.style.visibility = 'visible'
         if (!textWrap.current) return
         textWrap.current.style.visibility = 'visible'
+        _invalidate?.()
+        requestAnimationFrame(() => _invalidate?.())
       }
       const hide = () => {
         if (!canvasWrap.current) return

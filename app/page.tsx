@@ -14,7 +14,6 @@ import { AccessKeys } from '@/components/AccessKeys';
 import { About } from '@/app/components/About';
 import { FindYourWayIn } from '@/components/FindYourWayIn';
 import { Expanding } from '@/components/Expanding';
-import { AgentStorm } from '@/components/AgentStorm';
 import GymSpin from '@/components/GymSpinLazy';
 import GymScene from '@/app/components/GymSceneLazy';
 
@@ -46,11 +45,6 @@ export default function Home() {
       </section>
 
       <About />
-
-      {/* Section B2 — AGENT STORM onboarding shell */}
-      <section className="io-editorial">
-        <AgentStorm />
-      </section>
 
       {/* Section C — FIND YOUR WAY IN */}
       <section className="io-editorial">

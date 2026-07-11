@@ -10,7 +10,7 @@ const TERMS = [
   'NODE OPERATOR',
   'PRIVATE SPACE',
   'ACCESS KEY',
-  'CLEARANCE WINDOW',
+  'ACCESS WINDOW',
   'SMART LOCK',
   'PROTOCOL',
   'AUTONOMY',
@@ -30,7 +30,7 @@ const CELLS = [
   {
     label: 'AUTONOMY',
     title: 'YOUR SPACE, YOUR RULES',
-    copy: 'Set your own clearance windows. Lock or unlock access on demand. The protocol works around your schedule, not the other way around.',
+    copy: 'Set your own access windows. Lock or unlock access on demand. The protocol works around your schedule, not the other way around.',
   },
 ]
 

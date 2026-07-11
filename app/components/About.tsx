@@ -6,13 +6,13 @@ import { NeoButton } from '@/app/components/NeoButton'
 const STATS = [
   { figure: '24 / 7', label: 'Every window. Every hour.' },
   { figure: '1',      label: 'You. No one else.' },
-  { figure: '0',      label: 'Other members during your session.' },
+  { figure: '0',      label: 'Other people during your session.' },
 ]
 
 const FEATURES = [
   {
     tag: 'SMART LOCK ENTRY',
-    desc: 'Your Access Key initializes the lock. No clearance desk, no staff — just you entering your private space.',
+    desc: 'Your Access Key initializes the lock. No front desk, no staff — just you entering your private space.',
   },
   {
     tag: 'MOBILE BOOKING',
@@ -20,7 +20,7 @@ const FEATURES = [
   },
   {
     tag: '24/7 ACCESS',
-    desc: 'Every window is live. Enter at any hour — early, late, or mid-afternoon. No restrictions on clearance.',
+    desc: 'Every window is live. Enter at any hour — early, late, or mid-afternoon. No restrictions, no blackout hours.',
   },
   {
     tag: 'ZERO STAFF',
@@ -43,7 +43,7 @@ export function About() {
           </h2>
           <p className="mt-6 max-w-xl font-mono text-sm leading-relaxed text-white/70">
             One private space, reserved for one person per window. No crowds, no
-            contested equipment, no waiting — your clearance is absolute from the
+            contested equipment, no waiting — your access is absolute from the
             moment you book.
           </p>
         </IOReveal>
@@ -73,7 +73,7 @@ export function About() {
             <p className="font-mono text-sm leading-relaxed text-white/70">
               Iron Oasis is a private automated space. Book a window and the smart
               lock initializes to your Access Key alone — the space opens for you
-              and no one else. No staff presence, no shared clearance, no
+              and no one else. No staff presence, no shared access, no
               compromise on autonomy.
             </p>
             <p className="font-mono text-sm leading-relaxed text-white/70">

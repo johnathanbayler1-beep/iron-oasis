@@ -12,17 +12,21 @@ declare global {
 const FRAME_COUNT   = 121          // logo_000.webp … logo_120.webp
 const FRAMES_PATH   = '/frames/'   // → public/frames/
 const FRAME_EXT     = 'webp'       // full-res 1200px WebP
-const SCROLL_VH     = 700          // desktop scroll distance in vh (explosion speed)
-const SCROLL_VH_MOB = 450          // mobile scroll distance — shorter so it's not a marathon
+const SCROLL_VH     = 140          // desktop scroll distance in vh (explosion speed)
+const SCROLL_VH_MOB = 140          // mobile matches desktop — 140vh pin leaves 40vh of travel; going lower kills the scrub
 const INTRO_DUR     = 1.6          // animate-in duration in seconds
 const MOBILE_BP     = 768          // px — below this we use mobile tuning
 
 // Tagline — emerges as the logo explodes. Swap copy freely.
-const TAGLINE_1 = 'THE WHOLE GYM.'
+const TAGLINE_1 = 'THE WHOLE SPACE.'
 const TAGLINE_2 = 'JUST YOU.'
 // reveal windows in scroll-progress (0–1): [start, fullyVisible]
-const T1_WINDOW: [number, number] = [0.46, 0.62]
-const T2_WINDOW: [number, number] = [0.56, 0.74]
+// widened for the 140vh scale — old windows spanned ~100vh of travel at 700vh,
+// same fractions over 40vh of travel would pop instead of emerge
+const T1_WINDOW: [number, number] = [0.30, 0.60]
+const T2_WINDOW: [number, number] = [0.45, 0.80]
+// hero overlay fades out over this scroll window (in viewport-heights scrolled)
+const HERO_WINDOW: [number, number] = [0.05, 0.85]
 // ───────────────────────────────────────────────────────────────────────────
 
 function pad(n: number) {
@@ -44,9 +48,11 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
   const cueRef     = useRef<HTMLDivElement>(null)
   const line1Ref   = useRef<HTMLDivElement>(null)
   const line2Ref   = useRef<HTMLDivElement>(null)
+  const heroRef    = useRef<HTMLDivElement>(null)
   const imagesRef  = useRef<HTMLImageElement[]>([])
   const frameRef     = useRef(0)
   const scrollLocked  = useRef(false)   // tracks whether we own the overflow lock
+  const heroInRef     = useRef(false)   // hero stays hidden until the intro reveals it
   const cueGoneRef    = useRef(false)   // scroll cue fades once, on first scroll
   const scrubSTRef    = useRef<ScrollTrigger | null>(null)
   const floatTweenRef = useRef<gsap.core.Tween | null>(null)
@@ -84,16 +90,33 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
   const updateTagline = useCallback((progress: number) => {
     const l1 = line1Ref.current
     const l2 = line2Ref.current
+    // taglines exit before the 3D scene takes over — no double-layered text
+    const exit = 1 - ramp(progress, 0.88, 0.99)
     if (l1) {
-      const o = ramp(progress, T1_WINDOW[0], T1_WINDOW[1])
+      const o = ramp(progress, T1_WINDOW[0], T1_WINDOW[1]) * exit
       l1.style.opacity   = String(o)
       l1.style.transform = `translateY(${(1 - o) * 18}px)`
     }
     if (l2) {
-      const o = ramp(progress, T2_WINDOW[0], T2_WINDOW[1])
+      const o = ramp(progress, T2_WINDOW[0], T2_WINDOW[1]) * exit
       l2.style.opacity   = String(o)
       l2.style.transform = `translateY(${(1 - o) * 18}px)`
     }
+  }, [])
+
+  // hero fade rides raw scroll — immune to trigger ranges/kills, always correct
+  useEffect(() => {
+    const onScroll = () => {
+      const hero = heroRef.current
+      if (!hero || !heroInRef.current) return
+      const gone = ramp(window.scrollY / window.innerHeight, HERO_WINDOW[0], HERO_WINDOW[1])
+      hero.style.opacity    = String(1 - gone)
+      hero.style.transform  = `translateY(${gone * -24}px)`
+      hero.style.visibility = gone > 0.98 ? 'hidden' : 'visible'
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   /* ── canvas resize (backing store = device pixels) ──────────────────── */
@@ -193,12 +216,12 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         trigger: section,
         start:   'top top',
         end:     'bottom bottom',
-        scrub:   0.3,
+        scrub:   1,   // heavier smoothing — 40vh of travel needs inertia to stay deliberate, not snappy
         onLeave() {
-          gsap.to(canvas, { opacity: 0, duration: 0.4, overwrite: 'auto' })
+          gsap.to(canvas, { opacity: 0, duration: 0.7, ease: 'power2.inOut', overwrite: 'auto' })
         },
         onEnterBack() {
-          gsap.to(canvas, { opacity: 1, duration: 0.4, overwrite: 'auto' })
+          gsap.to(canvas, { opacity: 1, duration: 0.7, ease: 'power2.inOut', overwrite: 'auto' })
         },
         onUpdate(self) {
           if (self.progress > 0.001) fadeCue()
@@ -212,7 +235,8 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
             lastTaglineProgressRef.current = p
             updateTagline(p)
           }
-          if (self.progress > 0.8 && !gymPreloadFiredRef.current) {
+          // 0.8 of 40vh left only ~8vh of lead time before the private space canvas mounts
+          if (self.progress > 0.5 && !gymPreloadFiredRef.current) {
             gymPreloadFiredRef.current = true
             onPreloadGym?.()
           }
@@ -224,6 +248,10 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
     if (reduceMotion) {
       gsap.set(canvas, { opacity: 1, scale: 1, filter: 'blur(0px)' })
       if (cue) gsap.set(cue, { opacity: 0.55 })
+      if (heroRef.current) {
+        heroInRef.current = true
+        if (window.scrollY < window.innerHeight * 0.3) gsap.set(heroRef.current, { opacity: 1 })
+      }
       wireScrub()
       return () => {
         scrubSTRef.current?.kill()
@@ -256,6 +284,22 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
           },
         }
       )
+      if (heroRef.current) {
+        if (window.scrollY < window.innerHeight * 0.3) {
+          tl.fromTo(
+            heroRef.current,
+            { opacity: 0, y: 16 },
+            {
+              opacity: 1, y: 0, duration: 0.8, ease: 'power2.out',
+              onStart() { heroInRef.current = true },
+            },
+            '-=0.6',
+          )
+        } else {
+          // restored deep-scroll session — scroll ramp owns the hero, keep it hidden
+          heroInRef.current = true
+        }
+      }
       if (cue) {
         tl.fromTo(
           cue,
@@ -332,46 +376,116 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         }}
       />
 
-      {/* tagline — revealed by scroll progress */}
+      {/* hero overlay — CTAs live over the gateway sequence, fade out on scroll */}
+      <div
+        ref={heroRef}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          padding: '8vh 0 16vh',
+          textAlign: 'center',
+          opacity: 0,
+          zIndex: 3,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          pointerEvents: 'none',
+          willChange: 'opacity, transform',
+        }}
+      >
+        <div>
+        <span
+          style={{
+            fontFamily: 'monospace', fontSize: 10, letterSpacing: '0.4em',
+            textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)',
+            textIndent: '0.4em',
+          }}
+        >
+          Iron Oasis — Spatial Autonomy
+        </span>
+        <h1
+          style={{
+            fontFamily: 'var(--font-display), sans-serif', fontWeight: 700,
+            fontSize: 'clamp(28px, 4vw, 56px)', lineHeight: 0.95,
+            letterSpacing: '-0.02em', textTransform: 'uppercase', color: '#fff',
+            margin: '16px 0 0',
+          }}
+        >
+          One key. <span style={{ color: 'rgba(255,255,255,0.45)' }}>One private space.</span>
+        </h1>
+        </div>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', pointerEvents: 'auto', marginTop: 'auto' }}>
+          <a
+            href="#access-keys"
+            style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              border: '1px solid #fff', background: '#fff', color: '#000',
+              padding: '16px 32px', fontFamily: 'monospace', fontSize: 11,
+              fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase',
+              textDecoration: 'none',
+            }}
+          >
+            Get Access
+          </a>
+          <a
+            href="/partner"
+            style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              border: '1px solid #fff', background: 'transparent', color: '#fff',
+              padding: '16px 32px', fontFamily: 'monospace', fontSize: 11,
+              fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase',
+              textDecoration: 'none',
+            }}
+          >
+            Become a Partner
+          </a>
+        </div>
+      </div>
+
+      {/* kinetic taglines — locked to the canvas flanks, revealed by scroll progress */}
       <div
         aria-hidden="true"
         style={{
           position: 'fixed',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          bottom: '14%',
-          textAlign: 'center',
+          inset: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 4vw',
           pointerEvents: 'none',
-          fontFamily: 'Arial, sans-serif',
-          fontWeight: 900,
-          letterSpacing: '-0.02em',
-          lineHeight: '0.9',
+          fontFamily: 'var(--font-display), sans-serif',
+          fontWeight: 700,
           color: '#fff',
           zIndex: 2,
         }}
       >
-        <div className="io-hero-headline__float">
+        <div className="io-hero-headline__float" style={{ maxWidth: '26vw', textAlign: 'left' }}>
           <div
             ref={line1Ref}
             style={{
               opacity: 0,
-              fontSize: 'clamp(28px, 5.5vw, 64px)',
-              fontWeight: 900,
-              letterSpacing: '0.08em',
-              lineHeight: 1.05,
+              fontSize: 'clamp(24px, 3.5vw, 52px)',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+              lineHeight: 1,
+              textTransform: 'uppercase',
               willChange: 'opacity, transform',
             }}
           >
             {TAGLINE_1}
           </div>
+        </div>
+        <div className="io-hero-headline__float" style={{ maxWidth: '26vw', textAlign: 'right' }}>
           <div
             ref={line2Ref}
             style={{
               opacity: 0,
-              fontSize: 'clamp(28px, 5.5vw, 64px)',
-              fontWeight: 900,
-              letterSpacing: '0.08em',
-              lineHeight: 1.05,
+              fontSize: 'clamp(24px, 3.5vw, 52px)',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+              lineHeight: 1,
+              textTransform: 'uppercase',
               color: 'rgba(255,255,255,0.55)',
               willChange: 'opacity, transform',
             }}

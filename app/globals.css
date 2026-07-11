@@ -14,11 +14,11 @@
   --color-zinc-400: #a1a1aa;
   --color-zinc-300: #d4d4d8;
 
-  --font-display: var(--font-bebas), 'Arial Narrow', sans-serif;
-  --font-mono: var(--font-space-mono), ui-monospace, monospace;
+  --font-display: var(--font-grotesk), 'Arial Narrow', sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
   /* mechanical spring defaults consumed by Framer Motion configs */
-  --ease-mech: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-mech: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 @layer base {

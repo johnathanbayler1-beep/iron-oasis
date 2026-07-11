@@ -1,3 +1,5 @@
+import sites from '@/sites.config.json';
+
 const STATS = [
   { num: '24/7', cap: 'Doors never close' },
   { num: '60', cap: 'Minutes, uninterrupted' },
@@ -31,6 +33,32 @@ export function FindYourWayIn() {
               {stat.cap}
             </span>
           </div>
+        ))}
+      </div>
+
+      {/* Node index — raw coordinate table pulled straight from sites.config.json */}
+      <div className="mt-4 border border-white/10">
+        <div className="grid grid-cols-[80px_1fr_1fr_80px] gap-px border-b border-white/10 bg-black px-8 py-4 font-mono text-[10px] uppercase tracking-widest text-zinc-600">
+          <span>IDX</span>
+          <span>NODE</span>
+          <span>COORD</span>
+          <span className="text-right">STATE</span>
+        </div>
+        {sites.map((site, i) => (
+          <a
+            key={site.slug}
+            href={site.route}
+            className="group grid grid-cols-[80px_1fr_1fr_80px] gap-px bg-black px-8 py-6 font-mono text-[11px] uppercase tracking-widest transition-colors hover:bg-white"
+          >
+            <span className="text-zinc-500 group-hover:text-black">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <span className="text-white group-hover:text-black">{site.name}</span>
+            <span className="text-zinc-500 group-hover:text-black">
+              {'coords' in site ? (site as { coords: string }).coords : '—'}
+            </span>
+            <span className="text-right text-zinc-600 group-hover:text-black">LIVE</span>
+          </a>
         ))}
       </div>
 

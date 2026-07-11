@@ -105,12 +105,28 @@ function CameraRig({
   return null
 }
 
-export default function GymScene() {
-  const sectionRef    = useRef<HTMLDivElement>(null)
-  const progressRef   = useRef(0)
-  const waypointsRef  = useRef<WayPoint[]>([])
-  const invalidateRef = useRef<() => void>(() => {})
+export default function GymScene({ onReady }: { onReady?: () => void }) {
+  const sectionRef     = useRef<HTMLDivElement>(null)
+  const progressRef    = useRef(0)
+  const waypointsRef   = useRef<WayPoint[]>([])
+  const invalidateRef  = useRef<() => void>(() => {})
+  const readyFiredRef  = useRef(false)
   const [inView, setInView] = useState(false)
+
+  useEffect(() => {
+    if (!inView || readyFiredRef.current) return
+    let raf1 = 0, raf2 = 0
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        readyFiredRef.current = true
+        onReady?.()
+      })
+    })
+    return () => {
+      cancelAnimationFrame(raf1)
+      cancelAnimationFrame(raf2)
+    }
+  }, [inView, onReady])
 
   useEffect(() => {
     const el = sectionRef.current
@@ -136,6 +152,16 @@ export default function GymScene() {
       onUpdate(self) {
         progressRef.current = self.progress
         invalidateRef.current()
+        // scroll-driven text beats — triangle ramp: fade in to mid-window, out by end
+        const beats = sectionRef.current?.querySelectorAll<HTMLElement>('[data-beat]')
+        beats?.forEach((el) => {
+          const [a, b] = (el.dataset.beat ?? '0,1').split(',').map(Number)
+          const mid = (a + b) / 2
+          const p = self.progress
+          const o = p <= a || p >= b ? 0 : p < mid ? (p - a) / (mid - a) : (b - p) / (b - mid)
+          el.style.opacity   = String(o)
+          el.style.transform = `translateY(${(1 - o) * 24}px)`
+        })
       },
     })
 
@@ -177,6 +203,52 @@ export default function GymScene() {
             </Suspense>
           </Canvas>
         )}
+
+        {/* scroll-animated copy layered over the 3D canvas — beats on the 40% flanks */}
+        {[
+          { window: '0.05,0.32', side: 'left',  head: 'ONE KEY.',          body: 'Your Access Key opens a space reserved to you alone.' },
+          { window: '0.38,0.62', side: 'right', head: 'NO AUDIENCE.',      body: 'Every rack and machine uncontested for the full solo window.' },
+          { window: '0.68,0.95', side: 'left',  head: 'SPATIAL AUTONOMY.', body: 'A high-end premium environment that resets between sessions.' },
+        ].map((beat) => (
+          <div
+            key={beat.head}
+            data-beat={beat.window}
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              top: '50%',
+              [beat.side]: '6%',
+              transform: 'translateY(24px)',
+              opacity: 0,
+              maxWidth: '34vw',
+              pointerEvents: 'none',
+              textAlign: beat.side as 'left' | 'right',
+              zIndex: 2,
+              willChange: 'opacity, transform',
+            }}
+          >
+            <div
+              style={{
+                fontFamily: 'Arial, sans-serif', fontWeight: 900,
+                fontSize: 'clamp(28px, 4.5vw, 64px)', lineHeight: 0.95,
+                letterSpacing: '-0.02em', color: '#fff', textTransform: 'uppercase',
+                textShadow: '0 0 40px rgba(0,0,0,0.8)',
+              }}
+            >
+              {beat.head}
+            </div>
+            <p
+              style={{
+                marginTop: 12, fontFamily: 'monospace', fontSize: 12,
+                letterSpacing: '0.15em', textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.65)', lineHeight: 1.6,
+                textShadow: '0 0 24px rgba(0,0,0,0.9)',
+              }}
+            >
+              {beat.body}
+            </p>
+          </div>
+        ))}
       </div>
     </section>
   )

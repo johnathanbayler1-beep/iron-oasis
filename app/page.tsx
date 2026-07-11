@@ -14,11 +14,13 @@ import { AccessKeys } from '@/components/AccessKeys';
 import { About } from '@/app/components/About';
 import { FindYourWayIn } from '@/components/FindYourWayIn';
 import { Expanding } from '@/components/Expanding';
+import { AgentStorm } from '@/components/AgentStorm';
 import GymSpin from '@/components/GymSpinLazy';
 import GymScene from '@/app/components/GymSceneLazy';
 
 export default function Home() {
   const [gymMounted, setGymMounted] = useState(false)
+  const [gymSceneReady, setGymSceneReady] = useState(false)
   const preloadGym = useCallback(() => setGymMounted(true), [])
 
   return (
@@ -26,23 +28,29 @@ export default function Home() {
       {/* Toggles `io-hl-visible` on every reveal target as it scrolls in. */}
       <RevealObserver />
 
+      {/* Gateway hero — 121-frame logo sequence + hero CTAs, completes before 3D handoff */}
       <ScrollExplode onPreloadGym={preloadGym} />
 
-      {gymMounted && <GymSpin />}
+      {gymMounted && <GymScene onReady={() => setGymSceneReady(true)} />}
 
-      {gymMounted && <GymScene />}
+      {gymMounted && <GymSpin />}
 
       {/* Section A — HOW IT WORKS */}
       <section className="io-editorial">
         <TheHook />
       </section>
 
-      {/* Section B — ACCESS WINDOWS */}
-      <section className="io-editorial">
+      {/* Section B — ACCESS KEYS */}
+      <section id="access-keys" className="io-editorial">
         <AccessKeys />
       </section>
 
       <About />
+
+      {/* Section B2 — AGENT STORM onboarding shell */}
+      <section className="io-editorial">
+        <AgentStorm />
+      </section>
 
       {/* Section C — FIND YOUR WAY IN */}
       <section className="io-editorial">

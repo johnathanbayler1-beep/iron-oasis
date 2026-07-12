@@ -18,7 +18,7 @@ const INTRO_DUR     = 1.6          // animate-in duration in seconds
 const MOBILE_BP     = 768          // px — below this we use mobile tuning
 
 // Tagline — emerges as the logo explodes. Swap copy freely.
-const TAGLINE_1 = 'THE WHOLE SPACE.'
+const TAGLINE_1 = 'THE WHOLE GYM.'
 const TAGLINE_2 = 'JUST YOU.'
 // reveal windows in scroll-progress (0–1): [start, fullyVisible]
 // widened for the 140vh scale — old windows spanned ~100vh of travel at 700vh,
@@ -426,7 +426,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
             textIndent: '0.4em',
           }}
         >
-          Iron Oasis — Spatial Autonomy
+          Iron Oasis — Windsor
         </span>
         <h1
           style={{
@@ -436,7 +436,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
             margin: '16px 0 0',
           }}
         >
-          One key. <span style={{ color: 'rgba(255,255,255,0.45)' }}>One private space.</span>
+          One key. <span style={{ color: 'rgba(255,255,255,0.45)' }}>The whole gym, just you.</span>
         </h1>
         </div>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', pointerEvents: 'auto', marginTop: 'auto' }}>
@@ -458,7 +458,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
           </button>
           <a
             ref={secondaryCtaRef}
-            href="/partner"
+            href="/shop"
             style={{
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               border: '1px solid #fff', background: 'transparent', color: '#fff',
@@ -467,7 +467,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
               textDecoration: 'none', opacity: 0, willChange: 'opacity, transform',
             }}
           >
-            Become a Partner
+            See The Space
           </a>
         </div>
       </div>

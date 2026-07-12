@@ -6,15 +6,15 @@ import { useEffect, useRef, useState } from 'react';
 const FAQS = [
   {
     q: 'How does this work?',
-    a: 'You secure an access key. You book a solo window. You experience complete spatial autonomy.',
+    a: 'You get an access key, book a session in the app, and train alone in the whole gym.',
   },
   {
     q: 'What is the cost?',
-    a: 'Node access is structured at $99, $125, and $149 allocations based on volume.',
+    a: 'Monthly access is $99, $125, or $149 depending on how often you want to train.',
   },
   {
     q: 'Are there other people?',
-    a: 'No. This is a highly controlled, private space environment. Zero interference.',
+    a: 'No. When you book, the gym is yours for your session — no one else is there.',
   },
 ];
 
@@ -25,12 +25,12 @@ function matchFaq(input: string): string {
   if (/cost|price|\$|much|allocat/.test(t)) return FAQS[1].a;
   if (/people|other|crowd|alone|busy/.test(t)) return FAQS[2].a;
   if (/work|how|what is this/.test(t)) return FAQS[0].a;
-  return 'QUERY UNRESOLVED. Select a directive below or ask about access, cost, or the environment.';
+  return "I didn't catch that. Ask me about access, cost, or booking a session.";
 }
 
 export function AgentStormChat({ onClose }: { onClose: () => void }) {
   const [lines, setLines] = useState<Line[]>([
-    { from: 'storm', text: 'AGENT STORM ONLINE. State your query.' },
+    { from: 'storm', text: 'Hi — ask me anything about Iron Oasis.' },
   ]);
   const [typing, setTyping] = useState('');
   const [input, setInput] = useState('');

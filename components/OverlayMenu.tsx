@@ -9,7 +9,6 @@ type Pathway = { label: string; href: string; index: string };
 const PATHWAYS: Pathway[] = [
   { label: 'The Space', href: '/', index: '01' },
   { label: 'The Shop', href: '/shop', index: '02' },
-  { label: 'The Network', href: '/network', index: '03' },
 ];
 
 const MECH = { type: 'spring' as const, stiffness: 520, damping: 40, mass: 1 };

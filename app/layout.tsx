@@ -20,9 +20,9 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Iron Oasis — Private Space. Total Autonomy.',
+  title: 'Iron Oasis — Private 24/7 Gym in Windsor',
   description:
-    '1-of-1 private movement spaces in a high-end premium environment. No crowds. No wait. 24/7 access via Access Keys.',
+    'A private, 24/7 gym in Windsor. Book your session and train alone with high-end equipment — no crowds, no waiting.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -134,9 +134,9 @@ function BridgeRig({
 }
 
 const BEATS = [
-  { window: '0.02,0.30', side: 'right', head: 'SECURE YOUR ACCESS KEY.', body: 'One key, issued to you as node operator. No commitments. No hidden fees.' },
-  { window: '0.36,0.62', side: 'left',  head: 'BOOK YOUR SOLO WINDOW.',  body: 'Reserve in-app. The entire space allocated to you alone. Zero distraction.' },
-  { window: '0.68,0.96', side: 'right', head: 'UNLOCK VIA YALE ASSURE.', body: 'The door answers to your key and nothing else. Strictly private node access. Pure autonomy.' },
+  { window: '0.02,0.30', side: 'right', head: 'GET YOUR ACCESS KEY.', body: 'Your own key to the gym. No contracts, no hidden fees.' },
+  { window: '0.36,0.62', side: 'left',  head: 'BOOK YOUR SESSION.',  body: 'Book in the app. The whole gym is yours for your session — no one else.' },
+  { window: '0.68,0.96', side: 'right', head: 'UNLOCK WITH YOUR KEY.', body: 'The Yale smart lock opens for your key alone. Train in complete privacy.' },
 ]
 
 export default function InfrastructureBridge() {

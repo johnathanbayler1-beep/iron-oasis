@@ -228,9 +228,9 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
 
         {/* scroll-animated copy layered over the 3D canvas — beats on the 40% flanks */}
         {[
-          { window: '0.05,0.32', side: 'left',  head: 'ONE KEY.',          body: 'Your Access Key opens a space reserved to you alone.' },
-          { window: '0.38,0.62', side: 'right', head: 'NO AUDIENCE.',      body: 'Every rack and machine uncontested for the full solo window.' },
-          { window: '0.68,0.95', side: 'left',  head: 'SPATIAL AUTONOMY.', body: 'A high-end premium environment that resets between sessions.' },
+          { window: '0.05,0.32', side: 'left',  head: 'ONE KEY.',      body: 'Your access key opens the gym for you alone.' },
+          { window: '0.38,0.62', side: 'right', head: 'NO CROWDS.',    body: 'Every rack and machine is yours for the whole session.' },
+          { window: '0.68,0.95', side: 'left',  head: 'TRAIN IN PEACE.', body: 'A clean, high-end gym that resets between sessions.' },
         ].map((beat) => (
           <div
             key={beat.head}

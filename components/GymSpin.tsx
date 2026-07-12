@@ -14,19 +14,19 @@ const MODEL_URL = '/gym-space-2k.glb'
 // value stack — no prices here; the Final Close reveals numbers
 const BEATS = [
   {
-    heading: 'OASIS LITE.',
-    sub: 'ENTRY NODE ACCESS',
-    perks: ['4 SOLO WINDOWS / MONTH', 'FULL HARDWARE SUITE, UNCONTESTED', 'YALE ASSURE KEYED ENTRY'],
+    heading: 'IRON OASIS LITE.',
+    sub: 'GET STARTED',
+    perks: ['4 PRIVATE SESSIONS / MONTH', 'THE WHOLE GYM TO YOURSELF', 'SMART LOCK ENTRY'],
   },
   {
-    heading: 'OASIS MID.',
-    sub: 'EXPANDED ALLOCATION',
-    perks: ['8 SOLO WINDOWS / MONTH', 'PRIORITY BOOKING HORIZON', 'EXTENDED SESSION LENGTHS'],
+    heading: 'IRON OASIS PLUS.',
+    sub: 'TRAIN MORE',
+    perks: ['8 PRIVATE SESSIONS / MONTH', 'BOOK FURTHER AHEAD', 'LONGER SESSIONS'],
   },
   {
-    heading: 'OASIS UNLIMITED.',
-    sub: 'TOTAL SPATIAL AUTONOMY',
-    perks: ['UNLIMITED SOLO WINDOWS', 'ANY NODE, ANY HOUR', 'COMPLETE MENTAL SPACE, ON DEMAND'],
+    heading: 'IRON OASIS UNLIMITED.',
+    sub: 'ANYTIME ACCESS',
+    perks: ['UNLIMITED SESSIONS', 'TRAIN ANY HOUR, DAY OR NIGHT', 'THE GYM, WHENEVER YOU WANT'],
   },
 ]
 

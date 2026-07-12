@@ -62,11 +62,17 @@ body {
   overflow-x: hidden;
 }
 
-/* Industrial heading contract: uppercase + tight tracking.
-   No text-shadow, no size override — clamp() sizes stay tuned. */
-h1, h2 {
+/* Industrial heading contract: opt-in via .io-brutalist.
+   No text-shadow, no size override — clamp() sizes stay tuned.
+   Never apply to Canvas/WebGL containers. */
+.io-brutalist {
   text-transform: uppercase;
   letter-spacing: -0.03em;
+  font-weight: 800;
+  color: var(--text-primary);
+  border-bottom: var(--edge-hard) solid var(--accent-node);
+  padding-bottom: 0.25rem;
+  display: inline-block;
 }
 
 /* Lenis: disable native smooth so the JS smoother owns scroll */

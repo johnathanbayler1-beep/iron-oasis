@@ -7,9 +7,9 @@ import { SplitText } from 'gsap/SplitText'
 import { CustomEase } from 'gsap/CustomEase'
 
 const KEYS = [
-  { tier: 'OASIS LITE',      price: '$99',  alloc: '4 SOLO WINDOWS / MO',  line: 'Entry node access. Full hardware suite, uncontested.', accent: '#4dffa6' },
-  { tier: 'OASIS MID',       price: '$125', alloc: '8 SOLO WINDOWS / MO',  line: 'Expanded allocation. Priority booking horizon.',        accent: '#5ac8ff' },
-  { tier: 'OASIS UNLIMITED', price: '$149', alloc: 'UNLIMITED WINDOWS',    line: 'Total spatial autonomy. Any node, any hour.',           accent: '#ff4d6d' },
+  { tier: 'IRON OASIS LITE',      price: '$99',  alloc: '4 SESSIONS / MO',  line: 'Get started. The whole gym to yourself.',   accent: '#4dffa6' },
+  { tier: 'IRON OASIS PLUS',      price: '$125', alloc: '8 SESSIONS / MO',  line: 'Train more. Book further ahead.',            accent: '#5ac8ff' },
+  { tier: 'IRON OASIS UNLIMITED', price: '$149', alloc: 'UNLIMITED',        line: 'Train any hour, day or night.',             accent: '#ff4d6d' },
 ]
 
 const handlePWADownload = () => console.log('PWA Prompt Triggered')
@@ -93,7 +93,7 @@ function KeyCard({ k, i }: { k: (typeof KEYS)[number]; i: number }) {
         }}
       />
       <span style={{ fontFamily: 'var(--font-jetbrains), monospace', fontSize: 12, fontWeight: 700, letterSpacing: '0.3em', color: k.accent }}>
-        ● KEY_{String(i + 1).padStart(2, '0')} :: NODE OPERATOR
+        ● PLAN_{String(i + 1).padStart(2, '0')}
       </span>
       <span style={{ fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 900, fontSize: 'clamp(28px, 2.8vw, 40px)', letterSpacing: '-0.03em', color: '#fff', textTransform: 'uppercase' }}>
         {k.tier}
@@ -203,7 +203,7 @@ export function FinalClose() {
           letterSpacing: '0.35em', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase',
         }}
       >
-        {'// FINAL ALLOCATION — ACCESS KEYS'}
+        {'// PRICING — MONTHLY ACCESS'}
       </div>
 
       <h2
@@ -242,7 +242,7 @@ export function FinalClose() {
           GET ACCESS
         </button>
         <span style={{ fontFamily: 'var(--font-jetbrains), monospace', fontSize: 12, fontWeight: 700, letterSpacing: '0.3em', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
-          Install the app. Secure your key. Operate the node.
+          Download the app. Get your key. Start training.
         </span>
       </div>
     </div>

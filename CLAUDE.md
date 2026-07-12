@@ -4,8 +4,9 @@
 - All active development must occur on: **rebuild-from-scratch**
 
 ## Brand Vocabulary (Canonical)
-- **Preferred**: spatial autonomy, private space, solo window, high-end premium environment, node operator, access keys.
-- **Banned**: clearance, gym, workout, train, membership, sign up, gains, fitness, tiers, subscriptions, sanctuary, beast mode, grind, gym floor, precision.
+- **Allowed**: Gym, Workout, Train, Access, Booking, Session, Private, Windsor.
+- **Banned**: Node Operator, System Deployment, Partner, Franchise, Network, Area Developer.
+- **Tone**: Plain English. Simple, direct, warm, and inviting. No tech-heavy lingo. Focus on the ease of booking and the privacy of the workout.
 
 ## Architecture
 - **Framework**: Next.js 16.2.9, App Router, Turbopack.

@@ -6,16 +6,28 @@ import { Environment, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { NeoButton } from '@/app/components/NeoButton'
 
 useGLTF.setDecoderPath('/draco/')
 
 const MODEL_URL = '/gym-space-2k.glb'
 
+// value stack — no prices here; the Final Close reveals numbers
 const BEATS = [
-  { heading: 'ENGINEERED ISOLATION.',  sub: 'Every angle considered.',       cta: false },
-  { heading: 'STRUCTURAL INTEGRITY.',  sub: 'Aesthetics meet mathematics.',   cta: false },
-  { heading: 'THE SOLO NODE.',         sub: '360 degrees of absolute focus.', cta: true  },
+  {
+    heading: 'OASIS LITE.',
+    sub: 'ENTRY NODE ACCESS',
+    perks: ['4 SOLO WINDOWS / MONTH', 'FULL HARDWARE SUITE, UNCONTESTED', 'YALE ASSURE KEYED ENTRY'],
+  },
+  {
+    heading: 'OASIS MID.',
+    sub: 'EXPANDED ALLOCATION',
+    perks: ['8 SOLO WINDOWS / MONTH', 'PRIORITY BOOKING HORIZON', 'EXTENDED SESSION LENGTHS'],
+  },
+  {
+    heading: 'OASIS UNLIMITED.',
+    sub: 'TOTAL SPATIAL AUTONOMY',
+    perks: ['UNLIMITED SOLO WINDOWS', 'ANY NODE, ANY HOUR', 'COMPLETE MENTAL SPACE, ON DEMAND'],
+  },
 ]
 
 // GSAP → R3F invalidate bridge (GymSpin is a page singleton)
@@ -79,7 +91,6 @@ export default function GymSpin() {
   const textWrap   = useRef<HTMLDivElement>(null)
   const parallaxEl = useRef<HTMLDivElement>(null)
   const beatRefs   = useRef<(HTMLDivElement | null)[]>([])
-  const ctaRef     = useRef<HTMLDivElement>(null)
 
   const [dpr] = useState(() =>
     typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 1.5) : 1,
@@ -133,22 +144,6 @@ export default function GymSpin() {
           { opacity: 0, scale: 0.95, filter: 'blur(6px)',  y: -30, duration: 0.12, ease: 'power2.in', immediateRender: false },
           exit,
         )
-
-        // CTA co-animates with the final beat
-        if (!beat.cta) return
-        if (!ctaRef.current) return
-        tl.fromTo(
-          ctaRef.current,
-          { opacity: 0, y: 40, filter: 'blur(15px)' },
-          { opacity: 1, y: 0,  filter: 'blur(0px)', duration: 0.18, ease: 'power2.out', immediateRender: false },
-          ps + 0.015,
-        )
-        tl.fromTo(
-          ctaRef.current,
-          { opacity: 1, y: 0,   filter: 'blur(0px)' },
-          { opacity: 0, y: -30, filter: 'blur(6px)', duration: 0.12, ease: 'power2.in', immediateRender: false },
-          exit,
-        )
       })
 
       const show = () => {
@@ -188,6 +183,9 @@ export default function GymSpin() {
           parallaxEl.current.style.transform = `translateY(${-self.progress * 120}px)`
         },
       })
+
+      // dynamic 3D mount shifts layout — recompute all trigger positions
+      requestAnimationFrame(() => ScrollTrigger.refresh())
     })
 
     return () => ctx.revert()
@@ -263,28 +261,35 @@ export default function GymSpin() {
                 style={{
                   display: 'block',
                   fontFamily: 'var(--font-jetbrains), monospace',
-                  fontWeight: 400,
+                  fontWeight: 700,
+                  letterSpacing: '0.3em',
                   fontSize: '1rem',
-                  color: 'rgba(255,255,255,0.7)',
+                  color: 'rgba(255,255,255,0.8)',
                   marginTop: '1rem',
                   mixBlendMode: 'difference',
                 }}
               >
                 {beat.sub}
               </span>
-              {beat.cta && (
-                <div
-                  ref={ctaRef}
-                  style={{
-                    marginTop: '1.5rem',
-                    pointerEvents: 'auto',
-                    opacity: 0,
-                    willChange: 'transform, opacity, filter',
-                  }}
-                >
-                  <NeoButton variant="primary">GET ACCESS</NeoButton>
-                </div>
-              )}
+              <ul style={{ listStyle: 'none', margin: '1.5rem 0 0', padding: 0 }}>
+                {beat.perks.map((perk) => (
+                  <li
+                    key={perk}
+                    style={{
+                      fontFamily: 'var(--font-jetbrains), monospace',
+                      fontWeight: 700,
+                      fontSize: '0.95rem',
+                      letterSpacing: '0.12em',
+                      color: '#fff',
+                      padding: '10px 0',
+                      borderTop: '1px solid rgba(255,255,255,0.35)',
+                      textShadow: '0 0 24px rgba(0,0,0,0.9)',
+                    }}
+                  >
+                    + {perk}
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>

@@ -180,7 +180,10 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
       },
     })
 
-    return () => { st.kill(); fadeSt.kill() }
+    // dynamic 3D mount shifts layout — recompute all trigger positions
+    const rid = requestAnimationFrame(() => ScrollTrigger.refresh())
+
+    return () => { cancelAnimationFrame(rid); st.kill(); fadeSt.kill() }
   }, [])
 
   return (
@@ -256,9 +259,8 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
             </div>
             <p
               style={{
-                marginTop: 20, fontFamily: 'var(--font-jetbrains), monospace', fontSize: 17,
-                letterSpacing: '0.15em', textTransform: 'uppercase',
-                color: '#fff', lineHeight: 1.6, fontWeight: 700,
+                marginTop: 20, fontFamily: 'var(--font-grotesk), sans-serif', fontSize: 18,
+                color: 'rgba(255,255,255,0.92)', lineHeight: 1.6, fontWeight: 500,
                 textShadow: '0 0 32px rgba(0,0,0,1), 0 2px 12px rgba(0,0,0,0.9)',
               }}
             >

@@ -2,28 +2,53 @@
 
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Environment } from '@react-three/drei'
+import { Environment, Lightformer, MeshTransmissionMaterial } from '@react-three/drei'
 import * as THREE from 'three'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { SplitText } from 'gsap/SplitText'
+import { CustomEase } from 'gsap/CustomEase'
 
-const SCROLL_VH = 300
+const SCROLL_VH = 150
 
-// ponytail: stylized primitives for the app + Yale Assure lock — no GLB exists
-// for these; swap for real models when assets land.
+// ═══════════════════════════════════════════════════════════════════════
+// ASSET SWAP ZONE — primitives are placeholders. Studio pipeline live:
+// metalness 0.9 / roughness 0.1, studio Environment + Lightformers below.
+// When GLBs land in public/models/, each component below swaps to ONE line.
+// ponytail: no GLB exists yet; primitives ARE the active geometry.
+// ═══════════════════════════════════════════════════════════════════════
 
+// ┌─ INJECT: /models/smartphone.glb ──────────────────────────────────────
+// │ Swap this whole <group> body for:
+// │   const { scene } = useGLTF('/models/smartphone.glb')
+// │   return <primitive object={scene} position={[-1.6, 0, 0]}
+// │            onUpdate={(o) => o.traverse((c) => c.material &&
+// │              Object.assign(c.material, { metalness: 0.9, roughness: 0.1 }))} />
+// └───────────────────────────────────────────────────────────────────────
 function Phone() {
   return (
-    <group position={[-1.6, 0, 0]}>
-      {/* body */}
+    <group name="phone" position={[-1.6, 0, 0]}>
+      {/* body — machined metal */}
       <mesh>
         <boxGeometry args={[1.1, 2.3, 0.09]} />
-        <meshStandardMaterial color="#111" metalness={0.9} roughness={0.35} />
+        <meshPhysicalMaterial color="#111" metalness={0.9} roughness={0.1} clearcoat={1} clearcoatRoughness={0.15} />
       </mesh>
       {/* screen — booking interface glow */}
       <mesh position={[0, 0, 0.05]}>
         <planeGeometry args={[0.98, 2.14]} />
         <meshStandardMaterial color="#000" emissive="#e8fff4" emissiveIntensity={0.5} />
+      </mesh>
+      {/* cover glass — thick dispersive slab over the screen */}
+      <mesh position={[0, 0, 0.09]}>
+        <boxGeometry args={[1.02, 2.18, 0.04]} />
+        <MeshTransmissionMaterial
+          thickness={0.25}
+          roughness={0.04}
+          ior={1.5}
+          chromaticAberration={0.06}
+          anisotropicBlur={0.2}
+          transmission={1}
+        />
       </mesh>
       {/* interface blocks */}
       {[0.75, 0.35, -0.05, -0.45].map((y, i) => (
@@ -36,18 +61,25 @@ function Phone() {
   )
 }
 
+// ┌─ INJECT: /models/yale_lock.glb ───────────────────────────────────────
+// │ Swap this whole <group> body for:
+// │   const { scene } = useGLTF('/models/yale_lock.glb')
+// │   return <primitive object={scene} position={[1.6, 0, 0]}
+// │            onUpdate={(o) => o.traverse((c) => c.material &&
+// │              Object.assign(c.material, { metalness: 0.9, roughness: 0.1 }))} />
+// └───────────────────────────────────────────────────────────────────────
 function YaleLock() {
   return (
-    <group position={[1.6, 0, 0]}>
+    <group name="yaleLock" position={[1.6, 0, 0]}>
       {/* escutcheon plate */}
       <mesh>
         <boxGeometry args={[0.9, 1.9, 0.18]} />
-        <meshStandardMaterial color="#1a1a1a" metalness={1} roughness={0.25} />
+        <meshPhysicalMaterial color="#1a1a1a" metalness={0.9} roughness={0.1} clearcoat={1} clearcoatRoughness={0.1} />
       </mesh>
       {/* keypad ring */}
       <mesh position={[0, 0.45, 0.13]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.28, 0.045, 16, 48]} />
-        <meshStandardMaterial color="#c9a86a" metalness={1} roughness={0.2} />
+        <meshPhysicalMaterial color="#c9a86a" metalness={0.9} roughness={0.1} clearcoat={1} clearcoatRoughness={0.1} />
       </mesh>
       {/* status LED */}
       <mesh position={[0, 0.45, 0.14]}>
@@ -57,7 +89,7 @@ function YaleLock() {
       {/* thumbturn */}
       <mesh position={[0, -0.45, 0.16]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.14, 0.14, 0.14, 24]} />
-        <meshStandardMaterial color="#0f0f0f" metalness={1} roughness={0.3} />
+        <meshPhysicalMaterial color="#0f0f0f" metalness={0.9} roughness={0.1} clearcoat={1} clearcoatRoughness={0.15} />
       </mesh>
     </group>
   )
@@ -124,13 +156,27 @@ export default function InfrastructureBridge() {
   useEffect(() => {
     const section = sectionRef.current
     if (!section) return
-    gsap.registerPlugin(ScrollTrigger)
+    gsap.registerPlugin(ScrollTrigger, SplitText, CustomEase)
+    CustomEase.create('appleOut', '0.16, 1, 0.3, 1')
+
+    // Kowalski masked reveals — one scrub-driven timeline per beat heading
+    const splits: SplitText[] = []
+    const headTls = new Map<HTMLElement, gsap.core.Timeline>()
+    section.querySelectorAll<HTMLElement>('[data-beat]').forEach((el) => {
+      const head = el.querySelector<HTMLElement>('[data-head]')
+      if (!head) return
+      const split = new SplitText(head, { type: 'lines,words', mask: 'lines' })
+      splits.push(split)
+      const tl = gsap.timeline({ paused: true })
+      tl.fromTo(split.words, { yPercent: 110 }, { yPercent: 0, stagger: 0.08, duration: 1, ease: 'appleOut' })
+      headTls.set(el, tl)
+    })
 
     const st = ScrollTrigger.create({
       trigger: section,
       start:   'top top',
       end:     'bottom bottom',
-      scrub:   0.8,
+      scrub:   0.65,
       onUpdate(self) {
         progressRef.current = self.progress
         invalidateRef.current()
@@ -142,6 +188,9 @@ export default function InfrastructureBridge() {
           const o = p <= a || p >= b ? 0 : p < mid ? (p - a) / (mid - a) : (b - p) / (b - mid)
           el.style.opacity   = String(o)
           el.style.transform = `translateY(${(1 - o) * 24}px)`
+          // words scrub up through the line masks on entry, hold while visible
+          const entry = p <= a ? 0 : Math.min(1, (p - a) / (mid - a))
+          headTls.get(el)?.progress(entry)
         })
       },
     })
@@ -149,7 +198,12 @@ export default function InfrastructureBridge() {
     // dynamic 3D mount shifts layout — recompute all trigger positions
     const rid = requestAnimationFrame(() => ScrollTrigger.refresh())
 
-    return () => { cancelAnimationFrame(rid); st.kill() }
+    return () => {
+      cancelAnimationFrame(rid)
+      st.kill()
+      headTls.forEach((tl) => tl.kill())
+      splits.forEach((s) => s.revert())
+    }
   }, [])
 
   return (
@@ -158,6 +212,8 @@ export default function InfrastructureBridge() {
         {inView && (
           <Canvas
             frameloop="demand"
+            dpr={[1, 1.5]}
+            performance={{ min: 0.5 }}
             camera={{ fov: 40, near: 0.1, far: 100, position: [-1.6, 0, 4.2] }}
             gl={{ antialias: false, powerPreference: 'high-performance' }}
             style={{ background: '#000', display: 'block', width: '100%', height: '100%' }}
@@ -165,7 +221,12 @@ export default function InfrastructureBridge() {
             <ambientLight intensity={0.25} />
             <directionalLight position={[4, 6, 5]} intensity={2.2} />
             <Suspense fallback={null}>
-              <Environment preset="apartment" />
+              <Environment preset="studio">
+                {/* hard specular strips raking across the metal and glass */}
+                <Lightformer intensity={6} position={[0, 4, -3]} rotation-x={Math.PI / 2} scale={[12, 1.5, 1]} />
+                <Lightformer intensity={3} position={[-5, 1, 2]} rotation-y={Math.PI / 2} scale={[8, 1, 1]} color="#e8fff4" />
+                <Lightformer intensity={2.5} position={[5, -1, 2]} rotation-y={-Math.PI / 2} scale={[8, 1, 1]} />
+              </Environment>
               <BridgeRig progressRef={progressRef} invalidateRef={invalidateRef} />
             </Suspense>
           </Canvas>
@@ -190,6 +251,7 @@ export default function InfrastructureBridge() {
             }}
           >
             <div
+              data-head
               style={{
                 fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 900,
                 fontSize: 'clamp(40px, 6.5vw, 104px)', lineHeight: 0.9,

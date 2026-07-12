@@ -8,7 +8,7 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 const MODEL_URL = '/gym-space-2k.glb'
-const SCROLL_VH = 400
+const SCROLL_VH = 300
 
 const _lookAt = new THREE.Vector3()
 
@@ -202,6 +202,8 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
         {inView && (
           <Canvas
             frameloop="demand"
+            dpr={[1, 1.5]}
+            performance={{ min: 0.5 }}
             camera={{ fov: 45, near: 0.1, far: 1000 }}
             gl={{ antialias: false, powerPreference: 'high-performance' }}
             style={{ background: '#000', display: 'block', width: '100%', height: '100%' }}

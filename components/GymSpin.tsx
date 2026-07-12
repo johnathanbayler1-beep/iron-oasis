@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Environment, useGLTF } from '@react-three/drei'
+import { Environment, Lightformer, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -92,9 +92,6 @@ export default function GymSpin() {
   const parallaxEl = useRef<HTMLDivElement>(null)
   const beatRefs   = useRef<(HTMLDivElement | null)[]>([])
 
-  const [dpr] = useState(() =>
-    typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 1.5) : 1,
-  )
   const [inView, setInView] = useState(false)
 
   useEffect(() => {
@@ -118,7 +115,7 @@ export default function GymSpin() {
       const tl = gsap.timeline({ paused: true })
       ;(window as any).__timelines = { ...((window as any).__timelines ?? {}), gymSpin: tl }
 
-      // Spin arc: −π/4 → π/2 across the full 400vh scroll
+      // Spin arc: −π/4 → π/2 across the full 300vh scroll
       tl.to(spinProxy, { rotationY: Math.PI / 2, duration: 1, ease: 'none' }, 0)
 
       // Beat text — Spatial Z-Push entry + blur exit
@@ -184,17 +181,19 @@ export default function GymSpin() {
         },
       })
 
-      // dynamic 3D mount shifts layout — recompute all trigger positions
-      requestAnimationFrame(() => ScrollTrigger.refresh())
     })
 
-    return () => ctx.revert()
+    // dynamic 3D mount shifts layout — recompute trigger positions, gated so a
+    // fast unmount can't fire a refresh against dead triggers
+    const rid = requestAnimationFrame(() => ScrollTrigger.refresh())
+
+    return () => { cancelAnimationFrame(rid); ctx.revert() }
   }, [])
 
   return (
     <>
-      {/* 400vh invisible scroll track */}
-      <div ref={trackRef} style={{ height: '400vh', position: 'relative', zIndex: 1 }} />
+      {/* 300vh invisible scroll track — compressed, hands off instantly to next scene */}
+      <div ref={trackRef} style={{ height: '300vh', position: 'relative', zIndex: 1 }} />
 
       {/* Fixed Canvas — hidden until section is active */}
       <div
@@ -204,7 +203,8 @@ export default function GymSpin() {
         {inView && (
           <Canvas
             frameloop="demand"
-            dpr={dpr}
+            dpr={[1, 1.5]}
+            performance={{ min: 0.5 }}
             camera={{ fov: 45, near: 0.1, far: 1000 }}
             gl={{ powerPreference: 'high-performance', antialias: false }}
             style={{ display: 'block', width: '100%', height: '100%' }}
@@ -213,7 +213,12 @@ export default function GymSpin() {
             <ambientLight intensity={0.15} />
             <directionalLight position={[5, 8, 5]} intensity={3.0} />
             <Suspense fallback={null}>
-              <Environment preset="apartment" />
+              <Environment preset="studio">
+                {/* hard overhead + side strips for specular kicks on the hardware */}
+                <Lightformer intensity={5} position={[0, 6, -4]} rotation-x={Math.PI / 2} scale={[14, 2, 1]} />
+                <Lightformer intensity={2.5} position={[-6, 2, 0]} rotation-y={Math.PI / 2} scale={[10, 1.5, 1]} />
+                <Lightformer intensity={2} position={[6, 0, 2]} rotation-y={-Math.PI / 2} scale={[10, 1, 1]} color="#e8fff4" />
+              </Environment>
               <SpinModel />
             </Suspense>
           </Canvas>

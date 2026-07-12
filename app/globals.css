@@ -21,6 +21,28 @@
   --ease-mech: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
+/* ── Design System Manifesto — canonical source of truth ──────── */
+:root {
+  --node-surface: linear-gradient(160deg, rgba(255,255,255,.10), rgba(255,255,255,.03) 38%, rgba(0,0,0,.6));
+  --node-glass: blur(14px);
+  --tint-panel: rgba(9,9,11,.72);
+  --scrim: linear-gradient(180deg, transparent, rgba(0,0,0,.72) 60%);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255,255,255,.75);
+  --text-signal: rgba(255,255,255,.6);
+  --text-ghost: rgba(255,255,255,.5);
+  --accent-node: #4dffa6;
+  --accent-data: #5ac8ff;
+  --accent-alert: #ff4d6d;
+  --edge: 1px;
+  --edge-hard: 2px;
+  --radius: 0;
+  --chamfer: 24px;
+  --border-hair: rgba(255,255,255,.3);
+  --glow-node: 0 0 32px;
+  --shadow-cast: 0 24px 60px rgba(0,0,0,.8);
+}
+
 @layer base {
   * {
     margin: 0;
@@ -38,6 +60,13 @@ html {
 body {
   font-family: var(--font-mono);
   overflow-x: hidden;
+}
+
+/* Industrial heading contract: uppercase + tight tracking.
+   No text-shadow, no size override — clamp() sizes stay tuned. */
+h1, h2 {
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
 }
 
 /* Lenis: disable native smooth so the JS smoother owns scroll */
@@ -283,7 +312,7 @@ html.lenis-stopped body {
    ═══════════════════════════════════════════════════════════════ */
 .io-tier {
   position: relative;
-  border: 1px solid #262626;
+  border: 1px solid #3f3f46;
   padding: 2rem;
   box-shadow: 0 4px 20px rgba(0,0,0,0.4);
   border-radius: 0px;

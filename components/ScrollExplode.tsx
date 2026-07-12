@@ -430,9 +430,9 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         </span>
         <h1
           style={{
-            fontFamily: 'var(--font-display), sans-serif', fontWeight: 700,
-            fontSize: 'clamp(28px, 4vw, 56px)', lineHeight: 0.95,
-            letterSpacing: '-0.02em', textTransform: 'uppercase', color: '#fff',
+            fontFamily: 'var(--font-display), sans-serif', fontWeight: 900,
+            fontSize: 'clamp(40px, 6vw, 96px)', lineHeight: 0.9,
+            letterSpacing: '-0.04em', textTransform: 'uppercase', color: '#fff',
             margin: '16px 0 0',
           }}
         >
@@ -484,7 +484,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
           padding: '0 4vw',
           pointerEvents: 'none',
           fontFamily: 'var(--font-display), sans-serif',
-          fontWeight: 700,
+          fontWeight: 900,
           color: '#fff',
           zIndex: 2,
         }}
@@ -494,10 +494,10 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
             ref={line1Ref}
             style={{
               opacity: 0,
-              fontSize: 'clamp(24px, 3.5vw, 52px)',
-              fontWeight: 700,
-              letterSpacing: '-0.02em',
-              lineHeight: 1,
+              fontSize: 'clamp(32px, 5vw, 80px)',
+              fontWeight: 900,
+              letterSpacing: '-0.04em',
+              lineHeight: 0.95,
               textTransform: 'uppercase',
               willChange: 'opacity, transform',
             }}
@@ -510,10 +510,10 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
             ref={line2Ref}
             style={{
               opacity: 0,
-              fontSize: 'clamp(24px, 3.5vw, 52px)',
-              fontWeight: 700,
-              letterSpacing: '-0.02em',
-              lineHeight: 1,
+              fontSize: 'clamp(32px, 5vw, 80px)',
+              fontWeight: 900,
+              letterSpacing: '-0.04em',
+              lineHeight: 0.95,
               textTransform: 'uppercase',
               color: 'rgba(255,255,255,0.55)',
               willChange: 'opacity, transform',

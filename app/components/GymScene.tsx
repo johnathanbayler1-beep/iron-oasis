@@ -107,6 +107,7 @@ function CameraRig({
 
 export default function GymScene({ onReady }: { onReady?: () => void }) {
   const sectionRef     = useRef<HTMLDivElement>(null)
+  const stickyRef      = useRef<HTMLDivElement>(null)
   const progressRef    = useRef(0)
   const waypointsRef   = useRef<WayPoint[]>([])
   const invalidateRef  = useRef<() => void>(() => {})
@@ -165,18 +166,34 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
       },
     })
 
-    return () => { st.kill() }
+    // handoff crossfade — canvas layer fades in while the section slides over
+    // the hero's fixed canvas, so the 3D scene is revealed without a hard cut
+    const fadeSt = ScrollTrigger.create({
+      trigger: section,
+      start:   'top bottom',
+      end:     'top top',
+      scrub:   true,
+      onUpdate(self) {
+        if (!stickyRef.current) return
+        stickyRef.current.style.opacity = String(0.15 + self.progress * 0.85)
+        invalidateRef.current()
+      },
+    })
+
+    return () => { st.kill(); fadeSt.kill() }
   }, [])
 
   return (
     <section ref={sectionRef} style={{ height: `${SCROLL_VH}vh`, position: 'relative' }}>
       <div
+        ref={stickyRef}
         style={{
           position: 'sticky',
           top: 0,
           width: '100%',
           height: '100vh',
           overflow: 'hidden',
+          willChange: 'opacity',
         }}
       >
         {inView && (
@@ -220,7 +237,7 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
               [beat.side]: '6%',
               transform: 'translateY(24px)',
               opacity: 0,
-              maxWidth: '34vw',
+              maxWidth: '42vw',
               pointerEvents: 'none',
               textAlign: beat.side as 'left' | 'right',
               zIndex: 2,
@@ -229,20 +246,20 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
           >
             <div
               style={{
-                fontFamily: 'Arial, sans-serif', fontWeight: 900,
-                fontSize: 'clamp(28px, 4.5vw, 64px)', lineHeight: 0.95,
-                letterSpacing: '-0.02em', color: '#fff', textTransform: 'uppercase',
-                textShadow: '0 0 40px rgba(0,0,0,0.8)',
+                fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 900,
+                fontSize: 'clamp(48px, 8vw, 120px)', lineHeight: 0.9,
+                letterSpacing: '-0.03em', color: '#fff', textTransform: 'uppercase',
+                textShadow: '0 4px 60px rgba(0,0,0,0.95), 0 0 24px rgba(0,0,0,0.9)',
               }}
             >
               {beat.head}
             </div>
             <p
               style={{
-                marginTop: 12, fontFamily: 'monospace', fontSize: 12,
+                marginTop: 20, fontFamily: 'var(--font-jetbrains), monospace', fontSize: 17,
                 letterSpacing: '0.15em', textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.65)', lineHeight: 1.6,
-                textShadow: '0 0 24px rgba(0,0,0,0.9)',
+                color: '#fff', lineHeight: 1.6, fontWeight: 700,
+                textShadow: '0 0 32px rgba(0,0,0,1), 0 2px 12px rgba(0,0,0,0.9)',
               }}
             >
               {beat.body}

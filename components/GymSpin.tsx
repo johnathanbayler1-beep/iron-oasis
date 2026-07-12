@@ -46,7 +46,9 @@ function SpinModel() {
     const maxDim = Math.max(size.x, size.y, size.z)
     const persp  = camera as THREE.PerspectiveCamera
     const fov    = (persp.fov * Math.PI) / 180
-    const dist   = ((maxDim / 2) / Math.tan(fov / 2)) * 1.4
+    // 0.9 — camera pushed in tight so the model fills the frame edge to edge;
+    // 1.4 left dark void borders visible around the space
+    const dist   = ((maxDim / 2) / Math.tan(fov / 2)) * 0.9
 
     camera.position.set(0, size.y * 0.08, dist)
     camera.near = Math.max(dist / 100, 0.01)
@@ -121,14 +123,14 @@ export default function GymSpin() {
         tl.fromTo(
           el,
           { opacity: 0, scale: 1.05, filter: 'blur(15px)', y: 40 },
-          { opacity: 1, scale: 1,    filter: 'blur(0px)',  y: 0,   duration: 0.18, ease: 'power2.out' },
+          { opacity: 1, scale: 1,    filter: 'blur(0px)',  y: 0,   duration: 0.18, ease: 'power2.out', immediateRender: false },
           ps,
         )
         // Exit
         tl.fromTo(
           el,
           { opacity: 1, scale: 1,    filter: 'blur(0px)',  y: 0 },
-          { opacity: 0, scale: 0.95, filter: 'blur(6px)',  y: -30, duration: 0.12, ease: 'power2.in' },
+          { opacity: 0, scale: 0.95, filter: 'blur(6px)',  y: -30, duration: 0.12, ease: 'power2.in', immediateRender: false },
           exit,
         )
 
@@ -138,13 +140,13 @@ export default function GymSpin() {
         tl.fromTo(
           ctaRef.current,
           { opacity: 0, y: 40, filter: 'blur(15px)' },
-          { opacity: 1, y: 0,  filter: 'blur(0px)', duration: 0.18, ease: 'power2.out' },
+          { opacity: 1, y: 0,  filter: 'blur(0px)', duration: 0.18, ease: 'power2.out', immediateRender: false },
           ps + 0.015,
         )
         tl.fromTo(
           ctaRef.current,
           { opacity: 1, y: 0,   filter: 'blur(0px)' },
-          { opacity: 0, y: -30, filter: 'blur(6px)', duration: 0.12, ease: 'power2.in' },
+          { opacity: 0, y: -30, filter: 'blur(6px)', duration: 0.12, ease: 'power2.in', immediateRender: false },
           exit,
         )
       })
@@ -245,6 +247,7 @@ export default function GymSpin() {
               <span
                 style={{
                   display: 'block',
+                  fontFamily: 'var(--font-grotesk), sans-serif',
                   fontWeight: 900,
                   textTransform: 'uppercase',
                   letterSpacing: '-0.04em',
@@ -259,6 +262,7 @@ export default function GymSpin() {
               <span
                 style={{
                   display: 'block',
+                  fontFamily: 'var(--font-jetbrains), monospace',
                   fontWeight: 400,
                   fontSize: '1rem',
                   color: 'rgba(255,255,255,0.7)',

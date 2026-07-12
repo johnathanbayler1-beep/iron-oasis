@@ -49,6 +49,11 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
   const line1Ref   = useRef<HTMLDivElement>(null)
   const line2Ref   = useRef<HTMLDivElement>(null)
   const heroRef    = useRef<HTMLDivElement>(null)
+  const heroTextRef      = useRef<HTMLDivElement>(null)
+  const primaryCtaRef    = useRef<HTMLButtonElement>(null)
+  const secondaryCtaRef  = useRef<HTMLAnchorElement>(null)
+
+  const handlePWADownload = () => console.log('PWA Prompt Triggered')
   const imagesRef  = useRef<HTMLImageElement[]>([])
   const frameRef     = useRef(0)
   const scrollLocked  = useRef(false)   // tracks whether we own the overflow lock
@@ -217,14 +222,14 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         start:   'top top',
         end:     'bottom bottom',
         scrub:   1,   // heavier smoothing — 40vh of travel needs inertia to stay deliberate, not snappy
-        onLeave() {
-          gsap.to(canvas, { opacity: 0, duration: 0.7, ease: 'power2.inOut', overwrite: 'auto' })
-        },
-        onEnterBack() {
-          gsap.to(canvas, { opacity: 1, duration: 0.7, ease: 'power2.inOut', overwrite: 'auto' })
-        },
         onUpdate(self) {
           if (self.progress > 0.001) fadeCue()
+          // progress-driven handoff — canvas dissolves over the last 12% of the
+          // scrub, exactly as the 3D scene slides in underneath. No timed fade,
+          // no dead zone.
+          if (!scrollLocked.current) {
+            canvas.style.opacity = String(1 - ramp(self.progress, 0.88, 1))
+          }
           const idx = Math.round(self.progress * (FRAME_COUNT - 1))
           if (idx !== frameRef.current) {
             frameRef.current = idx
@@ -251,6 +256,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
       if (heroRef.current) {
         heroInRef.current = true
         if (window.scrollY < window.innerHeight * 0.3) gsap.set(heroRef.current, { opacity: 1 })
+        gsap.set([heroTextRef.current, primaryCtaRef.current, secondaryCtaRef.current], { opacity: 1 })
       }
       wireScrub()
       return () => {
@@ -286,18 +292,36 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
       )
       if (heroRef.current) {
         if (window.scrollY < window.innerHeight * 0.3) {
-          tl.fromTo(
-            heroRef.current,
-            { opacity: 0, y: 16 },
-            {
-              opacity: 1, y: 0, duration: 0.8, ease: 'power2.out',
-              onStart() { heroInRef.current = true },
-            },
-            '-=0.6',
-          )
+          // staged mount sequence: text → GET ACCESS → secondary CTA
+          tl.set(heroRef.current, { opacity: 1, onComplete() { heroInRef.current = true } }, '-=0.6')
+          if (heroTextRef.current) {
+            tl.fromTo(
+              heroTextRef.current,
+              { opacity: 0, y: 24 },
+              { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out', immediateRender: false },
+              '-=0.6',
+            )
+          }
+          if (primaryCtaRef.current) {
+            tl.fromTo(
+              primaryCtaRef.current,
+              { opacity: 0, y: 32, scale: 0.94 },
+              { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'power3.out', immediateRender: false },
+              '-=0.35',
+            )
+          }
+          if (secondaryCtaRef.current) {
+            tl.fromTo(
+              secondaryCtaRef.current,
+              { opacity: 0, y: 16 },
+              { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', immediateRender: false },
+              '-=0.25',
+            )
+          }
         } else {
           // restored deep-scroll session — scroll ramp owns the hero, keep it hidden
           heroInRef.current = true
+          gsap.set([heroTextRef.current, primaryCtaRef.current, secondaryCtaRef.current], { opacity: 1 })
         }
       }
       if (cue) {
@@ -394,7 +418,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
           willChange: 'opacity, transform',
         }}
       >
-        <div>
+        <div ref={heroTextRef} style={{ opacity: 0, willChange: 'opacity, transform' }}>
         <span
           style={{
             fontFamily: 'monospace', fontSize: 10, letterSpacing: '0.4em',
@@ -415,27 +439,32 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
           One key. <span style={{ color: 'rgba(255,255,255,0.45)' }}>One private space.</span>
         </h1>
         </div>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', pointerEvents: 'auto', marginTop: 'auto' }}>
-          <a
-            href="#access-keys"
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', pointerEvents: 'auto', marginTop: 'auto' }}>
+          <button
+            ref={primaryCtaRef}
+            type="button"
+            onClick={handlePWADownload}
             style={{
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              border: '1px solid #fff', background: '#fff', color: '#000',
-              padding: '16px 32px', fontFamily: 'monospace', fontSize: 11,
+              border: '2px solid #fff', background: '#fff', color: '#000',
+              padding: '28px 72px', cursor: 'pointer',
+              fontFamily: 'var(--font-jetbrains), monospace',
+              fontSize: 'clamp(18px, 2.2vw, 28px)',
               fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase',
-              textDecoration: 'none',
+              textDecoration: 'none', opacity: 0, willChange: 'opacity, transform',
             }}
           >
-            Get Access
-          </a>
+            GET ACCESS
+          </button>
           <a
+            ref={secondaryCtaRef}
             href="/partner"
             style={{
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               border: '1px solid #fff', background: 'transparent', color: '#fff',
-              padding: '16px 32px', fontFamily: 'monospace', fontSize: 11,
+              padding: '16px 32px', fontFamily: 'var(--font-jetbrains), monospace', fontSize: 11,
               fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase',
-              textDecoration: 'none',
+              textDecoration: 'none', opacity: 0, willChange: 'opacity, transform',
             }}
           >
             Become a Partner

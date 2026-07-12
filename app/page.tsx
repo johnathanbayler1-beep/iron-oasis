@@ -16,6 +16,7 @@ import { FindYourWayIn } from '@/components/FindYourWayIn';
 import { Expanding } from '@/components/Expanding';
 import GymSpin from '@/components/GymSpinLazy';
 import GymScene from '@/app/components/GymSceneLazy';
+import { EditorialDescent } from '@/components/EditorialDescent';
 
 export default function Home() {
   const [gymMounted, setGymMounted] = useState(false)
@@ -34,27 +35,32 @@ export default function Home() {
 
       {gymMounted && <GymSpin />}
 
-      {/* Section A — HOW IT WORKS */}
-      <section className="io-editorial">
-        <TheHook />
-      </section>
+      {/* Bottom half — continuous GSAP-scrubbed descent over a parallaxed coordinate grid */}
+      <EditorialDescent>
+        {/* Section A — HOW IT WORKS */}
+        <section data-descent className="io-editorial">
+          <TheHook />
+        </section>
 
-      {/* Section B — ACCESS KEYS */}
-      <section id="access-keys" className="io-editorial">
-        <AccessKeys />
-      </section>
+        {/* Section B — ACCESS KEYS */}
+        <section data-descent id="access-keys" className="io-editorial">
+          <AccessKeys />
+        </section>
 
-      <About />
+        <div data-descent>
+          <About />
+        </div>
 
-      {/* Section C — FIND YOUR WAY IN */}
-      <section className="io-editorial">
-        <FindYourWayIn />
-      </section>
+        {/* Section C — FIND YOUR WAY IN */}
+        <section data-descent className="io-editorial">
+          <FindYourWayIn />
+        </section>
 
-      {/* Section D — EXPANDING */}
-      <section className="io-editorial">
-        <Expanding />
-      </section>
+        {/* Section D — EXPANDING */}
+        <section data-descent className="io-editorial">
+          <Expanding />
+        </section>
+      </EditorialDescent>
     </main>
   );
 }

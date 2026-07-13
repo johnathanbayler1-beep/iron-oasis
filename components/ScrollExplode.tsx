@@ -220,8 +220,8 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
       scrubSTRef.current = ScrollTrigger.create({
         trigger: section,
         start:   'top top',
-        end:     'bottom bottom',
-        scrub:   1,   // heavier smoothing — 40vh of travel needs inertia to stay deliberate, not snappy
+        end:     'bottom top',   // scrub spans the FULL 140vh section so the canvas fade lands exactly at the GymScene handoff — no trailing dead zone
+        scrub:   1,   // heavier smoothing — keeps the long scrub deliberate, not snappy
         onUpdate(self) {
           if (self.progress > 0.001) fadeCue()
           // progress-driven handoff — canvas dissolves over the last 12% of the

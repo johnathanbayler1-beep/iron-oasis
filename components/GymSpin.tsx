@@ -192,8 +192,8 @@ export default function GymSpin() {
 
   return (
     <>
-      {/* 300vh invisible scroll track — compressed, hands off instantly to next scene */}
-      <div ref={trackRef} style={{ height: '300vh', position: 'relative', zIndex: 1 }} />
+      {/* 150vh invisible scroll track — compressed, hands off instantly to pricing */}
+      <div ref={trackRef} style={{ height: '150vh', position: 'relative', zIndex: 1 }} />
 
       {/* Fixed Canvas — hidden until section is active */}
       <div

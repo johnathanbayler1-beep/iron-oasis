@@ -8,7 +8,7 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 const MODEL_URL = '/gym-space-2k.glb'
-const SCROLL_VH = 300
+const SCROLL_VH = 160 // compressed: animation fills the track, no dead-scroll tail
 
 const _lookAt = new THREE.Vector3()
 

@@ -9,7 +9,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText } from 'gsap/SplitText'
 import { CustomEase } from 'gsap/CustomEase'
 
-const SCROLL_VH = 150
+const SCROLL_VH = 120 // compressed: tighter handoff into the spin scene
 
 // ═══════════════════════════════════════════════════════════════════════
 // ASSET SWAP ZONE — primitives are placeholders. Studio pipeline live:

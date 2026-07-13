@@ -157,9 +157,16 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
         const beats = sectionRef.current?.querySelectorAll<HTMLElement>('[data-beat]')
         beats?.forEach((el) => {
           const [a, b] = (el.dataset.beat ?? '0,1').split(',').map(Number)
-          const mid = (a + b) / 2
+          // trapezoid: ramp in over first 28%, HOLD centered, ramp out over last 28%.
+          // The hold is the dwell — the card pins readable instead of flashing past.
+          const span = b - a
+          const inEnd = a + span * 0.28
+          const outStart = b - span * 0.28
           const p = self.progress
-          const o = p <= a || p >= b ? 0 : p < mid ? (p - a) / (mid - a) : (b - p) / (b - mid)
+          const o = p <= a || p >= b ? 0
+            : p < inEnd ? (p - a) / (inEnd - a)
+            : p > outStart ? (b - p) / (b - outStart)
+            : 1
           el.style.opacity   = String(o)
           el.style.transform = `translateY(${(1 - o) * 24}px)`
         })
@@ -228,9 +235,9 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
 
         {/* scroll-animated copy layered over the 3D canvas — beats on the 40% flanks */}
         {[
-          { window: '0.05,0.32', side: 'left',  head: 'ONE TOKEN.',     body: 'Your Spatial Token opens the node for you alone.' },
-          { window: '0.38,0.62', side: 'right', head: 'ZERO SHARING.',  body: 'Every rack and machine is yours for the whole session.' },
-          { window: '0.68,0.95', side: 'left',  head: 'PURE PRIVACY.',  body: 'Premium equipment in a quiet residential setting that resets between sessions.' },
+          { window: '0.04,0.36', side: 'left',  head: 'ONE TOKEN.',     body: 'Frictionless access. Park. Walk up. The space is yours.' },
+          { window: '0.34,0.67', side: 'right', head: 'ZERO SHARING.',  body: 'Every rack and machine is yours for the whole session.' },
+          { window: '0.65,0.98', side: 'left',  head: 'PURE PRIVACY.',  body: 'Premium equipment, quiet residential setting. Reset between sessions.' },
         ].map((beat) => (
           <div
             key={beat.head}

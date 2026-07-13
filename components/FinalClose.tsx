@@ -13,7 +13,7 @@ const RULES = [
   { name: 'Zero commitments', line: 'No contracts, no hidden fees, no cancellation charges — ever.', featured: false },
 ]
 
-const ACCENT = '#4dffa6'
+const ACCENT = '#d4d7da'
 const MAX_TILT = 8
 
 function RuleCard({ r }: { r: (typeof RULES)[number] }) {
@@ -61,20 +61,18 @@ function RuleCard({ r }: { r: (typeof RULES)[number] }) {
         position: 'relative',
         display: 'flex', flexDirection: 'column',
         padding: 'clamp(32px, 3vw, 44px)',
-        borderRadius: 24,
+        borderRadius: 2,
         transformStyle: 'preserve-3d',
         willChange: 'transform',
-        background: 'linear-gradient(165deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 42%, rgba(0,0,0,0.55) 100%)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255,255,255,0.12)',
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), 0 30px 80px rgba(0,0,0,0.55)',
+        background: 'linear-gradient(145deg, #181818, #060606)',
+        border: '1px solid rgba(255,255,255,0.4)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(0,0,0,0.8), 0 20px 40px rgba(0,0,0,0.8)',
       }}
     >
       <span
         aria-hidden="true"
         style={{
-          position: 'absolute', inset: 0, borderRadius: 24, pointerEvents: 'none', zIndex: 1,
+          position: 'absolute', inset: 0, borderRadius: 2, pointerEvents: 'none', zIndex: 1,
           background: 'radial-gradient(340px circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.14), transparent 60%)',
         }}
       />
@@ -173,7 +171,7 @@ export function FinalClose() {
         aria-hidden="true"
         style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'radial-gradient(1100px circle at 50% 0%, rgba(77,255,166,0.10), transparent 55%)',
+          background: 'radial-gradient(1100px circle at 50% 0%, rgba(255,255,255,0.08), transparent 55%)',
         }}
       />
 
@@ -229,17 +227,17 @@ export function FinalClose() {
           style={{
             marginTop: 'clamp(28px, 4vh, 44px)',
             display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
-            padding: 'clamp(22px, 2.6vw, 32px)', borderRadius: 20,
-            border: '1px solid rgba(255,77,109,0.4)',
-            background: 'linear-gradient(165deg, rgba(255,77,109,0.10), rgba(0,0,0,0.5))',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)',
+            padding: 'clamp(22px, 2.6vw, 32px)', borderRadius: 2,
+            border: '1px solid rgba(255,255,255,0.4)',
+            background: 'linear-gradient(145deg, #181818, #060606)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(0,0,0,0.8), 0 20px 40px rgba(0,0,0,0.8)',
           }}
         >
           <span
             style={{
               fontFamily: 'var(--font-jetbrains), monospace', fontSize: 12, fontWeight: 700,
-              letterSpacing: '0.18em', textTransform: 'uppercase', color: '#ff4d6d',
-              padding: '6px 12px', borderRadius: 999, border: '1px solid rgba(255,77,109,0.5)',
+              letterSpacing: '0.18em', textTransform: 'uppercase', color: '#fff',
+              padding: '6px 12px', borderRadius: 2, border: '1px solid rgba(255,255,255,0.5)',
             }}
           >
             Strict policy

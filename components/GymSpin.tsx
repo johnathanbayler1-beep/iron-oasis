@@ -48,7 +48,7 @@ const BEATS = [
   },
 ]
 
-const ACCENT = '#4dffa6'
+const ACCENT = '#e6e6e6'
 
 // GSAP → R3F invalidate bridge (GymSpin is a page singleton)
 let _invalidate: (() => void) | null = null
@@ -238,7 +238,7 @@ export default function GymSpin() {
                 {/* hard overhead + side strips for specular kicks on the hardware */}
                 <Lightformer intensity={5} position={[0, 6, -4]} rotation-x={Math.PI / 2} scale={[14, 2, 1]} />
                 <Lightformer intensity={2.5} position={[-6, 2, 0]} rotation-y={Math.PI / 2} scale={[10, 1.5, 1]} />
-                <Lightformer intensity={2} position={[6, 0, 2]} rotation-y={-Math.PI / 2} scale={[10, 1, 1]} color="#e8fff4" />
+                <Lightformer intensity={2} position={[6, 0, 2]} rotation-y={-Math.PI / 2} scale={[10, 1, 1]} color="#ffffff" />
               </Environment>
               <SpinModel />
             </Suspense>
@@ -286,19 +286,17 @@ export default function GymSpin() {
                 transform: 'translateY(-50%)',
                 width: 'min(440px, 82vw)',
                 padding: 'clamp(28px, 3vw, 40px)',
-                borderRadius: 24,
+                borderRadius: 2,
                 opacity: 0,
                 transformStyle: 'preserve-3d',
                 willChange: 'transform, opacity, filter',
                 background: beat.accent
-                  ? 'linear-gradient(165deg, rgba(77,255,166,0.12) 0%, rgba(255,255,255,0.03) 42%, rgba(0,0,0,0.6) 100%)'
-                  : 'linear-gradient(165deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 42%, rgba(0,0,0,0.62) 100%)',
-                backdropFilter: 'blur(18px) saturate(1.3)',
-                WebkitBackdropFilter: 'blur(18px) saturate(1.3)',
-                border: `1px solid ${beat.accent ? 'rgba(77,255,166,0.5)' : 'rgba(255,255,255,0.14)'}`,
+                  ? 'linear-gradient(145deg, #3a3a3a, #101010)'
+                  : 'linear-gradient(145deg, #181818, #060606)',
+                border: `1px solid ${beat.accent ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.4)'}`,
                 boxShadow: beat.accent
-                  ? 'inset 0 1px 0 rgba(255,255,255,0.25), 0 30px 80px rgba(0,0,0,0.6), 0 0 60px rgba(77,255,166,0.18)'
-                  : 'inset 0 1px 0 rgba(255,255,255,0.18), 0 30px 80px rgba(0,0,0,0.55)',
+                  ? 'inset 0 1px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(0,0,0,0.9), 0 24px 44px rgba(0,0,0,0.85)'
+                  : 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(0,0,0,0.8), 0 20px 40px rgba(0,0,0,0.8)',
               }}
             >
               <span
@@ -312,8 +310,8 @@ export default function GymSpin() {
                 {beat.accent && (
                   <span
                     style={{
-                      padding: '5px 12px', borderRadius: 999, fontSize: 11, letterSpacing: '0.06em',
-                      color: '#04140c', background: ACCENT,
+                      padding: '5px 12px', borderRadius: 2, fontSize: 11, letterSpacing: '0.06em',
+                      color: '#000', background: 'linear-gradient(145deg, #f2f2f2, #b8b8b8)',
                     }}
                   >
                     Most popular

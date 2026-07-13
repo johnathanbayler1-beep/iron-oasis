@@ -32,9 +32,9 @@
   --text-secondary: rgba(255,255,255,.75);
   --text-signal: rgba(255,255,255,.6);
   --text-ghost: rgba(255,255,255,.5);
-  --accent-node: #4dffa6;
-  --accent-data: #5ac8ff;
-  --accent-alert: #ff4d6d;
+  --accent-node: #d4d7da;   /* chrome silver — monochrome only */
+  --accent-data: #8a8f94;   /* dim chrome */
+  --accent-alert: #f2f2f2;  /* emphasis = bright chrome, no red */
   --edge: 1px;
   --edge-hard: 2px;
   --radius: 0;
@@ -78,46 +78,44 @@ body {
   letter-spacing: -0.01em;
   color: #fff;
   cursor: pointer;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.02));
-  backdrop-filter: blur(14px) saturate(1.4);
-  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: linear-gradient(145deg, #1a1a1a, #050505);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
-    0 8px 24px rgba(0, 0, 0, 0.45);
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.8),
+    0 20px 40px rgba(0, 0, 0, 0.8);
   transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
     border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
   will-change: transform;
 }
 .io-btn:hover {
-  border-color: rgba(255, 255, 255, 0.28);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04));
+  border-color: rgba(255, 255, 255, 0.6);
+  background: linear-gradient(145deg, #2a2a2a, #0a0a0a);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
-    0 12px 34px rgba(0, 0, 0, 0.55);
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.8),
+    0 26px 52px rgba(0, 0, 0, 0.85);
 }
-.io-btn:active { transform: scale(0.98); }
+.io-btn:active { transform: scale(0.98) translateY(1px); }
 
-/* Primary accent variant — solid mint, same tactile inset language */
+/* Primary variant — polished chrome slab, brighter milled edge */
 .io-btn--accent {
-  color: #04140c;
-  border-color: transparent;
-  background: linear-gradient(180deg, #6effba, #4dffa6);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.55);
+  background: linear-gradient(145deg, #3a3a3a, #101010);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    inset 0 -1px 0 rgba(0, 60, 30, 0.35),
-    0 10px 40px rgba(77, 255, 166, 0.35);
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.9),
+    0 22px 44px rgba(0, 0, 0, 0.85);
 }
 .io-btn--accent:hover {
-  background: linear-gradient(180deg, #7dffc4, #57ffad);
+  border-color: rgba(255, 255, 255, 0.8);
+  background: linear-gradient(145deg, #4a4a4a, #151515);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    inset 0 -1px 0 rgba(0, 60, 30, 0.35),
-    0 14px 52px rgba(77, 255, 166, 0.5);
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.9),
+    0 28px 56px rgba(0, 0, 0, 0.9);
 }
 
 /* Industrial heading contract: opt-in via .io-brutalist.
@@ -266,13 +264,16 @@ html.lenis-stopped body {
 /* ── Tier cards — replace the empty outlined boxes ── */
 .io-tier {
   position: relative;
-  border: 1.5px solid rgba(255,255,255,0.14);
-  background:
-    linear-gradient(150deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.01) 45%, transparent 100%),
-    rgba(6,6,6,0.7);
+  border: 1px solid rgba(255,255,255,0.4);
+  background: linear-gradient(145deg, #181818, #060606);
   padding: clamp(32px, 4vw, 48px);
+  border-radius: 2px;
   cursor: pointer;
   overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.6),
+    inset 0 -1px 0 rgba(0,0,0,0.8),
+    0 20px 40px rgba(0,0,0,0.8);
   transition:
     opacity 0.7s ease,
     transform 0.7s ease,
@@ -292,9 +293,12 @@ html.lenis-stopped body {
 
 /* Hard-offset shadow on hover — brutalist lift */
 .io-tier:hover {
-  border-color: rgba(255,255,255,0.38);
-  box-shadow: 8px 8px 0 rgba(255,255,255,0.08);
-  transform: translateY(-4px) !important;
+  border-color: rgba(255,255,255,0.65);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.8),
+    inset 0 -1px 0 rgba(0,0,0,0.8),
+    0 30px 60px rgba(0,0,0,0.9);
+  transform: translateY(-6px) !important;
 }
 
 /* ── Photo hover scale ── */
@@ -376,21 +380,28 @@ html.lenis-stopped body {
    ═══════════════════════════════════════════════════════════════ */
 .io-tier {
   position: relative;
-  border: 1px solid #3f3f46;
+  border: 1px solid rgba(255,255,255,0.4);
   padding: 2rem;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  border-radius: 0px;
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  background: linear-gradient(145deg, #181818, #060606);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.6),
+    inset 0 -1px 0 rgba(0,0,0,0.8),
+    0 20px 40px rgba(0,0,0,0.8);
+  border-radius: 2px;
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
 }
 
 .io-tier:hover {
-  box-shadow: 10px 10px 0px white;
-  transform: translate(-2px, -2px);
+  border-color: rgba(255,255,255,0.65);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.8),
+    inset 0 -1px 0 rgba(0,0,0,0.8),
+    0 30px 60px rgba(0,0,0,0.9);
+  transform: translateY(-6px);
 }
 
 .io-tier:active {
-  box-shadow: 3px 3px 0px white;
-  transform: translate(1px, 1px);
+  transform: translateY(-2px) scale(0.995);
 }
 
 /* ═══════════════════════════════════════════════════════════════

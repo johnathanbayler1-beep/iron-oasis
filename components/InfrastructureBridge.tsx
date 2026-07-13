@@ -36,7 +36,7 @@ function Phone() {
       {/* screen — booking interface glow */}
       <mesh position={[0, 0, 0.05]}>
         <planeGeometry args={[0.98, 2.14]} />
-        <meshStandardMaterial color="#000" emissive="#e8fff4" emissiveIntensity={0.5} />
+        <meshStandardMaterial color="#000" emissive="#ffffff" emissiveIntensity={0.5} />
       </mesh>
       {/* cover glass — thick dispersive slab over the screen */}
       <mesh position={[0, 0, 0.09]}>
@@ -79,12 +79,12 @@ function YaleLock() {
       {/* keypad ring */}
       <mesh position={[0, 0.45, 0.13]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.28, 0.045, 16, 48]} />
-        <meshPhysicalMaterial color="#c9a86a" metalness={0.9} roughness={0.1} clearcoat={1} clearcoatRoughness={0.1} />
+        <meshPhysicalMaterial color="#c4c7ca" metalness={1} roughness={0.12} clearcoat={1} clearcoatRoughness={0.1} />
       </mesh>
       {/* status LED */}
       <mesh position={[0, 0.45, 0.14]}>
         <circleGeometry args={[0.06, 24]} />
-        <meshStandardMaterial color="#000" emissive="#4dffa6" emissiveIntensity={3} />
+        <meshStandardMaterial color="#000" emissive="#ffffff" emissiveIntensity={3} />
       </mesh>
       {/* thumbturn */}
       <mesh position={[0, -0.45, 0.16]} rotation={[Math.PI / 2, 0, 0]}>
@@ -134,9 +134,9 @@ function BridgeRig({
 }
 
 const BEATS = [
-  { window: '0.02,0.30', side: 'right', head: 'CLAIM YOUR TOKEN.', body: 'Pick a Spatial Token in the app. Premium equipment, zero sharing, 24/7 access. No contracts, no hidden fees.' },
-  { window: '0.36,0.62', side: 'left',  head: 'BOOK YOUR SESSION.',  body: 'Reserve a 1-hour block. Park on the street, walk up the property — the entire node is yours, no one else.' },
-  { window: '0.68,0.96', side: 'right', head: 'UNLOCK WITH YOUR TOKEN.', body: 'The Yale smart lock opens for your token alone. A frictionless, private walk-in — every time.' },
+  { window: '0.02,0.35', side: 'right', head: 'CLAIM YOUR TOKEN.', body: 'Pick a Spatial Token in the app. Premium equipment, zero sharing, 24/7 access. No contracts, no hidden fees.' },
+  { window: '0.33,0.67', side: 'left',  head: 'BOOK YOUR SESSION.',  body: 'Reserve a 1-hour block. Park on the street, walk up the property — the entire node is yours, no one else.' },
+  { window: '0.65,0.98', side: 'right', head: 'UNLOCK WITH YOUR TOKEN.', body: 'The Yale smart lock opens for your token alone. A frictionless, private walk-in — every time.' },
 ]
 
 export default function InfrastructureBridge() {
@@ -183,13 +183,19 @@ export default function InfrastructureBridge() {
         const beats = section.querySelectorAll<HTMLElement>('[data-beat]')
         beats.forEach((el) => {
           const [a, b] = (el.dataset.beat ?? '0,1').split(',').map(Number)
-          const mid = (a + b) / 2
+          // trapezoid dwell: ramp in, HOLD centered/readable, ramp out — no flash-by
+          const span = b - a
+          const inEnd = a + span * 0.28
+          const outStart = b - span * 0.28
           const p = self.progress
-          const o = p <= a || p >= b ? 0 : p < mid ? (p - a) / (mid - a) : (b - p) / (b - mid)
+          const o = p <= a || p >= b ? 0
+            : p < inEnd ? (p - a) / (inEnd - a)
+            : p > outStart ? (b - p) / (b - outStart)
+            : 1
           el.style.opacity   = String(o)
           el.style.transform = `translateY(${(1 - o) * 24}px)`
           // words scrub up through the line masks on entry, hold while visible
-          const entry = p <= a ? 0 : Math.min(1, (p - a) / (mid - a))
+          const entry = p <= a ? 0 : Math.min(1, (p - a) / (inEnd - a))
           headTls.get(el)?.progress(entry)
         })
       },
@@ -224,7 +230,7 @@ export default function InfrastructureBridge() {
               <Environment preset="studio">
                 {/* hard specular strips raking across the metal and glass */}
                 <Lightformer intensity={6} position={[0, 4, -3]} rotation-x={Math.PI / 2} scale={[12, 1.5, 1]} />
-                <Lightformer intensity={3} position={[-5, 1, 2]} rotation-y={Math.PI / 2} scale={[8, 1, 1]} color="#e8fff4" />
+                <Lightformer intensity={3} position={[-5, 1, 2]} rotation-y={Math.PI / 2} scale={[8, 1, 1]} color="#ffffff" />
                 <Lightformer intensity={2.5} position={[5, -1, 2]} rotation-y={-Math.PI / 2} scale={[8, 1, 1]} />
               </Environment>
               <BridgeRig progressRef={progressRef} invalidateRef={invalidateRef} />

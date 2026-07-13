@@ -436,7 +436,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
             margin: '16px 0 0',
           }}
         >
-          One token. <span style={{ color: 'rgba(255,255,255,0.45)' }}>The whole node, just you.</span>
+          Your Private Node. <span style={{ color: 'rgba(255,255,255,0.45)' }}>Zero Sharing. 100% Focus.</span>
         </h1>
         </div>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', pointerEvents: 'auto', marginTop: 'auto' }}>

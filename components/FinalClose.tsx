@@ -6,10 +6,10 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText } from 'gsap/SplitText'
 import { CustomEase } from 'gsap/CustomEase'
 
-// Logistics + rules — the honest close. No pricing here; Spatial Tokens carry that.
+// Logistics + rules — the honest close. No pricing here; Access Keys carry that.
 const RULES = [
   { name: '1-hour blocks', line: 'Every booking is a clean 1-hour block. Reserve it, walk up, the node is yours.', featured: false },
-  { name: 'Flexible cancellations', line: 'Can’t make it? Cancel any time and keep your booking token. No penalty.', featured: false },
+  { name: 'Flexible cancellations', line: 'Can’t make it? Cancel any time and keep your booking key. No penalty.', featured: false },
   { name: 'Zero commitments', line: 'No contracts, no hidden fees, no cancellation charges — ever.', featured: false },
 ]
 
@@ -206,7 +206,7 @@ export function FinalClose() {
             fontWeight: 400, lineHeight: 1.55, color: 'rgba(255,255,255,0.7)',
           }}
         >
-          Claim a Spatial Token, book a block, and the private node in Windsor is yours. No games, no fine print.
+          Claim an Access Key, book a block, and the private node in Windsor is yours. No games, no fine print.
         </p>
 
         <div
@@ -265,10 +265,10 @@ export function FinalClose() {
             className="io-btn io-btn--accent"
             style={{ padding: 'clamp(20px, 2.4vh, 26px) clamp(40px, 5vw, 64px)', fontSize: 'clamp(18px, 2vw, 22px)', fontWeight: 700 }}
           >
-            Get your token
+            Get your key
           </button>
           <span style={{ fontFamily: 'var(--font-grotesk), sans-serif', fontSize: 15, fontWeight: 400, color: 'rgba(255,255,255,0.5)' }}>
-            Download the app and claim your Spatial Token in minutes.
+            Download the app and claim your Access Key in minutes.
           </span>
         </div>
       </div>

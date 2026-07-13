@@ -23,7 +23,7 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'Iron Oasis — Your Private Node in Windsor',
   description:
-    'A premium private space in a quiet Windsor residential setting. Park on the street, walk up, and the entire node is yours. Spatial Tokens, premium equipment, zero sharing, 24/7 access.',
+    'A premium private space in a quiet Windsor residential setting. Park on the street, walk up, and the entire node is yours. Access Keys, premium equipment, zero sharing, 24/7 access.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

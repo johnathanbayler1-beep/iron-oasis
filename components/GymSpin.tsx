@@ -11,10 +11,10 @@ useGLTF.setDecoderPath('/draco/')
 
 const MODEL_URL = '/gym-space-2k.glb'
 
-// Spatial Tokens — access tiers. Cards sit in the right rail, never over the model.
+// Access Keys — access tiers. Cards sit in the right rail, never over the model.
 const BEATS = [
   {
-    index: 'TOKEN 01',
+    index: 'KEY 01',
     name: 'Oasis Lite',
     tagline: 'Your first key to the node.',
     accent: false,
@@ -25,7 +25,7 @@ const BEATS = [
     ],
   },
   {
-    index: 'TOKEN 02',
+    index: 'KEY 02',
     name: 'Oasis Plus',
     tagline: 'Peak hours, unlocked.',
     accent: true,
@@ -36,7 +36,7 @@ const BEATS = [
     ],
   },
   {
-    index: 'TOKEN 03',
+    index: 'KEY 03',
     name: 'Oasis Max',
     tagline: 'The whole node, any hour.',
     accent: false,
@@ -113,6 +113,9 @@ export default function GymSpin() {
   const beatRefs   = useRef<(HTMLDivElement | null)[]>([])
 
   const [inView, setInView] = useState(false)
+  // latch: once mounted the GL context lives for the page lifetime. Remounting on
+  // every scroll in/out churns the context and triggers "Context Lost".
+  const [canvasMounted, setCanvasMounted] = useState(false)
 
   useEffect(() => {
     const el = trackRef.current
@@ -124,6 +127,8 @@ export default function GymSpin() {
     observer.observe(el)
     return () => observer.disconnect()
   }, [])
+
+  useEffect(() => { if (inView) setCanvasMounted(true) }, [inView])
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
@@ -221,7 +226,7 @@ export default function GymSpin() {
         ref={canvasWrap}
         style={{ position: 'fixed', inset: 0, zIndex: 0, visibility: 'hidden' }}
       >
-        {inView && (
+        {canvasMounted && (
           <Canvas
             frameloop="demand"
             dpr={[1, 1.5]}
@@ -229,7 +234,10 @@ export default function GymSpin() {
             camera={{ fov: 45, near: 0.1, far: 1000 }}
             gl={{ powerPreference: 'high-performance', antialias: false }}
             style={{ display: 'block', width: '100%', height: '100%' }}
-            onCreated={({ gl }) => gl.setClearColor('#000000', 1)}
+            onCreated={({ gl }) => {
+              gl.setClearColor('#000000', 1)
+              gl.domElement.addEventListener('webglcontextlost', (e) => e.preventDefault(), false)
+            }}
           >
             <ambientLight intensity={0.15} />
             <directionalLight position={[5, 8, 5]} intensity={3.0} />
@@ -246,7 +254,7 @@ export default function GymSpin() {
         )}
       </div>
 
-      {/* Fixed text layer — right rail of tactile token cards, model stays left */}
+      {/* Fixed text layer — right rail of tactile key cards, model stays left */}
       <div
         ref={textWrap}
         style={{ position: 'fixed', inset: 0, zIndex: 10, pointerEvents: 'none', visibility: 'hidden' }}
@@ -268,7 +276,7 @@ export default function GymSpin() {
             letterSpacing: '0.34em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)',
           }}
         >
-          Spatial Tokens
+          Access Keys
         </span>
 
         <div

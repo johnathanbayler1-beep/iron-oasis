@@ -113,6 +113,11 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
   const invalidateRef  = useRef<() => void>(() => {})
   const readyFiredRef  = useRef(false)
   const [inView, setInView] = useState(false)
+  // permanently mounted once entered — remounting the Canvas thrashes the WebGL
+  // context (browser throttles creation → "Context Lost" black void). Cull by
+  // demand-frameloop + opacity, never by unmounting the GL context.
+  const [canvasMounted, setCanvasMounted] = useState(false)
+  useEffect(() => { if (inView) setCanvasMounted(true) }, [inView])
 
   useEffect(() => {
     if (!inView || readyFiredRef.current) return
@@ -206,7 +211,7 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
           willChange: 'opacity',
         }}
       >
-        {inView && (
+        {canvasMounted && (
           <Canvas
             frameloop="demand"
             dpr={[1, 1.5]}
@@ -235,7 +240,7 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
 
         {/* scroll-animated copy layered over the 3D canvas — beats on the 40% flanks */}
         {[
-          { window: '0.04,0.36', side: 'left',  head: 'ONE TOKEN.',     body: 'Frictionless access. Park. Walk up. The space is yours.' },
+          { window: '0.04,0.36', side: 'left',  head: 'ONE KEY.',       body: 'Frictionless access. Park. Walk up. The space is yours.' },
           { window: '0.34,0.67', side: 'right', head: 'ZERO SHARING.',  body: 'Every rack and machine is yours for the whole session.' },
           { window: '0.65,0.98', side: 'left',  head: 'PURE PRIVACY.',  body: 'Premium equipment, quiet residential setting. Reset between sessions.' },
         ].map((beat) => (

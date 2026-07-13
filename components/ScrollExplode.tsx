@@ -18,8 +18,8 @@ const INTRO_DUR     = 1.6          // animate-in duration in seconds
 const MOBILE_BP     = 768          // px — below this we use mobile tuning
 
 // Tagline — emerges as the logo explodes. Swap copy freely.
-const TAGLINE_1 = 'THE WHOLE GYM.'
-const TAGLINE_2 = 'JUST YOU.'
+const TAGLINE_1 = 'ONE PRIVATE NODE.'
+const TAGLINE_2 = 'ZERO SHARING.'
 // reveal windows in scroll-progress (0–1): [start, fullyVisible]
 // widened for the 140vh scale — old windows spanned ~100vh of travel at 700vh,
 // same fractions over 40vh of travel would pop instead of emerge
@@ -436,7 +436,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
             margin: '16px 0 0',
           }}
         >
-          One key. <span style={{ color: 'rgba(255,255,255,0.45)' }}>The whole gym, just you.</span>
+          One token. <span style={{ color: 'rgba(255,255,255,0.45)' }}>The whole node, just you.</span>
         </h1>
         </div>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', pointerEvents: 'auto', marginTop: 'auto' }}>
@@ -444,30 +444,24 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
             ref={primaryCtaRef}
             type="button"
             onClick={handlePWADownload}
+            className="io-btn io-btn--accent"
             style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              border: '2px solid #fff', background: '#fff', color: '#000',
-              padding: '28px 72px', cursor: 'pointer',
-              fontFamily: 'var(--font-jetbrains), monospace',
-              fontSize: 'clamp(18px, 2.2vw, 28px)',
-              fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase',
-              textDecoration: 'none', opacity: 0, willChange: 'opacity, transform',
+              padding: '22px 56px', fontSize: 'clamp(17px, 2vw, 22px)', fontWeight: 700,
+              opacity: 0, willChange: 'opacity, transform',
             }}
           >
-            GET ACCESS
+            Get access
           </button>
           <a
             ref={secondaryCtaRef}
             href="/shop"
+            className="io-btn"
             style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              border: '1px solid #fff', background: 'transparent', color: '#fff',
-              padding: '16px 32px', fontFamily: 'var(--font-jetbrains), monospace', fontSize: 11,
-              fontWeight: 700, letterSpacing: '0.25em', textTransform: 'uppercase',
-              textDecoration: 'none', opacity: 0, willChange: 'opacity, transform',
+              padding: '20px 40px', textDecoration: 'none',
+              opacity: 0, willChange: 'opacity, transform',
             }}
           >
-            See The Space
+            See the space
           </a>
         </div>
       </div>

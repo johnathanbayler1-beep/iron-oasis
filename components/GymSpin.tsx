@@ -11,24 +11,44 @@ useGLTF.setDecoderPath('/draco/')
 
 const MODEL_URL = '/gym-space-2k.glb'
 
-// value stack — no prices here; the Final Close reveals numbers
+// Spatial Tokens — access tiers. Cards sit in the right rail, never over the model.
 const BEATS = [
   {
-    heading: 'IRON OASIS LITE.',
-    sub: 'GET STARTED',
-    perks: ['4 PRIVATE SESSIONS / MONTH', 'THE WHOLE GYM TO YOURSELF', 'SMART LOCK ENTRY'],
+    index: 'TOKEN 01',
+    name: 'Oasis Lite',
+    tagline: 'Your first key to the node.',
+    accent: false,
+    specs: [
+      ['Access', '3 days / week'],
+      ['Hours', 'Non-peak only'],
+      ['Locked', '3 PM – 8 PM'],
+    ],
   },
   {
-    heading: 'IRON OASIS PLUS.',
-    sub: 'TRAIN MORE',
-    perks: ['8 PRIVATE SESSIONS / MONTH', 'BOOK FURTHER AHEAD', 'LONGER SESSIONS'],
+    index: 'TOKEN 02',
+    name: 'Oasis Plus',
+    tagline: 'Peak hours, unlocked.',
+    accent: true,
+    specs: [
+      ['Access', '4 days / week'],
+      ['Hours', 'Peak included'],
+      ['Booking', 'Standard window'],
+    ],
   },
   {
-    heading: 'IRON OASIS UNLIMITED.',
-    sub: 'ANYTIME ACCESS',
-    perks: ['UNLIMITED SESSIONS', 'TRAIN ANY HOUR, DAY OR NIGHT', 'THE GYM, WHENEVER YOU WANT'],
+    index: 'TOKEN 03',
+    name: 'Oasis Max',
+    tagline: 'The whole node, any hour.',
+    accent: false,
+    specs: [
+      ['Access', 'Every day'],
+      ['Hours', '24/7 · peak & non-peak'],
+      ['Priority', '48-hour booking window'],
+    ],
   },
 ]
+
+const ACCENT = '#4dffa6'
 
 // GSAP → R3F invalidate bridge (GymSpin is a page singleton)
 let _invalidate: (() => void) | null = null
@@ -127,18 +147,19 @@ export default function GymSpin() {
         const ps   = i * SLOT
         const exit = i < BEATS.length - 1 ? ps + SLOT * 0.65 : 0.92
 
-        // Entry: scale(1.05) blur(15px) y(40) → scale(1) blur(0) y(0)
+        gsap.set(el, { transformPerspective: 1200 })
+        // Entry: tilt up from the table — rotateY(14) scale(1.05) blur → flat
         tl.fromTo(
           el,
-          { opacity: 0, scale: 1.05, filter: 'blur(15px)', y: 40 },
-          { opacity: 1, scale: 1,    filter: 'blur(0px)',  y: 0,   duration: 0.18, ease: 'power2.out', immediateRender: false },
+          { opacity: 0, scale: 1.05, filter: 'blur(15px)', y: 40, rotateY: 14, rotateX: -6 },
+          { opacity: 1, scale: 1,    filter: 'blur(0px)',  y: 0,  rotateY: 0,  rotateX: 0, duration: 0.18, ease: 'power2.out', immediateRender: false },
           ps,
         )
-        // Exit
+        // Exit — tilt away
         tl.fromTo(
           el,
-          { opacity: 1, scale: 1,    filter: 'blur(0px)',  y: 0 },
-          { opacity: 0, scale: 0.95, filter: 'blur(6px)',  y: -30, duration: 0.12, ease: 'power2.in', immediateRender: false },
+          { opacity: 1, scale: 1,    filter: 'blur(0px)',  y: 0,   rotateY: 0,   rotateX: 0 },
+          { opacity: 0, scale: 0.95, filter: 'blur(6px)',  y: -30, rotateY: -12, rotateX: 4, duration: 0.12, ease: 'power2.in', immediateRender: false },
           exit,
         )
       })
@@ -225,14 +246,34 @@ export default function GymSpin() {
         )}
       </div>
 
-      {/* Fixed text layer */}
+      {/* Fixed text layer — right rail of tactile token cards, model stays left */}
       <div
         ref={textWrap}
         style={{ position: 'fixed', inset: 0, zIndex: 10, pointerEvents: 'none', visibility: 'hidden' }}
       >
+        {/* right-side scrim panel — gives the split its edge, keeps cards legible */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute', top: 0, right: 0, bottom: 0, width: 'min(56vw, 900px)',
+            background: 'linear-gradient(90deg, transparent, rgba(0,0,0,0.55) 42%, rgba(0,0,0,0.82))',
+          }}
+        />
+
+        {/* section eyebrow — anchored, doesn't overlap the model */}
+        <span
+          style={{
+            position: 'absolute', top: 'clamp(28px, 6vh, 64px)', right: 'clamp(24px, 6vw, 96px)',
+            fontFamily: 'var(--font-jetbrains), monospace', fontSize: 12, fontWeight: 700,
+            letterSpacing: '0.34em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)',
+          }}
+        >
+          Spatial Tokens
+        </span>
+
         <div
           ref={parallaxEl}
-          style={{ position: 'absolute', inset: 0, willChange: 'transform' }}
+          style={{ position: 'absolute', inset: 0, perspective: 1400, willChange: 'transform' }}
         >
           {BEATS.map((beat, i) => (
             <div
@@ -240,58 +281,82 @@ export default function GymSpin() {
               ref={el => { beatRefs.current[i] = el }}
               style={{
                 position: 'absolute',
-                left: '3rem',
+                right: 'clamp(24px, 6vw, 96px)',
                 top: '50%',
                 transform: 'translateY(-50%)',
+                width: 'min(440px, 82vw)',
+                padding: 'clamp(28px, 3vw, 40px)',
+                borderRadius: 24,
                 opacity: 0,
+                transformStyle: 'preserve-3d',
                 willChange: 'transform, opacity, filter',
+                background: beat.accent
+                  ? 'linear-gradient(165deg, rgba(77,255,166,0.12) 0%, rgba(255,255,255,0.03) 42%, rgba(0,0,0,0.6) 100%)'
+                  : 'linear-gradient(165deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 42%, rgba(0,0,0,0.62) 100%)',
+                backdropFilter: 'blur(18px) saturate(1.3)',
+                WebkitBackdropFilter: 'blur(18px) saturate(1.3)',
+                border: `1px solid ${beat.accent ? 'rgba(77,255,166,0.5)' : 'rgba(255,255,255,0.14)'}`,
+                boxShadow: beat.accent
+                  ? 'inset 0 1px 0 rgba(255,255,255,0.25), 0 30px 80px rgba(0,0,0,0.6), 0 0 60px rgba(77,255,166,0.18)'
+                  : 'inset 0 1px 0 rgba(255,255,255,0.18), 0 30px 80px rgba(0,0,0,0.55)',
               }}
             >
               <span
                 style={{
-                  display: 'block',
-                  fontFamily: 'var(--font-grotesk), sans-serif',
-                  fontWeight: 900,
-                  textTransform: 'uppercase',
-                  letterSpacing: '-0.04em',
-                  fontSize: 'clamp(3rem, 8vw, 8rem)',
-                  lineHeight: 0.9,
-                  color: 'white',
-                  mixBlendMode: 'difference',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  fontFamily: 'var(--font-jetbrains), monospace', fontSize: 12, fontWeight: 700,
+                  letterSpacing: '0.22em', color: beat.accent ? ACCENT : 'rgba(255,255,255,0.55)',
                 }}
               >
-                {beat.heading}
+                {beat.index}
+                {beat.accent && (
+                  <span
+                    style={{
+                      padding: '5px 12px', borderRadius: 999, fontSize: 11, letterSpacing: '0.06em',
+                      color: '#04140c', background: ACCENT,
+                    }}
+                  >
+                    Most popular
+                  </span>
+                )}
+              </span>
+
+              <span
+                style={{
+                  display: 'block', marginTop: 18,
+                  fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 800,
+                  fontSize: 'clamp(2.4rem, 4vw, 3.4rem)', lineHeight: 1, letterSpacing: '-0.035em',
+                  color: '#f6f8f6',
+                }}
+              >
+                {beat.name}
               </span>
               <span
                 style={{
-                  display: 'block',
-                  fontFamily: 'var(--font-jetbrains), monospace',
-                  fontWeight: 700,
-                  letterSpacing: '0.3em',
-                  fontSize: '1rem',
-                  color: 'rgba(255,255,255,0.8)',
-                  marginTop: '1rem',
-                  mixBlendMode: 'difference',
+                  display: 'block', marginTop: 10,
+                  fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 400,
+                  fontSize: 16, lineHeight: 1.5, color: 'rgba(255,255,255,0.62)',
                 }}
               >
-                {beat.sub}
+                {beat.tagline}
               </span>
-              <ul style={{ listStyle: 'none', margin: '1.5rem 0 0', padding: 0 }}>
-                {beat.perks.map((perk) => (
+
+              <ul style={{ listStyle: 'none', margin: '24px 0 0', padding: 0 }}>
+                {beat.specs.map(([label, value]) => (
                   <li
-                    key={perk}
+                    key={label}
                     style={{
-                      fontFamily: 'var(--font-jetbrains), monospace',
-                      fontWeight: 700,
-                      fontSize: '0.95rem',
-                      letterSpacing: '0.12em',
-                      color: '#fff',
-                      padding: '10px 0',
-                      borderTop: '1px solid rgba(255,255,255,0.35)',
-                      textShadow: '0 0 24px rgba(0,0,0,0.9)',
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16,
+                      padding: '12px 0', borderTop: '1px solid rgba(255,255,255,0.1)',
+                      fontFamily: 'var(--font-grotesk), sans-serif',
                     }}
                   >
-                    + {perk}
+                    <span style={{ fontSize: 13, fontWeight: 500, letterSpacing: '0.02em', color: 'rgba(255,255,255,0.5)' }}>
+                      {label}
+                    </span>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: '#fff', textAlign: 'right' }}>
+                      {value}
+                    </span>
                   </li>
                 ))}
               </ul>

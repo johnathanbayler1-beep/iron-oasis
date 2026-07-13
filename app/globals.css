@@ -14,7 +14,8 @@
   --color-zinc-400: #a1a1aa;
   --color-zinc-300: #d4d4d8;
 
-  --font-display: var(--font-grotesk), 'Arial Narrow', sans-serif;
+  --font-display: var(--font-grotesk), -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  --font-sans: var(--font-grotesk), -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
   /* mechanical spring defaults consumed by Framer Motion configs */
@@ -58,8 +59,65 @@ html {
 }
 
 body {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  letter-spacing: -0.011em;
   overflow-x: hidden;
+}
+
+/* ── Tactile CTA — Apple / Vercel: translucent, blurred, 1px hairline,
+   inset highlight, physical press. GSAP handles scale:0.98 on pointer-down. ── */
+.io-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6em;
+  padding: 0.95em 1.9em;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: clamp(15px, 1.5vw, 17px);
+  letter-spacing: -0.01em;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.02));
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 8px 24px rgba(0, 0, 0, 0.45);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  will-change: transform;
+}
+.io-btn:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 12px 34px rgba(0, 0, 0, 0.55);
+}
+.io-btn:active { transform: scale(0.98); }
+
+/* Primary accent variant — solid mint, same tactile inset language */
+.io-btn--accent {
+  color: #04140c;
+  border-color: transparent;
+  background: linear-gradient(180deg, #6effba, #4dffa6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(0, 60, 30, 0.35),
+    0 10px 40px rgba(77, 255, 166, 0.35);
+}
+.io-btn--accent:hover {
+  background: linear-gradient(180deg, #7dffc4, #57ffad);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 0 rgba(0, 60, 30, 0.35),
+    0 14px 52px rgba(77, 255, 166, 0.5);
 }
 
 /* Industrial heading contract: opt-in via .io-brutalist.

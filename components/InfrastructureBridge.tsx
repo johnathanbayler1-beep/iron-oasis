@@ -134,9 +134,9 @@ function BridgeRig({
 }
 
 const BEATS = [
-  { window: '0.02,0.30', side: 'right', head: 'GET YOUR ACCESS KEY.', body: 'Your own key to the gym. No contracts, no hidden fees.' },
-  { window: '0.36,0.62', side: 'left',  head: 'BOOK YOUR SESSION.',  body: 'Book in the app. The whole gym is yours for your session — no one else.' },
-  { window: '0.68,0.96', side: 'right', head: 'UNLOCK WITH YOUR KEY.', body: 'The Yale smart lock opens for your key alone. Train in complete privacy.' },
+  { window: '0.02,0.30', side: 'right', head: 'CLAIM YOUR TOKEN.', body: 'Pick a Spatial Token in the app. Premium equipment, zero sharing, 24/7 access. No contracts, no hidden fees.' },
+  { window: '0.36,0.62', side: 'left',  head: 'BOOK YOUR SESSION.',  body: 'Reserve a 1-hour block. Park on the street, walk up the property — the entire node is yours, no one else.' },
+  { window: '0.68,0.96', side: 'right', head: 'UNLOCK WITH YOUR TOKEN.', body: 'The Yale smart lock opens for your token alone. A frictionless, private walk-in — every time.' },
 ]
 
 export default function InfrastructureBridge() {

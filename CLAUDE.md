@@ -4,9 +4,10 @@
 - All active development must occur on: **rebuild-from-scratch**
 
 ## Brand Vocabulary (Canonical)
-- **Allowed**: Gym, Workout, Train, Access, Booking, Session, Private, Windsor.
-- **Banned**: Node Operator, System Deployment, Partner, Franchise, Network, Area Developer.
-- **Tone**: Plain English. Simple, direct, warm, and inviting. No tech-heavy lingo. Focus on the ease of booking and the privacy of the workout.
+- **Allowed**: Spatial Token, Private Node, Node, Premium Equipment, Zero Sharing, 24/7 Access, Access, Booking, Session, Private, Windsor.
+- **Banned**: Gym, Train, Workout, Membership, Tier, Node Operator, Partner, Franchise, Network, Area Developer.
+- **Concept**: A premium private space in a quiet residential setting. Frictionless flow — park on the street, walk up the property, and the entire node is yours.
+- **Tone**: Apple / Emil Kowalski standard. Clean, high-contrast, confident. Premium and calm, not hype. Focus on privacy, zero sharing, and frictionless 24/7 access.
 
 ## Architecture
 - **Framework**: Next.js 16.2.9, App Router, Turbopack.

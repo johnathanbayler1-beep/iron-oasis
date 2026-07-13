@@ -1,5 +1,8 @@
 'use client'
 
+import { useRef } from 'react'
+import gsap from 'gsap'
+
 type Props = {
   children: React.ReactNode
   variant?: 'primary' | 'outline'
@@ -8,22 +11,23 @@ type Props = {
   className?: string
 }
 
+// Apple / Vercel tactile button. Glass + inset shadow live in .io-btn (globals);
+// GSAP owns the physical press so it springs back instead of snapping.
 export function NeoButton({ children, variant = 'primary', type = 'button', onClick, className = '' }: Props) {
-  const base =
-    'inline-flex items-center justify-center border-2 border-white px-8 py-4 font-mono text-xs font-bold uppercase tracking-[0.25em] cursor-pointer transition-[box-shadow,transform] duration-150'
+  const ref = useRef<HTMLButtonElement>(null)
 
-  const variants: Record<NonNullable<Props['variant']>, string> = {
-    primary:
-      'bg-white text-black [box-shadow:6px_6px_0_white] hover:[box-shadow:8px_8px_0_white] hover:-translate-x-[2px] hover:-translate-y-[2px] active:[box-shadow:3px_3px_0_white] active:translate-x-[1px] active:translate-y-[1px]',
-    outline:
-      'bg-black text-white [box-shadow:6px_6px_0_white] hover:[box-shadow:8px_8px_0_white] hover:-translate-x-[2px] hover:-translate-y-[2px] active:[box-shadow:3px_3px_0_white] active:translate-x-[1px] active:translate-y-[1px]',
-  }
+  const press = () => gsap.to(ref.current, { scale: 0.98, duration: 0.12, ease: 'power2.out' })
+  const release = () => gsap.to(ref.current, { scale: 1, duration: 0.5, ease: 'elastic.out(1, 0.5)' })
 
   return (
     <button
+      ref={ref}
       type={type}
       onClick={onClick}
-      className={[base, variants[variant ?? 'primary'], className].filter(Boolean).join(' ')}
+      onPointerDown={press}
+      onPointerUp={release}
+      onPointerLeave={release}
+      className={['io-btn', variant === 'primary' ? 'io-btn--accent' : '', className].filter(Boolean).join(' ')}
     >
       {children}
     </button>

@@ -172,16 +172,23 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         const batchPromises: Promise<void>[] = []
         for (let i = batchStart; i < batchEnd; i++) {
           const img = new Image()
-          img.src = `${FRAMES_PATH}logo_${pad(i)}.${FRAME_EXT}`
           imgs[i] = img
           batchPromises.push(
             new Promise<void>((resolve) => {
-              img.onload = () => {
-                ;(img.decode?.() ?? Promise.resolve())
-                  .catch(() => {})
-                  .finally(() => { tick(); resolve() })
+              let settled = false
+              const finish = () => {
+                if (settled) return
+                settled = true
+                tick(); resolve()
               }
-              img.onerror = () => { tick(); resolve() }
+              img.onload = () => {
+                ;(img.decode?.() ?? Promise.resolve()).catch(() => {}).finally(finish)
+              }
+              img.onerror = finish
+              // src set AFTER handlers: cached frames fire load synchronously,
+              // and an already-complete image would otherwise never call onload.
+              img.src = `${FRAMES_PATH}logo_${pad(i)}.${FRAME_EXT}`
+              if (img.complete && img.onload) img.onload(new Event('load'))
             })
           )
         }

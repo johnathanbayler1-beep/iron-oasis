@@ -287,7 +287,7 @@ export default function GymSpin() {
         trigger: trackRef.current,
         start:   'top top',
         end:     'bottom bottom',
-        scrub:   1.2,
+        scrub:   1.6,
         onEnter:     show,
         onLeave:     hide,
         onEnterBack: show,
@@ -312,13 +312,13 @@ export default function GymSpin() {
 
   return (
     <>
-      {/* 150vh invisible scroll track — compressed, hands off instantly to pricing */}
-      <div ref={trackRef} style={{ height: '150vh', position: 'relative', zIndex: 1 }} />
+      {/* 300vh scroll track — longer runway slows the scrub so each key reads before the next */}
+      <div ref={trackRef} style={{ height: '300vh', position: 'relative', zIndex: 1 }} />
 
       {/* Fixed Canvas — hidden until section is active */}
       <div
         ref={canvasWrap}
-        style={{ position: 'fixed', inset: 0, zIndex: 0, visibility: 'hidden' }}
+        style={{ position: 'fixed', inset: 0, zIndex: 0, visibility: 'hidden', willChange: 'transform' }}
       >
         {canvasMounted && (
           <Canvas

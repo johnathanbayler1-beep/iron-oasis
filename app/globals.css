@@ -68,6 +68,9 @@ body {
    the panel, a 1px milled edge catches light, physical press on pointer-down.
    GSAP drives scale:0.97; :active is the no-JS fallback. ── */
 .io-btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -90,6 +93,63 @@ body {
   transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
     border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
   will-change: transform;
+}
+/* light-sweep — a specular band slides across the glass on hover */
+.io-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.16) 48%,
+    rgba(255, 255, 255, 0.28) 50%,
+    rgba(255, 255, 255, 0.16) 52%,
+    transparent 70%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.io-btn:hover::before { transform: translateX(120%); }
+/* conic border-glow — animated gradient ring, revealed on hover */
+.io-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--io-angle, 0deg),
+    transparent 0deg,
+    rgba(255, 255, 255, 0.55) 60deg,
+    transparent 120deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.io-btn:hover::after {
+  opacity: 1;
+  animation: io-border-spin 2.4s linear infinite;
+}
+@property --io-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes io-border-spin {
+  to { --io-angle: 360deg; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .io-btn::before,
+  .io-btn:hover::after { transition: none; animation: none; }
 }
 .io-btn:hover {
   border-color: rgba(255, 255, 255, 0.28);

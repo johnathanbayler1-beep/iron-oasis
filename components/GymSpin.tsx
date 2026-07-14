@@ -383,7 +383,7 @@ export default function GymSpin() {
                 transform: 'translateY(-50%)',
                 width: 'min(440px, 82vw)',
                 padding: 'clamp(28px, 3vw, 40px)',
-                borderRadius: 2,
+                borderRadius: 12,
                 opacity: 0,
                 transformStyle: 'preserve-3d',
                 willChange: 'transform, opacity, filter',
@@ -402,7 +402,7 @@ export default function GymSpin() {
                 {beat.accent && (
                   <span
                     style={{
-                      padding: '5px 12px', borderRadius: 2, fontSize: 11, letterSpacing: '0.06em',
+                      padding: '5px 12px', borderRadius: 8, fontSize: 11, letterSpacing: '0.06em',
                       color: 'rgba(255,255,255,0.75)', background: 'rgba(255,255,255,0.06)',
                       border: '1px solid rgba(255,255,255,0.08)',
                     }}

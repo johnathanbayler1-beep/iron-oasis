@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, type MouseEvent as ReactMouseEvent } from 'react'
+import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText } from 'gsap/SplitText'
@@ -14,60 +14,36 @@ const RULES = [
 ]
 
 const ACCENT = '#d4d7da'
-const MAX_TILT = 8
 
+// Calm tactile card — no 3D tilt, no glow. A quiet lift + border brighten on
+// hover, a physical scale(0.98) on press. Spring-like ease, not a linear fade.
 function RuleCard({ r }: { r: (typeof RULES)[number] }) {
   const cardRef = useRef<HTMLDivElement>(null)
-  const setRotX = useRef<((v: number) => void) | null>(null)
-  const setRotY = useRef<((v: number) => void) | null>(null)
-  const setMX = useRef<((v: string) => void) | null>(null)
-  const setMY = useRef<((v: string) => void) | null>(null)
 
-  useEffect(() => {
+  const set = (transform: string, border: string) => {
     const el = cardRef.current
     if (!el) return
-    gsap.set(el, { transformPerspective: 1200 })
-    setRotX.current = gsap.quickTo(el, 'rotateX', { duration: 0.4, ease: 'power3.out' })
-    setRotY.current = gsap.quickTo(el, 'rotateY', { duration: 0.4, ease: 'power3.out' })
-    setMX.current = gsap.quickSetter(el, '--mx') as (v: string) => void
-    setMY.current = gsap.quickSetter(el, '--my') as (v: string) => void
-  }, [])
-
-  const onMove = (e: ReactMouseEvent<HTMLDivElement>) => {
-    const el = cardRef.current
-    if (!el) return
-    const rect = el.getBoundingClientRect()
-    const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1
-    const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1
-    setMX.current?.(`${((nx + 1) / 2) * 100}%`)
-    setMY.current?.(`${((ny + 1) / 2) * 100}%`)
-    setRotY.current?.(nx * MAX_TILT)
-    setRotX.current?.(-ny * MAX_TILT)
-  }
-
-  const onLeave = () => {
-    const el = cardRef.current
-    if (!el) return
-    gsap.to(el, { rotateX: 0, rotateY: 0, duration: 0.8, ease: 'elastic.out(1, 0.6)', overwrite: 'auto' })
+    el.style.transform = transform
+    el.style.borderColor = border
   }
 
   return (
     <div
       ref={cardRef}
       data-rule-card
-      onMouseMove={onMove}
-      onMouseLeave={onLeave}
+      onMouseEnter={() => set('translateY(-4px)', 'rgba(255,255,255,0.09)')}
+      onMouseLeave={() => set('translateY(0)', 'rgba(255,255,255,0.04)')}
+      onPointerDown={() => set('scale(0.98)', 'rgba(255,255,255,0.09)')}
+      onPointerUp={() => set('translateY(-4px)', 'rgba(255,255,255,0.09)')}
       style={{
         position: 'relative',
         display: 'flex', flexDirection: 'column',
         padding: 'clamp(32px, 3vw, 44px)',
-        borderRadius: 14,
-        transformStyle: 'preserve-3d',
+        borderRadius: 12,
         willChange: 'transform',
         background: 'rgba(255,255,255,0.02)',
-        backdropFilter: 'blur(20px) saturate(110%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(110%)',
         border: '1px solid rgba(255,255,255,0.04)',
+        transition: 'transform 0.4s cubic-bezier(0.32,0.72,0,1), border-color 0.4s cubic-bezier(0.32,0.72,0,1)',
       }}
     >
       <span
@@ -128,12 +104,11 @@ export function FinalClose() {
         )
       })
 
-      gsap.set(cards, { transformPerspective: 1200 })
       gsap.fromTo(
         cards,
-        { opacity: 0, y: 60, rotateX: -32 },
+        { opacity: 0, y: 40 },
         {
-          opacity: 1, y: 0, rotateX: 0, duration: 0.9, stagger: 0.12, ease: 'appleOut',
+          opacity: 1, y: 0, duration: 0.9, stagger: 0.1, ease: 'appleOut',
           scrollTrigger: { trigger: grid, start: 'top 82%', once: true },
         },
       )
@@ -213,18 +188,16 @@ export function FinalClose() {
           style={{
             marginTop: 'clamp(28px, 4vh, 44px)',
             display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
-            padding: 'clamp(22px, 2.6vw, 32px)', borderRadius: 14,
+            padding: 'clamp(22px, 2.6vw, 32px)', borderRadius: 12,
             border: '1px solid rgba(255,255,255,0.04)',
             background: 'rgba(255,255,255,0.02)',
-            backdropFilter: 'blur(20px) saturate(110%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(110%)',
           }}
         >
           <span
             style={{
               fontFamily: 'var(--font-jetbrains), monospace', fontSize: 12, fontWeight: 700,
               letterSpacing: '0.18em', textTransform: 'uppercase', color: '#fff',
-              padding: '6px 12px', borderRadius: 2, border: '1px solid rgba(255,255,255,0.5)',
+              padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.5)',
             }}
           >
             Strict policy
@@ -246,10 +219,8 @@ export function FinalClose() {
             display: 'flex', flexDirection: 'column', alignItems: 'center',
             gap: 'clamp(24px, 3.5vh, 40px)', textAlign: 'center',
             padding: 'clamp(72px, 11vh, 128px) clamp(32px, 6vw, 88px)',
-            borderRadius: 20, overflow: 'hidden',
+            borderRadius: 12, overflow: 'hidden',
             background: 'rgba(255,255,255,0.02)',
-            backdropFilter: 'blur(20px) saturate(110%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(110%)',
             border: '1px solid rgba(255,255,255,0.04)',
           }}
         >

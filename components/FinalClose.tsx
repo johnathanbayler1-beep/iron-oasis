@@ -61,18 +61,20 @@ function RuleCard({ r }: { r: (typeof RULES)[number] }) {
         position: 'relative',
         display: 'flex', flexDirection: 'column',
         padding: 'clamp(32px, 3vw, 44px)',
-        borderRadius: 2,
+        borderRadius: 14,
         transformStyle: 'preserve-3d',
         willChange: 'transform',
-        background: 'linear-gradient(145deg, #181818, #060606)',
-        border: '1px solid rgba(255,255,255,0.4)',
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(0,0,0,0.8), 0 20px 40px rgba(0,0,0,0.8)',
+        background: 'rgba(14,14,14,0.55)',
+        backdropFilter: 'blur(28px) saturate(120%)',
+        WebkitBackdropFilter: 'blur(28px) saturate(120%)',
+        border: '1px solid rgba(255,255,255,0.12)',
+        boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.10), 0 30px 60px rgba(0,0,0,0.8)',
       }}
     >
       <span
         aria-hidden="true"
         style={{
-          position: 'absolute', inset: 0, borderRadius: 2, pointerEvents: 'none', zIndex: 1,
+          position: 'absolute', inset: 0, borderRadius: 14, pointerEvents: 'none', zIndex: 1,
           background: 'radial-gradient(340px circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.14), transparent 60%)',
         }}
       />
@@ -227,10 +229,12 @@ export function FinalClose() {
           style={{
             marginTop: 'clamp(28px, 4vh, 44px)',
             display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
-            padding: 'clamp(22px, 2.6vw, 32px)', borderRadius: 2,
-            border: '1px solid rgba(255,255,255,0.4)',
-            background: 'linear-gradient(145deg, #181818, #060606)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(0,0,0,0.8), 0 20px 40px rgba(0,0,0,0.8)',
+            padding: 'clamp(22px, 2.6vw, 32px)', borderRadius: 14,
+            border: '1px solid rgba(255,255,255,0.12)',
+            background: 'rgba(14,14,14,0.55)',
+            backdropFilter: 'blur(28px) saturate(120%)',
+            WebkitBackdropFilter: 'blur(28px) saturate(120%)',
+            boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.10), 0 30px 60px rgba(0,0,0,0.8)',
           }}
         >
           <span
@@ -255,19 +259,43 @@ export function FinalClose() {
         <div
           data-fade
           style={{
-            marginTop: 'clamp(56px, 8vh, 96px)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, textAlign: 'center',
+            position: 'relative', marginTop: 'clamp(56px, 8vh, 96px)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            gap: 'clamp(24px, 3.5vh, 40px)', textAlign: 'center',
+            padding: 'clamp(56px, 8vh, 96px) clamp(32px, 6vw, 88px)',
+            borderRadius: 20, overflow: 'hidden',
+            background: 'rgba(14,14,14,0.5)',
+            backdropFilter: 'blur(30px) saturate(120%)',
+            WebkitBackdropFilter: 'blur(30px) saturate(120%)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.14), 0 30px 60px rgba(0,0,0,0.8), 0 0 80px rgba(255,255,255,0.05)',
           }}
         >
+          <span
+            aria-hidden="true"
+            style={{
+              position: 'absolute', inset: 0, pointerEvents: 'none',
+              background: 'radial-gradient(600px circle at 50% 0%, rgba(255,255,255,0.10), transparent 60%)',
+            }}
+          />
+          <h3
+            style={{
+              position: 'relative', margin: 0,
+              fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 800,
+              fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1, letterSpacing: '-0.04em', color: '#f6f8f6',
+            }}
+          >
+            The node is waiting.
+          </h3>
           <button
             type="button"
             onClick={() => console.log('PWA Prompt Triggered')}
             className="io-btn io-btn--accent"
-            style={{ padding: 'clamp(20px, 2.4vh, 26px) clamp(40px, 5vw, 64px)', fontSize: 'clamp(18px, 2vw, 22px)', fontWeight: 700 }}
+            style={{ position: 'relative', padding: 'clamp(20px, 2.4vh, 26px) clamp(40px, 5vw, 64px)', fontSize: 'clamp(18px, 2vw, 22px)', fontWeight: 700 }}
           >
             Get your key
           </button>
-          <span style={{ fontFamily: 'var(--font-grotesk), sans-serif', fontSize: 15, fontWeight: 400, color: 'rgba(255,255,255,0.5)' }}>
+          <span style={{ position: 'relative', fontFamily: 'var(--font-grotesk), sans-serif', fontSize: 15, fontWeight: 400, color: 'rgba(255,255,255,0.5)' }}>
             Download the app and claim your Access Key in minutes.
           </span>
         </div>

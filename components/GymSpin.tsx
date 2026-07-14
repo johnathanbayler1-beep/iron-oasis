@@ -56,45 +56,55 @@ const BEATS = [
 
 const ACCENT = '#e6e6e6'
 
-// Weighted material physics — light glass → chrome → dense metal. Monochrome only.
+// Linear-style translucent glass. Accent key gets a brighter milled edge + glow.
+// Monochrome only. backdrop-filter refracts the 3D scene behind the panel.
+const GLASS_BASE: React.CSSProperties = {
+  backdropFilter: 'blur(28px) saturate(120%)',
+  WebkitBackdropFilter: 'blur(28px) saturate(120%)',
+} as React.CSSProperties
 const MATERIAL: Record<string, React.CSSProperties> = {
   light: {
-    background: 'linear-gradient(145deg, #262626, #0e0e0e)',
-    border: '1px solid rgba(255,255,255,0.32)',
-    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.72), inset 0 -1px 0 rgba(0,0,0,0.55), 0 16px 34px rgba(0,0,0,0.7)',
+    ...GLASS_BASE,
+    background: 'rgba(14,14,14,0.55)',
+    border: '1px solid rgba(255,255,255,0.10)',
+    boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.10), 0 30px 60px rgba(0,0,0,0.8)',
   },
   chrome: {
-    background: 'linear-gradient(145deg, #3a3a3a, #101010)',
-    border: '1px solid rgba(255,255,255,0.55)',
-    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(0,0,0,0.9), 0 24px 44px rgba(0,0,0,0.85)',
+    ...GLASS_BASE,
+    background: 'rgba(20,20,20,0.55)',
+    border: '1px solid rgba(255,255,255,0.15)',
+    boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.18), 0 40px 80px rgba(0,0,0,0.85), 0 0 40px rgba(255,255,255,0.06)',
   },
   heavy: {
-    background: 'linear-gradient(145deg, #2c2c2c, #000000)',
-    border: '1px solid rgba(255,255,255,0.42)',
-    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -2px 1px rgba(0,0,0,1), 0 36px 64px rgba(0,0,0,0.92)',
+    ...GLASS_BASE,
+    background: 'rgba(10,10,10,0.6)',
+    border: '1px solid rgba(255,255,255,0.12)',
+    boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.12), 0 40px 80px rgba(0,0,0,0.9)',
   },
 }
 
 // Sleek monochrome geometry — floats above the card in preserve-3d, anchors each key.
 function KeyGlyph({ variant, bright }: { variant: 'spark' | 'node' | 'diamond'; bright: boolean }) {
-  const s = bright ? 'rgba(255,255,255,0.62)' : 'rgba(255,255,255,0.32)'
+  const s = bright ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.5)'
+  const glow = bright ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.22)'
   return (
     <svg
       viewBox="0 0 100 100"
       aria-hidden="true"
       style={{
         position: 'absolute',
-        bottom: 'clamp(20px, 2.4vw, 32px)',
-        right: 'clamp(22px, 2.6vw, 34px)',
-        width: 'clamp(72px, 9vw, 116px)',
-        height: 'clamp(72px, 9vw, 116px)',
-        transform: 'translateZ(42px)',
+        top: 'clamp(24px, 2.6vw, 34px)',
+        right: 'clamp(24px, 2.8vw, 36px)',
+        width: 'clamp(30px, 3.4vw, 42px)',
+        height: 'clamp(30px, 3.4vw, 42px)',
+        transform: 'translateZ(40px)',
+        filter: `drop-shadow(0 0 6px ${glow})`,
         pointerEvents: 'none',
         overflow: 'visible',
       }}
       fill="none"
       stroke={s}
-      strokeWidth={1.3}
+      strokeWidth={2.4}
       strokeLinecap="round"
       strokeLinejoin="round"
     >

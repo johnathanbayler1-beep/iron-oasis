@@ -18,6 +18,8 @@ const BEATS = [
     name: 'Oasis Lite',
     tagline: 'Your first key to the node.',
     accent: false,
+    glyph: 'spark' as const,
+    weight: 'light' as const,
     specs: [
       ['Access', '3 days / week'],
       ['Hours', 'Non-peak only'],
@@ -29,6 +31,8 @@ const BEATS = [
     name: 'Oasis Plus',
     tagline: 'Peak hours, unlocked.',
     accent: true,
+    glyph: 'node' as const,
+    weight: 'chrome' as const,
     specs: [
       ['Access', '4 days / week'],
       ['Hours', 'Peak included'],
@@ -40,6 +44,8 @@ const BEATS = [
     name: 'Oasis Max',
     tagline: 'The whole node, any hour.',
     accent: false,
+    glyph: 'diamond' as const,
+    weight: 'heavy' as const,
     specs: [
       ['Access', 'Every day'],
       ['Hours', '24/7 · peak & non-peak'],
@@ -49,6 +55,84 @@ const BEATS = [
 ]
 
 const ACCENT = '#e6e6e6'
+
+// Weighted material physics — light glass → chrome → dense metal. Monochrome only.
+const MATERIAL: Record<string, React.CSSProperties> = {
+  light: {
+    background: 'linear-gradient(145deg, #262626, #0e0e0e)',
+    border: '1px solid rgba(255,255,255,0.32)',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.72), inset 0 -1px 0 rgba(0,0,0,0.55), 0 16px 34px rgba(0,0,0,0.7)',
+  },
+  chrome: {
+    background: 'linear-gradient(145deg, #3a3a3a, #101010)',
+    border: '1px solid rgba(255,255,255,0.55)',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(0,0,0,0.9), 0 24px 44px rgba(0,0,0,0.85)',
+  },
+  heavy: {
+    background: 'linear-gradient(145deg, #2c2c2c, #000000)',
+    border: '1px solid rgba(255,255,255,0.42)',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -2px 1px rgba(0,0,0,1), 0 36px 64px rgba(0,0,0,0.92)',
+  },
+}
+
+// Sleek monochrome geometry — floats above the card in preserve-3d, anchors each key.
+function KeyGlyph({ variant, bright }: { variant: 'spark' | 'node' | 'diamond'; bright: boolean }) {
+  const s = bright ? 'rgba(255,255,255,0.62)' : 'rgba(255,255,255,0.32)'
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        bottom: 'clamp(20px, 2.4vw, 32px)',
+        right: 'clamp(22px, 2.6vw, 34px)',
+        width: 'clamp(72px, 9vw, 116px)',
+        height: 'clamp(72px, 9vw, 116px)',
+        transform: 'translateZ(42px)',
+        pointerEvents: 'none',
+        overflow: 'visible',
+      }}
+      fill="none"
+      stroke={s}
+      strokeWidth={1.3}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {variant === 'spark' && (
+        <g>
+          {[0, 45, 90, 135, 180, 225, 270, 315].map((a, i) => {
+            const r = i % 2 ? 20 : 34
+            const rad = (a * Math.PI) / 180
+            return <line key={a} x1={50} y1={50} x2={50 + Math.cos(rad) * r} y2={50 + Math.sin(rad) * r} />
+          })}
+          <circle cx={50} cy={50} r={3.5} />
+        </g>
+      )}
+      {variant === 'node' && (
+        <g>
+          <line x1={50} y1={50} x2={24} y2={30} />
+          <line x1={50} y1={50} x2={78} y2={36} />
+          <line x1={50} y1={50} x2={52} y2={80} />
+          <circle cx={50} cy={50} r={7} />
+          <circle cx={24} cy={30} r={4} />
+          <circle cx={78} cy={36} r={4} />
+          <circle cx={52} cy={80} r={4} />
+        </g>
+      )}
+      {variant === 'diamond' && (
+        <g>
+          <path d="M38 26 L62 26 L82 44 L50 86 L18 44 Z" />
+          <line x1={18} y1={44} x2={82} y2={44} />
+          <line x1={38} y1={26} x2={50} y2={44} />
+          <line x1={62} y1={26} x2={50} y2={44} />
+          <line x1={18} y1={44} x2={50} y2={86} />
+          <line x1={82} y1={44} x2={50} y2={86} />
+          <line x1={50} y1={44} x2={50} y2={86} />
+        </g>
+      )}
+    </svg>
+  )
+}
 
 // GSAP → R3F invalidate bridge (GymSpin is a page singleton)
 let _invalidate: (() => void) | null = null
@@ -298,15 +382,10 @@ export default function GymSpin() {
                 opacity: 0,
                 transformStyle: 'preserve-3d',
                 willChange: 'transform, opacity, filter',
-                background: beat.accent
-                  ? 'linear-gradient(145deg, #3a3a3a, #101010)'
-                  : 'linear-gradient(145deg, #181818, #060606)',
-                border: `1px solid ${beat.accent ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.4)'}`,
-                boxShadow: beat.accent
-                  ? 'inset 0 1px 0 rgba(255,255,255,0.85), inset 0 -1px 0 rgba(0,0,0,0.9), 0 24px 44px rgba(0,0,0,0.85)'
-                  : 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(0,0,0,0.8), 0 20px 40px rgba(0,0,0,0.8)',
+                ...MATERIAL[beat.weight],
               }}
             >
+              <KeyGlyph variant={beat.glyph} bright={beat.accent} />
               <span
                 style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',

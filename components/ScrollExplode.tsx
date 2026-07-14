@@ -182,7 +182,8 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
                 tick(); resolve()
               }
               img.onload = () => {
-                ;(img.decode?.() ?? Promise.resolve()).catch(() => {}).finally(finish)
+                finish()                        // ready on load; never gate on decode
+                img.decode?.().catch(() => {})  // fire-and-forget: warm cache, never block
               }
               img.onerror = finish
               // src set AFTER handlers: cached frames fire load synchronously,

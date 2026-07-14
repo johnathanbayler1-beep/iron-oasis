@@ -59,34 +59,30 @@ const ACCENT = '#e6e6e6'
 // Linear-style translucent glass. Accent key gets a brighter milled edge + glow.
 // Monochrome only. backdrop-filter refracts the 3D scene behind the panel.
 const GLASS_BASE: React.CSSProperties = {
-  backdropFilter: 'blur(28px) saturate(120%)',
-  WebkitBackdropFilter: 'blur(28px) saturate(120%)',
+  backdropFilter: 'blur(20px) saturate(110%)',
+  WebkitBackdropFilter: 'blur(20px) saturate(110%)',
 } as React.CSSProperties
 const MATERIAL: Record<string, React.CSSProperties> = {
   light: {
     ...GLASS_BASE,
-    background: 'rgba(14,14,14,0.55)',
-    border: '1px solid rgba(255,255,255,0.10)',
-    boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.10), 0 30px 60px rgba(0,0,0,0.8)',
+    background: 'rgba(255,255,255,0.02)',
+    border: '1px solid rgba(255,255,255,0.04)',
   },
   chrome: {
     ...GLASS_BASE,
-    background: 'rgba(20,20,20,0.55)',
-    border: '1px solid rgba(255,255,255,0.15)',
-    boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.18), 0 40px 80px rgba(0,0,0,0.85), 0 0 40px rgba(255,255,255,0.06)',
+    background: 'rgba(255,255,255,0.035)',
+    border: '1px solid rgba(255,255,255,0.08)',
   },
   heavy: {
     ...GLASS_BASE,
-    background: 'rgba(10,10,10,0.6)',
-    border: '1px solid rgba(255,255,255,0.12)',
-    boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.12), 0 40px 80px rgba(0,0,0,0.9)',
+    background: 'rgba(255,255,255,0.02)',
+    border: '1px solid rgba(255,255,255,0.04)',
   },
 }
 
 // Sleek monochrome geometry — floats above the card in preserve-3d, anchors each key.
 function KeyGlyph({ variant, bright }: { variant: 'spark' | 'node' | 'diamond'; bright: boolean }) {
-  const s = bright ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.5)'
-  const glow = bright ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.22)'
+  const s = bright ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.32)'
   return (
     <svg
       viewBox="0 0 100 100"
@@ -98,13 +94,12 @@ function KeyGlyph({ variant, bright }: { variant: 'spark' | 'node' | 'diamond'; 
         width: 'clamp(30px, 3.4vw, 42px)',
         height: 'clamp(30px, 3.4vw, 42px)',
         transform: 'translateZ(40px)',
-        filter: `drop-shadow(0 0 6px ${glow})`,
         pointerEvents: 'none',
         overflow: 'visible',
       }}
       fill="none"
       stroke={s}
-      strokeWidth={2.4}
+      strokeWidth={2}
       strokeLinecap="round"
       strokeLinejoin="round"
     >
@@ -408,7 +403,8 @@ export default function GymSpin() {
                   <span
                     style={{
                       padding: '5px 12px', borderRadius: 2, fontSize: 11, letterSpacing: '0.06em',
-                      color: '#000', background: 'linear-gradient(145deg, #f2f2f2, #b8b8b8)',
+                      color: 'rgba(255,255,255,0.75)', background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid rgba(255,255,255,0.08)',
                     }}
                   >
                     Most popular

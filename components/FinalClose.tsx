@@ -64,20 +64,12 @@ function RuleCard({ r }: { r: (typeof RULES)[number] }) {
         borderRadius: 14,
         transformStyle: 'preserve-3d',
         willChange: 'transform',
-        background: 'rgba(14,14,14,0.55)',
-        backdropFilter: 'blur(28px) saturate(120%)',
-        WebkitBackdropFilter: 'blur(28px) saturate(120%)',
-        border: '1px solid rgba(255,255,255,0.12)',
-        boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.10), 0 30px 60px rgba(0,0,0,0.8)',
+        background: 'rgba(255,255,255,0.02)',
+        backdropFilter: 'blur(20px) saturate(110%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(110%)',
+        border: '1px solid rgba(255,255,255,0.04)',
       }}
     >
-      <span
-        aria-hidden="true"
-        style={{
-          position: 'absolute', inset: 0, borderRadius: 14, pointerEvents: 'none', zIndex: 1,
-          background: 'radial-gradient(340px circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.14), transparent 60%)',
-        }}
-      />
       <span
         style={{
           position: 'relative', zIndex: 2,
@@ -169,14 +161,6 @@ export function FinalClose() {
         overflow: 'hidden',
       }}
     >
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'radial-gradient(1100px circle at 50% 0%, rgba(255,255,255,0.08), transparent 55%)',
-        }}
-      />
-
       <div style={{ position: 'relative', maxWidth: 1200, margin: '0 auto' }}>
         <div
           data-fade
@@ -230,11 +214,10 @@ export function FinalClose() {
             marginTop: 'clamp(28px, 4vh, 44px)',
             display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
             padding: 'clamp(22px, 2.6vw, 32px)', borderRadius: 14,
-            border: '1px solid rgba(255,255,255,0.12)',
-            background: 'rgba(14,14,14,0.55)',
-            backdropFilter: 'blur(28px) saturate(120%)',
-            WebkitBackdropFilter: 'blur(28px) saturate(120%)',
-            boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.10), 0 30px 60px rgba(0,0,0,0.8)',
+            border: '1px solid rgba(255,255,255,0.04)',
+            background: 'rgba(255,255,255,0.02)',
+            backdropFilter: 'blur(20px) saturate(110%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(110%)',
           }}
         >
           <span
@@ -262,22 +245,14 @@ export function FinalClose() {
             position: 'relative', marginTop: 'clamp(56px, 8vh, 96px)',
             display: 'flex', flexDirection: 'column', alignItems: 'center',
             gap: 'clamp(24px, 3.5vh, 40px)', textAlign: 'center',
-            padding: 'clamp(56px, 8vh, 96px) clamp(32px, 6vw, 88px)',
+            padding: 'clamp(72px, 11vh, 128px) clamp(32px, 6vw, 88px)',
             borderRadius: 20, overflow: 'hidden',
-            background: 'rgba(14,14,14,0.5)',
-            backdropFilter: 'blur(30px) saturate(120%)',
-            WebkitBackdropFilter: 'blur(30px) saturate(120%)',
-            border: '1px solid rgba(255,255,255,0.15)',
-            boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.14), 0 30px 60px rgba(0,0,0,0.8), 0 0 80px rgba(255,255,255,0.05)',
+            background: 'rgba(255,255,255,0.02)',
+            backdropFilter: 'blur(20px) saturate(110%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(110%)',
+            border: '1px solid rgba(255,255,255,0.04)',
           }}
         >
-          <span
-            aria-hidden="true"
-            style={{
-              position: 'absolute', inset: 0, pointerEvents: 'none',
-              background: 'radial-gradient(600px circle at 50% 0%, rgba(255,255,255,0.10), transparent 60%)',
-            }}
-          />
           <h3
             style={{
               position: 'relative', margin: 0,

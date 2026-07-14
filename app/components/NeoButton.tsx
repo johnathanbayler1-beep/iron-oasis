@@ -16,8 +16,8 @@ type Props = {
 export function NeoButton({ children, variant = 'primary', type = 'button', onClick, className = '' }: Props) {
   const ref = useRef<HTMLButtonElement>(null)
 
-  const press = () => gsap.to(ref.current, { scale: 0.98, duration: 0.12, ease: 'power2.out' })
-  const release = () => gsap.to(ref.current, { scale: 1, duration: 0.5, ease: 'elastic.out(1, 0.5)' })
+  const press = () => gsap.to(ref.current, { scale: 0.96, duration: 0.14, ease: 'expo.out' })
+  const release = () => gsap.to(ref.current, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' })
 
   return (
     <button

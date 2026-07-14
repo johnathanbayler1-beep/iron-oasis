@@ -64,13 +64,10 @@ body {
   overflow-x: hidden;
 }
 
-/* ── Floating Chrome CTA — real hardware glass: the 3D scene refracts through
-   the panel, a 1px milled edge catches light, physical press on pointer-down.
-   GSAP drives scale:0.97; :active is the no-JS fallback. ── */
+/* ── Quiet tactile CTA (Kowalski) — understated glass, no sweeps, no glow ring.
+   Physical spring press: GSAP drives scale on pointer-down, :active is fallback. ── */
 .io-btn {
   position: relative;
-  isolation: isolate;
-  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -83,98 +80,36 @@ body {
   color: #fff;
   cursor: pointer;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(10, 10, 10, 0.5);
-  -webkit-backdrop-filter: blur(24px) saturate(120%);
-  backdrop-filter: blur(24px) saturate(120%);
-  box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.25),
-    0 24px 48px rgba(0, 0, 0, 0.8);
-  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  -webkit-backdrop-filter: blur(20px) saturate(120%);
+  backdrop-filter: blur(20px) saturate(120%);
+  transition: transform 0.16s cubic-bezier(0.23, 1, 0.32, 1),
+    border-color 0.2s ease, background 0.2s ease;
   will-change: transform;
 }
-/* light-sweep — a specular band slides across the glass on hover */
-.io-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: linear-gradient(
-    115deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.16) 48%,
-    rgba(255, 255, 255, 0.28) 50%,
-    rgba(255, 255, 255, 0.16) 52%,
-    transparent 70%
-  );
-  transform: translateX(-120%);
-  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+@media (hover: hover) and (pointer: fine) {
+  .io-btn:hover {
+    border-color: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.07);
+  }
 }
-.io-btn:hover::before { transform: translateX(120%); }
-/* conic border-glow — animated gradient ring, revealed on hover */
-.io-btn::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  border-radius: inherit;
-  padding: 1px;
-  background: conic-gradient(
-    from var(--io-angle, 0deg),
-    transparent 0deg,
-    rgba(255, 255, 255, 0.55) 60deg,
-    transparent 120deg,
-    transparent 360deg
-  );
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-.io-btn:hover::after {
-  opacity: 1;
-  animation: io-border-spin 2.4s linear infinite;
-}
-@property --io-angle {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
-}
-@keyframes io-border-spin {
-  to { --io-angle: 360deg; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .io-btn::before,
-  .io-btn:hover::after { transition: none; animation: none; }
-}
-.io-btn:hover {
-  border-color: rgba(255, 255, 255, 0.28);
-  background: rgba(22, 22, 22, 0.55);
-  box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.35),
-    0 30px 60px rgba(0, 0, 0, 0.85);
-}
-.io-btn:active { transform: scale(0.97); }
+.io-btn:active { transform: scale(0.96); }
 
-/* Primary variant — brighter milled edge, chrome catches more light */
+/* Primary variant — understated, a touch elevated from base. Quiet, no glow. */
 .io-btn--accent {
   color: #fff;
-  border-color: rgba(255, 255, 255, 0.22);
-  background: rgba(28, 28, 28, 0.55);
-  box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.45),
-    0 24px 48px rgba(0, 0, 0, 0.85);
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
 }
-.io-btn--accent:hover {
-  border-color: rgba(255, 255, 255, 0.4);
-  background: rgba(40, 40, 40, 0.6);
-  box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.55),
-    0 30px 60px rgba(0, 0, 0, 0.9);
+@media (hover: hover) and (pointer: fine) {
+  .io-btn--accent:hover {
+    border-color: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.11);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .io-btn { transition: none; }
 }
 
 /* Industrial heading contract: opt-in via .io-brutalist.

@@ -174,7 +174,7 @@ export function FinalClose() {
           ref={gridRef}
           style={{
             display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: 'clamp(18px, 2vw, 28px)', perspective: 1200,
+            gap: 'clamp(18px, 2vw, 28px)',
           }}
         >
           {RULES.map((r) => (

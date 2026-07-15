@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Environment, Lightformer, useGLTF } from '@react-three/drei'
+import { Environment, Lightformer, Preload, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -241,19 +241,18 @@ export default function GymSpin() {
         const ps   = i * SLOT
         const exit = i < BEATS.length - 1 ? ps + SLOT * 0.65 : 0.92
 
-        gsap.set(el, { transformPerspective: 1200 })
-        // Entry: tilt up from the table — rotateY(14) scale(1.05) blur → flat
+        // Entry: a calm rise + settle. No 3D tilt — Kowalski quiet, opacity/y/blur only.
         tl.fromTo(
           el,
-          { opacity: 0, scale: 1.05, filter: 'blur(15px)', y: 40, rotateY: 14, rotateX: -6 },
-          { opacity: 1, scale: 1,    filter: 'blur(0px)',  y: 0,  rotateY: 0,  rotateX: 0, duration: 0.18, ease: 'power2.out', immediateRender: false },
+          { opacity: 0, y: 28, filter: 'blur(10px)' },
+          { opacity: 1, y: 0,  filter: 'blur(0px)', duration: 0.18, ease: 'power2.out', immediateRender: false },
           ps,
         )
-        // Exit — tilt away
+        // Exit — soft settle out
         tl.fromTo(
           el,
-          { opacity: 1, scale: 1,    filter: 'blur(0px)',  y: 0,   rotateY: 0,   rotateX: 0 },
-          { opacity: 0, scale: 0.95, filter: 'blur(6px)',  y: -30, rotateY: -12, rotateX: 4, duration: 0.12, ease: 'power2.in', immediateRender: false },
+          { opacity: 1, y: 0,   filter: 'blur(0px)' },
+          { opacity: 0, y: -20, filter: 'blur(5px)', duration: 0.12, ease: 'power2.in', immediateRender: false },
           exit,
         )
       })
@@ -338,6 +337,7 @@ export default function GymSpin() {
                 <Lightformer intensity={2} position={[6, 0, 2]} rotation-y={-Math.PI / 2} scale={[10, 1, 1]} color="#ffffff" />
               </Environment>
               <SpinModel />
+              <Preload all />
             </Suspense>
           </Canvas>
         )}

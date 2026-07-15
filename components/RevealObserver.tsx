@@ -9,7 +9,7 @@ import { useEffect } from 'react';
 export function RevealObserver() {
   useEffect(() => {
     const els = document.querySelectorAll(
-      '.io-reveal-up, .io-edit-heading, .io-tier, .io-stat-num, .io-body, .io-rule'
+      '.io-reveal-up, .io-edit-heading, .io-tier, .io-stat-num, .io-body, .io-rule, .io-spatial'
     );
     if (!els.length) return;
 

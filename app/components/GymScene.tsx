@@ -8,13 +8,17 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 const MODEL_URL = '/gym-space-2k.glb'
-const SCROLL_VH = 160 // compressed: animation fills the track, no dead-scroll tail
+const SCROLL_VH = 140 // eased spline reaches the end sooner; trim the dead tail
 
 const _lookAt = new THREE.Vector3()
+const _camPos = new THREE.Vector3()
 
 type WayPoint = { pos: THREE.Vector3; lookAt: THREE.Vector3 }
 
-function Model({ waypointsRef }: { waypointsRef: { current: WayPoint[] } }) {
+function Model({ waypointsRef, curveRef }: {
+  waypointsRef: { current: WayPoint[] }
+  curveRef: { current: THREE.CatmullRomCurve3 | null }
+}) {
   const { scene } = useGLTF(MODEL_URL)
   const cloned  = useMemo(() => scene.clone(true), [scene])
 
@@ -49,17 +53,25 @@ function Model({ waypointsRef }: { waypointsRef: { current: WayPoint[] } }) {
         lookAt: c.clone(),
       },
     ]
-  }, [cloned, waypointsRef])
+
+    curveRef.current = new THREE.CatmullRomCurve3(
+      waypointsRef.current.map((w) => w.pos),
+      false,           // not closed
+      'centripetal',   // avoids overshoot/cusps at waypoints
+    )
+  }, [cloned, waypointsRef, curveRef])
 
   return <primitive object={cloned} />
 }
 
 function CameraRig({
   waypointsRef,
+  curveRef,
   progressRef,
   invalidateRef,
 }: {
   waypointsRef:  { current: WayPoint[] }
+  curveRef:      { current: THREE.CatmullRomCurve3 | null }
   progressRef:   { current: number }
   invalidateRef: { current: () => void }
 }) {
@@ -82,19 +94,31 @@ function CameraRig({
       lastChangeRef.current = Date.now()
     }
 
-    const idle   = Date.now() - lastChangeRef.current > 1500
-    const scaled = prog * (pts.length - 1)
+    const idle  = Date.now() - lastChangeRef.current > 1500
+    const curve = curveRef.current
+    if (!curve) return
+
+    // power4.inOut easing on global progress → one continuous C1 glide
+    const p = prog
+    const eased = p < 0.5
+      ? 8 * p * p * p * p
+      : 1 - Math.pow(-2 * p + 2, 4) / 2
+
+    curve.getPoint(eased, _camPos)
+    camera.position.copy(_camPos)
+
+    // lookAt still piecewise-lerped across the raw waypoint targets
+    const scaled = eased * (pts.length - 1)
     const lo     = Math.floor(scaled)
     const hi     = Math.min(lo + 1, pts.length - 1)
     const t      = scaled - lo
-
-    camera.position.lerpVectors(pts[lo].pos, pts[hi].pos, t)
     _lookAt.lerpVectors(pts[lo].lookAt, pts[hi].lookAt, t)
 
+    // idle drift: heavily reduced — barely-there, never fights the frame-synced feel
     if (idle) {
       const now = Date.now()
-      camera.position.x += Math.sin(now * 0.0004) * 0.003
-      camera.position.y += Math.cos(now * 0.0003) * 0.0015
+      camera.position.x += Math.sin(now * 0.0004) * 0.0008
+      camera.position.y += Math.cos(now * 0.0003) * 0.0004
     }
 
     camera.lookAt(_lookAt)
@@ -110,6 +134,7 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
   const stickyRef      = useRef<HTMLDivElement>(null)
   const progressRef    = useRef(0)
   const waypointsRef   = useRef<WayPoint[]>([])
+  const curveRef       = useRef<THREE.CatmullRomCurve3 | null>(null)
   const invalidateRef  = useRef<() => void>(() => {})
   const readyFiredRef  = useRef(false)
   const [inView, setInView] = useState(false)
@@ -154,7 +179,7 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
       trigger: section,
       start:   'top top',
       end:     'bottom bottom',
-      scrub:   0.8,
+      scrub:   0.5,
       onUpdate(self) {
         progressRef.current = self.progress
         invalidateRef.current()
@@ -228,9 +253,10 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
             <directionalLight position={[5, 5, 5]} intensity={1.2} />
             <Suspense fallback={null}>
               <Environment preset="apartment" />
-              <Model waypointsRef={waypointsRef} />
+              <Model waypointsRef={waypointsRef} curveRef={curveRef} />
               <CameraRig
                 waypointsRef={waypointsRef}
+                curveRef={curveRef}
                 progressRef={progressRef}
                 invalidateRef={invalidateRef}
               />

@@ -88,6 +88,7 @@ body {
   .io-btn:hover {
     border-color: rgba(255, 255, 255, 0.16);
     background: rgba(255, 255, 255, 0.07);
+    transform: translateY(-2px);
   }
 }
 .io-btn:active { transform: scale(0.96); }
@@ -167,19 +168,46 @@ html.lenis-stopped body {
 /* Fallback watchdog: if the observer never fires, RevealObserver adds
    `io-fallback-visible` to <body> to force-show these reveal targets. */
 .io-fallback-visible .io-reveal-up,
-.io-fallback-visible .io-edit-heading {
+.io-fallback-visible .io-edit-heading,
+.io-fallback-visible .io-spatial {
   opacity: 1 !important;
   transform: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .io-reveal-up,
-  .io-edit-heading {
+  .io-edit-heading,
+  .io-spatial {
     transition: none;
     opacity: 1;
     transform: none;
   }
 }
+
+/* ── Shared spatial entrance — restrained rise + subtle tilt.
+   Opt-in: .io-spatial-parent on the container, .io-spatial on each child.
+   RevealObserver adds .io-hl-visible per element as it enters view. ── */
+.io-spatial-parent {
+  perspective: 1000px;
+}
+.io-spatial {
+  opacity: 0;
+  transform: translateY(30px) rotateX(6deg);
+  transform-origin: center bottom;
+  transition:
+    opacity 0.7s ease,
+    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+.io-spatial.io-hl-visible {
+  opacity: 1;
+  transform: translateY(0) rotateX(0);
+  will-change: auto;
+}
+.io-spatial-parent > .io-spatial:nth-child(2) { transition-delay: 0.1s; }
+.io-spatial-parent > .io-spatial:nth-child(3) { transition-delay: 0.2s; }
+.io-spatial-parent > .io-spatial:nth-child(4) { transition-delay: 0.3s; }
+.io-spatial-parent > .io-spatial:nth-child(5) { transition-delay: 0.4s; }
 
 /* ═══════════════════════════════════════════════════════════════
    IRON OASIS — ATMOSPHERE + SECTION DESIGN SYSTEM

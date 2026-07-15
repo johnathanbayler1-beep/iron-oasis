@@ -37,11 +37,11 @@ export function HowItWorks() {
         { opacity: 1, y: 0, duration: 0.7, stagger: 0.08, ease: 'power2.out',
           scrollTrigger: { trigger: wrap, start: 'top 72%', once: true } },
       )
-      // steps snap in sequentially — a slight z-push + tilt, like plates settling into place
+      // steps settle in sequentially — restrained rise + subtle tilt (≤6deg), quiet-luxury
       gsap.fromTo(
         steps,
-        { opacity: 0, y: 36, z: -60, rotateX: -10 },
-        { opacity: 1, y: 0, z: 0, rotateX: 0, duration: 0.75, stagger: 0.12, ease: 'power3.out',
+        { opacity: 0, y: 30, rotateX: -6 },
+        { opacity: 1, y: 0, rotateX: 0, duration: 0.75, stagger: 0.1, ease: 'power3.out',
           scrollTrigger: { trigger: steps[0], start: 'top 82%', once: true } },
       )
     }, wrap)

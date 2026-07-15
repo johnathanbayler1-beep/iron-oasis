@@ -109,9 +109,9 @@ export function FinalClose() {
 
       gsap.fromTo(
         cards,
-        { opacity: 0, y: 40 },
+        { opacity: 0, y: 30, rotateX: -6 },
         {
-          opacity: 1, y: 0, duration: 0.9, stagger: 0.1, ease: 'appleOut',
+          opacity: 1, y: 0, rotateX: 0, duration: 0.9, stagger: 0.1, ease: 'appleOut',
           scrollTrigger: { trigger: grid, start: 'top 82%', once: true },
         },
       )
@@ -213,6 +213,7 @@ export function FinalClose() {
           style={{
             display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
             gap: 'clamp(18px, 2vw, 28px)',
+            perspective: '1000px',
           }}
         >
           {RULES.map((r) => (

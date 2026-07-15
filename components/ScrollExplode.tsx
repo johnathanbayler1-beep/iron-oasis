@@ -444,8 +444,17 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
             margin: '16px 0 0',
           }}
         >
-          Your private space is live. <span style={{ color: 'rgba(255,255,255,0.45)' }}>Private autonomy, on your key.</span>
+          Your private space is live.
         </h1>
+        <p
+          style={{
+            fontFamily: 'var(--font-grotesk), sans-serif', fontSize: 'clamp(15px, 1.7vw, 19px)',
+            color: 'rgba(255,255,255,0.55)', margin: '18px 0 0', maxWidth: '32ch',
+            marginInline: 'auto', lineHeight: 1.5,
+          }}
+        >
+          Private autonomy, on your key.
+        </p>
         </div>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', pointerEvents: 'auto', marginTop: 'auto' }}>
           <button

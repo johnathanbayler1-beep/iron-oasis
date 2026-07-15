@@ -135,7 +135,7 @@ function BridgeRig({
 
 const BEATS = [
   { window: '0.02,0.35', side: 'right', head: 'CLAIM YOUR KEY.', body: 'Pick an Access Key in the app. Premium equipment, zero sharing, 24/7 access. No contracts, no hidden fees.' },
-  { window: '0.33,0.67', side: 'left',  head: 'BOOK YOUR SESSION.',  body: 'Reserve a 1-hour block. Park on the street, walk up the property — the entire private space is yours, no one else.' },
+  { window: '0.33,0.67', side: 'left',  head: 'BOOK YOUR SESSION.',  body: 'Reserve a 1-hour block. Park on the street, walk up the property — the entire private node is yours, no one else.' },
   { window: '0.65,0.98', side: 'right', head: 'UNLOCK WITH YOUR KEY.', body: 'The Yale smart lock opens for your key alone. A frictionless, private walk-in — every time.' },
 ]
 

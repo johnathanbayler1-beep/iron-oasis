@@ -17,6 +17,7 @@ const BEATS = [
     index: 'KEY 01',
     name: 'Oasis Lite',
     tagline: 'Your first key to the space.',
+    price: '$99',
     accent: false,
     glyph: 'spark' as const,
     weight: 'light' as const,
@@ -30,6 +31,7 @@ const BEATS = [
     index: 'KEY 02',
     name: 'Oasis Plus',
     tagline: 'Peak hours, unlocked.',
+    price: '$125',
     accent: true,
     glyph: 'grid' as const,
     weight: 'chrome' as const,
@@ -43,6 +45,7 @@ const BEATS = [
     index: 'KEY 03',
     name: 'Oasis Max',
     tagline: 'The whole space, any hour.',
+    price: '$149',
     accent: false,
     glyph: 'diamond' as const,
     weight: 'heavy' as const,
@@ -202,6 +205,26 @@ export default function GymSpin() {
   const textWrap   = useRef<HTMLDivElement>(null)
   const parallaxEl = useRef<HTMLDivElement>(null)
   const beatRefs   = useRef<(HTMLDivElement | null)[]>([])
+  const tiltRefs   = useRef<(HTMLDivElement | null)[]>([])
+
+  // Restrained mouse tilt — ±2.5deg, GSAP-owned so it never fights the scrub
+  // timeline (timeline drives the outer beat el, tilt drives the inner card).
+  const canTilt = () =>
+    window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+    !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const tiltMove = (i: number) => (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = tiltRefs.current[i]
+    if (!el || !canTilt()) return
+    const r = e.currentTarget.getBoundingClientRect()
+    const nx = (e.clientX - r.left) / r.width - 0.5
+    const ny = (e.clientY - r.top) / r.height - 0.5
+    gsap.to(el, { rotateY: nx * 5, rotateX: -ny * 5, y: -2, duration: 0.5, ease: 'power3.out', overwrite: 'auto' })
+  }
+  const tiltReset = (i: number) => () => {
+    const el = tiltRefs.current[i]
+    if (!el) return
+    gsap.to(el, { rotateX: 0, rotateY: 0, y: 0, duration: 0.7, ease: 'power3.out', overwrite: 'auto' })
+  }
 
   const [inView, setInView] = useState(false)
   // latch: once mounted the GL context lives for the page lifetime. Remounting on
@@ -379,20 +402,30 @@ export default function GymSpin() {
             <div
               key={i}
               ref={el => { beatRefs.current[i] = el }}
+              onMouseMove={tiltMove(i)}
+              onMouseLeave={tiltReset(i)}
               style={{
                 position: 'absolute',
                 right: 'clamp(24px, 6vw, 96px)',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 width: 'min(440px, 82vw)',
-                padding: 'clamp(34px, 3.6vw, 48px)',
-                borderRadius: 12,
                 opacity: 0,
                 transformStyle: 'preserve-3d',
                 willChange: 'transform, opacity, filter',
-                ...MATERIAL[beat.weight],
+                pointerEvents: 'auto',
               }}
             >
+              <div
+                ref={el => { tiltRefs.current[i] = el }}
+                style={{
+                  padding: 'clamp(34px, 3.6vw, 48px)',
+                  borderRadius: 12,
+                  transformStyle: 'preserve-3d',
+                  willChange: 'transform',
+                  ...MATERIAL[beat.weight],
+                }}
+              >
               <KeyGlyph variant={beat.glyph} bright={beat.accent} />
               <span
                 style={{
@@ -427,6 +460,19 @@ export default function GymSpin() {
               </span>
               <span
                 style={{
+                  display: 'block', marginTop: 12,
+                  fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 700,
+                  fontSize: 'clamp(1.3rem, 2vw, 1.7rem)', lineHeight: 1, letterSpacing: '-0.02em',
+                  color: '#fff',
+                }}
+              >
+                {beat.price}
+                <span style={{ marginLeft: 6, fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.5)', letterSpacing: 0 }}>
+                  / month
+                </span>
+              </span>
+              <span
+                style={{
                   display: 'block', marginTop: 10,
                   fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 400,
                   fontSize: 16, lineHeight: 1.5, color: 'rgba(255,255,255,0.62)',
@@ -454,6 +500,7 @@ export default function GymSpin() {
                   </li>
                 ))}
               </ul>
+              </div>
             </div>
           ))}
         </div>

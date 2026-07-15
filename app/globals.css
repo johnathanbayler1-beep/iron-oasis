@@ -75,7 +75,7 @@ body {
   letter-spacing: -0.01em;
   color: #fff;
   cursor: pointer;
-  border-radius: 12px;
+  border-radius: 0;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.04);
   -webkit-backdrop-filter: blur(20px) saturate(120%);
@@ -86,12 +86,17 @@ body {
 }
 @media (hover: hover) and (pointer: fine) {
   .io-btn:hover {
-    border-color: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.45);
     background: rgba(255, 255, 255, 0.07);
-    transform: translateY(-2px);
+    transform: translateY(-3px);
   }
 }
 .io-btn:active { transform: scale(0.96); }
+.io-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.45);
+  outline-offset: 3px;
+  border-color: rgba(255, 255, 255, 0.22);
+}
 
 /* Primary variant — understated, a touch elevated from base. Quiet, no glow. */
 .io-btn--accent {
@@ -272,7 +277,7 @@ html.lenis-stopped body {
   border-top: 1px solid rgba(255,255,255,0.08);
   background: rgba(255,255,255,0.02);
   padding: clamp(38px, 4.8vw, 58px);
-  border-radius: 12px;
+  border-radius: 0;
   cursor: pointer;
   overflow: hidden;
   -webkit-backdrop-filter: blur(16px);

@@ -18,7 +18,7 @@ const INTRO_DUR     = 1.6          // animate-in duration in seconds
 const MOBILE_BP     = 768          // px — below this we use mobile tuning
 
 // Tagline — emerges as the logo explodes. Swap copy freely.
-const TAGLINE_1 = 'ONE PRIVATE SPACE.'
+const TAGLINE_1 = 'ONE PRIVATE NODE.'
 const TAGLINE_2 = 'ZERO SHARING.'
 // reveal windows in scroll-progress (0–1): [start, fullyVisible]
 // widened for the 140vh scale — old windows spanned ~100vh of travel at 700vh,
@@ -49,6 +49,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
   const line1Ref   = useRef<HTMLDivElement>(null)
   const line2Ref   = useRef<HTMLDivElement>(null)
   const heroRef    = useRef<HTMLDivElement>(null)
+  const brickRef   = useRef<HTMLDivElement>(null)
   const heroTextRef      = useRef<HTMLDivElement>(null)
   const primaryCtaRef    = useRef<HTMLButtonElement>(null)
   const secondaryCtaRef  = useRef<HTMLAnchorElement>(null)
@@ -238,6 +239,11 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
           if (!scrollLocked.current) {
             canvas.style.opacity = String(1 - ramp(self.progress, 0.88, 1))
           }
+          // black → brick-wall crossfade under the spin; returns to black for the 3D handoff
+          if (brickRef.current) {
+            const o = ramp(self.progress, 0.45, 0.85) * (1 - ramp(self.progress, 0.9, 0.99))
+            brickRef.current.style.opacity = String(o)
+          }
           const idx = Math.round(self.progress * (FRAME_COUNT - 1))
           if (idx !== frameRef.current) {
             frameRef.current = idx
@@ -398,6 +404,25 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         </div>
       )}
 
+      {/* brick wall — sits under the canvas; the difference blend re-keys the logo
+          from white-on-black to dark-on-brick as this layer fades in */}
+      <div
+        ref={brickRef}
+        aria-hidden="true"
+        style={{
+          position: 'fixed', inset: 0, zIndex: 0, opacity: 0, pointerEvents: 'none',
+          backgroundColor: '#d8d7d3',
+          backgroundImage: [
+            'linear-gradient(335deg, #c9c8c3 23px, transparent 23px)',
+            'linear-gradient(155deg, #c9c8c3 23px, transparent 23px)',
+            'linear-gradient(335deg, #c9c8c3 23px, transparent 23px)',
+            'linear-gradient(155deg, #c9c8c3 23px, transparent 23px)',
+          ].join(', '),
+          backgroundSize: '116px 58px',
+          backgroundPosition: '0px 2px, 4px 62px, 58px 31px, 62px 91px',
+        }}
+      />
+
       {/* canvas — position:fixed, stays pinned while the section scrolls */}
       <canvas
         ref={canvasRef}
@@ -426,7 +451,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
           willChange: 'opacity, transform',
         }}
       >
-        <div ref={heroTextRef} style={{ opacity: 0, willChange: 'opacity, transform' }}>
+        <div ref={heroTextRef} style={{ opacity: 0, willChange: 'opacity, transform', mixBlendMode: 'difference' }}>
         <span
           style={{
             fontFamily: 'monospace', fontSize: 10, letterSpacing: '0.4em',
@@ -444,7 +469,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
             margin: '16px 0 0',
           }}
         >
-          Your private space is live.
+          Your private node is live.
         </h1>
         <p
           style={{
@@ -498,6 +523,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
           fontWeight: 900,
           color: '#fff',
           zIndex: 2,
+          mixBlendMode: 'difference',
         }}
       >
         <div className="io-hero-headline__float" style={{ maxWidth: '26vw', textAlign: 'left' }}>

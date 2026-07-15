@@ -50,7 +50,7 @@ export default function ${toPascal(slug)}() {
         <h1 className="font-display text-[14vw] uppercase leading-none tracking-tight">
           ${displayName}
         </h1>
-        <p className="sr-only">Spatial autonomy. Your private space.</p>
+        <p className="sr-only">Spatial autonomy. Your private node.</p>
       </section>
     </main>
   );

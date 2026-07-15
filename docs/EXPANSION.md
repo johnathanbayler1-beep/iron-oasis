@@ -6,7 +6,7 @@
 - **Brand Vocabulary**:
   - **Required**: spatial autonomy
   - **Banned**: clearance, workout, gains, beast mode, grind, sanctuary, gym floor.
-  - **Terminology**: spatial autonomy, private space, solo window.
+  - **Terminology**: spatial autonomy, private node, solo window.
 
 ## Workflow
 1. When adding a new site, generate a new [config/route] file.

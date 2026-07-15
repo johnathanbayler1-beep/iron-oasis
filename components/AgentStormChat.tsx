@@ -6,15 +6,15 @@ import { useEffect, useRef, useState } from 'react';
 const FAQS = [
   {
     q: 'How does this work?',
-    a: 'You get an access key, book a session in the app, and have the entire private space to yourself.',
+    a: 'You get an access key, book a session in the app, and have the entire private node to yourself.',
   },
   {
     q: 'What is the cost?',
-    a: 'Monthly access is $99, $125, or $149 depending on how often you want to train.',
+    a: 'Monthly access is $99, $125, or $149 depending on how much access you want.',
   },
   {
     q: 'Are there other people?',
-    a: 'No. When you book, the gym is yours for your session — no one else is there.',
+    a: 'No. When you book, the private node is yours for your session — no one else is there.',
   },
 ];
 

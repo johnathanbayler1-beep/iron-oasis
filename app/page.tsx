@@ -33,13 +33,13 @@ export default function Home() {
       {/* Phase 2 — infrastructure bridge: app interface + Yale Assure, keyed autonomy narrative */}
       {gymMounted && <InfrastructureBridge />}
 
-      {/* Phase 3 — 360 spin: the value stack, no prices */}
+      {/* Phase 3 — 360 spin: Access Keys carry the value stack and pricing */}
       {gymMounted && <GymSpin />}
 
       {/* Phase 4 — how it works: the process + the model, stated plainly */}
       <HowItWorks />
 
-      {/* Phase 5 — final close: the only place prices exist */}
+      {/* Phase 5 — final close: rules + CTA, no pricing */}
       <FinalClose />
     </main>
   );

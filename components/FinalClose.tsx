@@ -151,7 +151,7 @@ export function FinalClose() {
       ref={wrapRef}
       style={{
         position: 'relative', zIndex: 20, background: '#000',
-        padding: 'clamp(96px, 15vh, 200px) 6% clamp(96px, 14vh, 180px)',
+        padding: 'clamp(120px, 18vh, 240px) 6% clamp(120px, 16vh, 220px)',
         borderTop: '1px solid rgba(255,255,255,0.1)',
         overflow: 'hidden',
       }}
@@ -205,7 +205,7 @@ export function FinalClose() {
             fontWeight: 400, lineHeight: 1.5, color: '#a1a1aa',
           }}
         >
-          Claim an Access Key, book a block, and the private space in Windsor is yours. No games, no fine print.
+          Claim an Access Key, book a block, and the private node in Windsor is yours. No games, no fine print.
         </p>
 
         <div
@@ -292,7 +292,7 @@ export function FinalClose() {
                 fontSize: 'clamp(52px, 8vw, 108px)', lineHeight: 0.95, letterSpacing: '-0.045em', color: '#ffffff',
               }}
             >
-              Your private space is waiting.
+              Your private node is waiting.
             </h3>
             <button
               type="button"

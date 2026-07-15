@@ -14,6 +14,7 @@ const InfrastructureBridge = dynamic(
 )
 import GymSpin from '@/components/GymSpinLazy';
 import GymScene from '@/app/components/GymSceneLazy';
+import { HowItWorks } from '@/components/HowItWorks';
 import { FinalClose } from '@/components/FinalClose';
 
 export default function Home() {
@@ -35,7 +36,10 @@ export default function Home() {
       {/* Phase 3 — 360 spin: the value stack, no prices */}
       {gymMounted && <GymSpin />}
 
-      {/* Phase 4 — final close: the only place prices exist */}
+      {/* Phase 4 — how it works: the process + the model, stated plainly */}
+      <HowItWorks />
+
+      {/* Phase 5 — final close: the only place prices exist */}
       <FinalClose />
     </main>
   );

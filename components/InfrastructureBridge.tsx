@@ -9,7 +9,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText } from 'gsap/SplitText'
 import { CustomEase } from 'gsap/CustomEase'
 
-const SCROLL_VH = 120 // compressed: tighter handoff into the spin scene
+const SCROLL_VH = 190 // longer runway — each beat dwells and reads before the next (sticky-pinned, beats are fractional so pacing scales cleanly)
 
 // ═══════════════════════════════════════════════════════════════════════
 // ASSET SWAP ZONE — primitives are placeholders. Studio pipeline live:
@@ -176,7 +176,7 @@ export default function InfrastructureBridge() {
       trigger: section,
       start:   'top top',
       end:     'bottom bottom',
-      scrub:   0.65,
+      scrub:   0.9,
       onUpdate(self) {
         progressRef.current = self.progress
         invalidateRef.current()

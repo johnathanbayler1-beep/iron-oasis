@@ -243,11 +243,12 @@ export default function GymSpin() {
         const ps   = i * SLOT
         const exit = i < BEATS.length - 1 ? ps + SLOT * 0.65 : 0.92
 
-        // Entry: a calm rise + settle. No 3D tilt — Kowalski quiet, opacity/y/blur only.
+        // Entry: each key snaps in as a physical object — a slight rotateX tilt +
+        // translateZ push, resolving to flat. Spatial but restrained (perspective:1400).
         tl.fromTo(
           el,
-          { opacity: 0, y: 28, filter: 'blur(10px)' },
-          { opacity: 1, y: 0,  filter: 'blur(0px)', duration: 0.18, ease: 'power2.out', immediateRender: false },
+          { opacity: 0, y: 40, z: -90, rotateX: -14, filter: 'blur(10px)' },
+          { opacity: 1, y: 0, z: 0, rotateX: 0, filter: 'blur(0px)', duration: 0.2, ease: 'power3.out', immediateRender: false },
           ps,
         )
         // Exit — soft settle out
@@ -308,8 +309,8 @@ export default function GymSpin() {
 
   return (
     <>
-      {/* 300vh scroll track — longer runway slows the scrub so each key reads before the next */}
-      <div ref={trackRef} style={{ height: '300vh', position: 'relative', zIndex: 1 }} />
+      {/* 360vh scroll track — longer runway slows the scrub so each key reads before the next */}
+      <div ref={trackRef} style={{ height: '360vh', position: 'relative', zIndex: 1 }} />
 
       {/* Fixed Canvas — hidden until section is active */}
       <div
@@ -319,7 +320,7 @@ export default function GymSpin() {
         {canvasMounted && (
           <Canvas
             frameloop="demand"
-            dpr={[1, 1.5]}
+            dpr={[1, 1.25]}
             performance={{ min: 0.5 }}
             camera={{ fov: 45, near: 0.1, far: 1000 }}
             gl={{ powerPreference: 'high-performance', antialias: false }}

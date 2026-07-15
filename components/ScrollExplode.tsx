@@ -12,8 +12,8 @@ declare global {
 const FRAME_COUNT   = 121          // logo_000.webp … logo_120.webp
 const FRAMES_PATH   = '/frames/'   // → public/frames/
 const FRAME_EXT     = 'webp'       // full-res 1200px WebP
-const SCROLL_VH     = 140          // desktop scroll distance in vh (explosion speed)
-const SCROLL_VH_MOB = 140          // mobile matches desktop — 140vh pin leaves 40vh of travel; going lower kills the scrub
+const SCROLL_VH     = 200          // desktop scroll distance in vh — lengthened runway slows the scrub so the gateway reads deliberately (windows are fractional, handoff stays synced)
+const SCROLL_VH_MOB = 200          // mobile matches desktop
 const INTRO_DUR     = 1.6          // animate-in duration in seconds
 const MOBILE_BP     = 768          // px — below this we use mobile tuning
 
@@ -439,12 +439,12 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         <h1
           style={{
             fontFamily: 'var(--font-display), sans-serif', fontWeight: 900,
-            fontSize: 'clamp(40px, 6vw, 96px)', lineHeight: 0.9,
+            fontSize: 'clamp(44px, 6.6vw, 108px)', lineHeight: 0.9,
             letterSpacing: '-0.04em', textTransform: 'uppercase', color: '#fff',
             margin: '16px 0 0',
           }}
         >
-          Your Private Node. <span style={{ color: 'rgba(255,255,255,0.45)' }}>Zero Sharing. 100% Focus.</span>
+          The node is active. <span style={{ color: 'rgba(255,255,255,0.45)' }}>Private autonomy, on your key.</span>
         </h1>
         </div>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', pointerEvents: 'auto', marginTop: 'auto' }}>
@@ -454,7 +454,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
             onClick={handlePWADownload}
             className="io-btn io-btn--accent"
             style={{
-              padding: '22px 56px', fontSize: 'clamp(17px, 2vw, 22px)', fontWeight: 700,
+              padding: '24px 68px', fontSize: 'clamp(18px, 2.2vw, 24px)', fontWeight: 700,
               opacity: 0, willChange: 'opacity, transform',
             }}
           >
@@ -465,7 +465,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
             href="/shop"
             className="io-btn"
             style={{
-              padding: '20px 40px', textDecoration: 'none',
+              padding: '22px 48px', fontSize: 'clamp(16px, 1.9vw, 20px)', textDecoration: 'none',
               opacity: 0, willChange: 'opacity, transform',
             }}
           >

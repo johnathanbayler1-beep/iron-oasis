@@ -124,6 +124,23 @@ export function FinalClose() {
           scrollTrigger: { trigger: wrap, start: 'top 60%', once: true },
         },
       )
+
+      // data-speed parallax — ghost layers drift at their own rate against the
+      // content, written straight to the DOM (no per-el tweens). Depth, not motion slop.
+      const layers = gsap.utils.toArray<HTMLElement>('[data-speed]')
+      ScrollTrigger.create({
+        trigger: wrap,
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: true,
+        onUpdate(self) {
+          const p = self.progress - 0.5
+          layers.forEach((el) => {
+            const s = Number(el.dataset.speed ?? 0)
+            el.style.transform = `translate3d(0, ${p * s * 260}px, 0)`
+          })
+        },
+      })
     }, wrap)
 
     return () => { splits.forEach((s) => s.revert()); ctx.revert() }
@@ -140,9 +157,25 @@ export function FinalClose() {
       }}
     >
       <div style={{ position: 'relative', maxWidth: 1200, margin: '0 auto' }}>
+        {/* ghost layer — huge outline word drifting slower than the content behind the heading */}
+        <span
+          data-speed="-1.4"
+          aria-hidden="true"
+          style={{
+            position: 'absolute', top: '-2vh', left: '-1vw', zIndex: 0, pointerEvents: 'none',
+            fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 900,
+            fontSize: 'clamp(120px, 22vw, 340px)', lineHeight: 0.8, letterSpacing: '-0.05em',
+            color: 'transparent', WebkitTextStroke: '1px rgba(255,255,255,0.05)',
+            textTransform: 'uppercase', whiteSpace: 'nowrap',
+          }}
+        >
+          Private
+        </span>
+
         <div
           data-fade
           style={{
+            position: 'relative', zIndex: 2,
             fontFamily: 'var(--font-grotesk), sans-serif', fontSize: 14, fontWeight: 700,
             letterSpacing: '0.24em', textTransform: 'uppercase', color: ACCENT,
           }}
@@ -153,6 +186,7 @@ export function FinalClose() {
         <h2
           data-split-head
           style={{
+            position: 'relative', zIndex: 2,
             margin: '20px 0 20px',
             fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 800,
             fontSize: 'clamp(60px, 9vw, 140px)', lineHeight: 0.95,
@@ -165,6 +199,7 @@ export function FinalClose() {
         <p
           data-fade
           style={{
+            position: 'relative', zIndex: 2,
             margin: '0 0 clamp(48px, 6vh, 80px)', maxWidth: 560,
             fontFamily: 'var(--font-grotesk), sans-serif', fontSize: 'clamp(17px, 1.6vw, 21px)',
             fontWeight: 400, lineHeight: 1.5, color: '#a1a1aa',
@@ -218,41 +253,58 @@ export function FinalClose() {
           </span>
         </div>
 
-        <div
-          data-fade
-          style={{
-            position: 'relative', marginTop: 'clamp(56px, 8vh, 96px)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
-            gap: 'clamp(24px, 3.5vh, 40px)', textAlign: 'center',
-            padding: 'clamp(72px, 11vh, 128px) clamp(32px, 6vw, 88px)',
-            borderRadius: 12, overflow: 'hidden',
-            background: 'rgba(255,255,255,0.02)',
-            backdropFilter: 'blur(16px) saturate(110%)',
-            WebkitBackdropFilter: 'blur(16px) saturate(110%)',
-            border: '1px solid rgba(255,255,255,0.04)',
-            borderTop: '1px solid rgba(255,255,255,0.08)',
-          }}
-        >
-          <h3
+        {/* spatial finale — overlapping ghost word drifts behind a single deep-glass panel */}
+        <div style={{ position: 'relative', marginTop: 'clamp(72px, 12vh, 160px)' }}>
+          <span
+            data-speed="1.6"
+            aria-hidden="true"
             style={{
-              position: 'relative', margin: 0,
-              fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 800,
-              fontSize: 'clamp(38px, 5vw, 64px)', lineHeight: 1.1, letterSpacing: '-0.03em', color: '#ffffff',
+              position: 'absolute', bottom: '-6vh', right: '-2vw', zIndex: 0, pointerEvents: 'none',
+              fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 900,
+              fontSize: 'clamp(140px, 28vw, 460px)', lineHeight: 0.7, letterSpacing: '-0.06em',
+              color: 'transparent', WebkitTextStroke: '1px rgba(255,255,255,0.055)',
+              textTransform: 'uppercase', whiteSpace: 'nowrap',
             }}
           >
-            The node is waiting.
-          </h3>
-          <button
-            type="button"
-            onClick={() => console.log('PWA Prompt Triggered')}
-            className="io-btn io-btn--accent"
-            style={{ position: 'relative', padding: 'clamp(20px, 2.4vh, 26px) clamp(40px, 5vw, 64px)', fontSize: 'clamp(18px, 2vw, 22px)', fontWeight: 700 }}
-          >
-            Get your key
-          </button>
-          <span style={{ position: 'relative', fontFamily: 'var(--font-grotesk), sans-serif', fontSize: 15, fontWeight: 400, color: 'rgba(255,255,255,0.5)' }}>
-            Download the app and claim your Access Key in minutes.
+            Oasis
           </span>
+
+          <div
+            data-fade
+            style={{
+              position: 'relative', zIndex: 2,
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              gap: 'clamp(28px, 4vh, 44px)', textAlign: 'center',
+              padding: 'clamp(88px, 14vh, 168px) clamp(32px, 6vw, 96px)',
+              borderRadius: 12, overflow: 'hidden',
+              background: 'rgba(255,255,255,0.025)',
+              backdropFilter: 'blur(28px) saturate(120%)',
+              WebkitBackdropFilter: 'blur(28px) saturate(120%)',
+              border: '1px solid rgba(255,255,255,0.05)',
+              borderTop: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <h3
+              style={{
+                position: 'relative', margin: 0,
+                fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 800,
+                fontSize: 'clamp(52px, 8vw, 108px)', lineHeight: 0.95, letterSpacing: '-0.045em', color: '#ffffff',
+              }}
+            >
+              The node is waiting.
+            </h3>
+            <button
+              type="button"
+              onClick={() => console.log('PWA Prompt Triggered')}
+              className="io-btn io-btn--accent"
+              style={{ position: 'relative', padding: 'clamp(22px, 2.6vh, 28px) clamp(48px, 6vw, 76px)', fontSize: 'clamp(19px, 2.2vw, 24px)', fontWeight: 700 }}
+            >
+              Get your key
+            </button>
+            <span style={{ position: 'relative', fontFamily: 'var(--font-grotesk), sans-serif', fontSize: 15, fontWeight: 400, color: 'rgba(255,255,255,0.5)' }}>
+              Download the app and claim your Access Key in minutes.
+            </span>
+          </div>
         </div>
       </div>
     </div>

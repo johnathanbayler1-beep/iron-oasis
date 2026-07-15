@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 const FAQS = [
   {
     q: 'How does this work?',
-    a: 'You get an access key, book a session in the app, and train alone in the whole gym.',
+    a: 'You get an access key, book a session in the app, and have the entire private space to yourself.',
   },
   {
     q: 'What is the cost?',

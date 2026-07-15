@@ -4,9 +4,9 @@
 - All active development must occur on: **rebuild-from-scratch**
 
 ## Brand Vocabulary (Canonical)
-- **Allowed**: Access Key, Key, Private Node, Node, Premium Equipment, Zero Sharing, 24/7 Access, Access, Booking, Session, Private, Windsor.
-- **Banned**: Token, Spatial Token, Gym, Train, Workout, Membership, Tier, Node Operator, Partner, Franchise, Network, Area Developer.
-- **Concept**: A premium private space in a quiet residential setting. Frictionless flow — park on the street, walk up the property, and the entire node is yours.
+- **Allowed**: Access Key, Key, Private Space, Location, Private Access, Premium Equipment, Zero Sharing, 24/7 Access, Access, Booking, Session, Private, Windsor.
+- **Banned**: Node, Private Node, Node Operator, Token, Spatial Token, Spatial Autonomy, Gym, Train, Workout, Membership, Tier, Partner, Franchise, Network, Area Developer.
+- **Concept**: A premium private space in a quiet residential setting. Frictionless flow — park on the street, walk up the property, and the entire private space is yours.
 - **Tone**: Apple / Emil Kowalski standard. Clean, high-contrast, confident. Premium and calm, not hype. Focus on privacy, zero sharing, and frictionless 24/7 access.
 
 ## Architecture

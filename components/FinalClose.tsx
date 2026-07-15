@@ -8,7 +8,7 @@ import { CustomEase } from 'gsap/CustomEase'
 
 // Logistics + rules — the honest close. No pricing here; Access Keys carry that.
 const RULES = [
-  { name: '1-hour blocks', line: 'Every booking is a clean 1-hour block. Reserve it, walk up, the node is yours.', featured: false },
+  { name: '1-hour blocks', line: 'Every booking is a clean 1-hour block. Reserve it, walk up, the space is yours.', featured: false },
   { name: 'Flexible cancellations', line: 'Can’t make it? Cancel any time and keep your booking key. No penalty.', featured: false },
   { name: 'Zero commitments', line: 'No contracts, no hidden fees, no cancellation charges — ever.', featured: false },
 ]
@@ -205,7 +205,7 @@ export function FinalClose() {
             fontWeight: 400, lineHeight: 1.5, color: '#a1a1aa',
           }}
         >
-          Claim an Access Key, book a block, and the private node in Windsor is yours. No games, no fine print.
+          Claim an Access Key, book a block, and the private space in Windsor is yours. No games, no fine print.
         </p>
 
         <div
@@ -291,7 +291,7 @@ export function FinalClose() {
                 fontSize: 'clamp(52px, 8vw, 108px)', lineHeight: 0.95, letterSpacing: '-0.045em', color: '#ffffff',
               }}
             >
-              The node is waiting.
+              Your private space is waiting.
             </h3>
             <button
               type="button"

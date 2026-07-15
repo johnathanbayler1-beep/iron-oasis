@@ -18,7 +18,7 @@ const INTRO_DUR     = 1.6          // animate-in duration in seconds
 const MOBILE_BP     = 768          // px — below this we use mobile tuning
 
 // Tagline — emerges as the logo explodes. Swap copy freely.
-const TAGLINE_1 = 'ONE PRIVATE NODE.'
+const TAGLINE_1 = 'ONE PRIVATE SPACE.'
 const TAGLINE_2 = 'ZERO SHARING.'
 // reveal windows in scroll-progress (0–1): [start, fullyVisible]
 // widened for the 140vh scale — old windows spanned ~100vh of travel at 700vh,
@@ -444,7 +444,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
             margin: '16px 0 0',
           }}
         >
-          The node is active. <span style={{ color: 'rgba(255,255,255,0.45)' }}>Private autonomy, on your key.</span>
+          Your private space is live. <span style={{ color: 'rgba(255,255,255,0.45)' }}>Private autonomy, on your key.</span>
         </h1>
         </div>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', pointerEvents: 'auto', marginTop: 'auto' }}>

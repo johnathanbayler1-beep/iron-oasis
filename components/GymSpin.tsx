@@ -16,7 +16,7 @@ const BEATS = [
   {
     index: 'KEY 01',
     name: 'Oasis Lite',
-    tagline: 'Your first key to the node.',
+    tagline: 'Your first key to the space.',
     accent: false,
     glyph: 'spark' as const,
     weight: 'light' as const,
@@ -31,7 +31,7 @@ const BEATS = [
     name: 'Oasis Plus',
     tagline: 'Peak hours, unlocked.',
     accent: true,
-    glyph: 'node' as const,
+    glyph: 'grid' as const,
     weight: 'chrome' as const,
     specs: [
       ['Access', '4 days / week'],
@@ -42,7 +42,7 @@ const BEATS = [
   {
     index: 'KEY 03',
     name: 'Oasis Max',
-    tagline: 'The whole node, any hour.',
+    tagline: 'The whole space, any hour.',
     accent: false,
     glyph: 'diamond' as const,
     weight: 'heavy' as const,
@@ -83,7 +83,7 @@ const MATERIAL: Record<string, React.CSSProperties> = {
 }
 
 // Sleek monochrome geometry — floats above the card in preserve-3d, anchors each key.
-function KeyGlyph({ variant, bright }: { variant: 'spark' | 'node' | 'diamond'; bright: boolean }) {
+function KeyGlyph({ variant, bright }: { variant: 'spark' | 'grid' | 'diamond'; bright: boolean }) {
   const s = bright ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.32)'
   return (
     <svg
@@ -115,7 +115,7 @@ function KeyGlyph({ variant, bright }: { variant: 'spark' | 'node' | 'diamond'; 
           <circle cx={50} cy={50} r={3.5} />
         </g>
       )}
-      {variant === 'node' && (
+      {variant === 'grid' && (
         <g>
           <line x1={50} y1={50} x2={24} y2={30} />
           <line x1={50} y1={50} x2={78} y2={36} />

@@ -38,11 +38,14 @@ function RuleCard({ r }: { r: (typeof RULES)[number] }) {
       style={{
         position: 'relative',
         display: 'flex', flexDirection: 'column',
-        padding: 'clamp(32px, 3vw, 44px)',
+        padding: 'clamp(38px, 3.6vw, 53px)',
         borderRadius: 12,
         willChange: 'transform',
         background: 'rgba(255,255,255,0.02)',
+        backdropFilter: 'blur(16px) saturate(110%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(110%)',
         border: '1px solid rgba(255,255,255,0.04)',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
         transition: 'transform 0.4s cubic-bezier(0.32,0.72,0,1), border-color 0.4s cubic-bezier(0.32,0.72,0,1)',
       }}
     >
@@ -50,7 +53,7 @@ function RuleCard({ r }: { r: (typeof RULES)[number] }) {
         style={{
           position: 'relative', zIndex: 2,
           fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 700,
-          fontSize: 'clamp(22px, 2.4vw, 28px)', letterSpacing: '-0.02em', color: '#f6f8f6',
+          fontSize: 'clamp(22px, 2.4vw, 28px)', lineHeight: 1.1, letterSpacing: '-0.03em', color: '#ffffff',
         }}
       >
         {r.name}
@@ -59,7 +62,7 @@ function RuleCard({ r }: { r: (typeof RULES)[number] }) {
         style={{
           position: 'relative', zIndex: 2, margin: '14px 0 0',
           fontFamily: 'var(--font-grotesk), sans-serif', fontSize: 16, fontWeight: 400,
-          lineHeight: 1.55, color: 'rgba(255,255,255,0.62)',
+          lineHeight: 1.5, color: '#a1a1aa',
         }}
       >
         {r.line}
@@ -152,8 +155,8 @@ export function FinalClose() {
           style={{
             margin: '20px 0 20px',
             fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 800,
-            fontSize: 'clamp(52px, 8vw, 120px)', lineHeight: 0.92,
-            letterSpacing: '-0.045em', color: '#f6f8f6',
+            fontSize: 'clamp(60px, 9vw, 140px)', lineHeight: 0.95,
+            letterSpacing: '-0.045em', color: '#ffffff',
           }}
         >
           Simple and honest.
@@ -164,7 +167,7 @@ export function FinalClose() {
           style={{
             margin: '0 0 clamp(48px, 6vh, 80px)', maxWidth: 560,
             fontFamily: 'var(--font-grotesk), sans-serif', fontSize: 'clamp(17px, 1.6vw, 21px)',
-            fontWeight: 400, lineHeight: 1.55, color: 'rgba(255,255,255,0.7)',
+            fontWeight: 400, lineHeight: 1.5, color: '#a1a1aa',
           }}
         >
           Claim an Access Key, book a block, and the private node in Windsor is yours. No games, no fine print.
@@ -188,9 +191,12 @@ export function FinalClose() {
           style={{
             marginTop: 'clamp(28px, 4vh, 44px)',
             display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
-            padding: 'clamp(22px, 2.6vw, 32px)', borderRadius: 12,
+            padding: 'clamp(26px, 3.1vw, 38px)', borderRadius: 12,
             border: '1px solid rgba(255,255,255,0.04)',
+            borderTop: '1px solid rgba(255,255,255,0.08)',
             background: 'rgba(255,255,255,0.02)',
+            backdropFilter: 'blur(16px) saturate(110%)',
+            WebkitBackdropFilter: 'blur(16px) saturate(110%)',
           }}
         >
           <span
@@ -221,14 +227,17 @@ export function FinalClose() {
             padding: 'clamp(72px, 11vh, 128px) clamp(32px, 6vw, 88px)',
             borderRadius: 12, overflow: 'hidden',
             background: 'rgba(255,255,255,0.02)',
+            backdropFilter: 'blur(16px) saturate(110%)',
+            WebkitBackdropFilter: 'blur(16px) saturate(110%)',
             border: '1px solid rgba(255,255,255,0.04)',
+            borderTop: '1px solid rgba(255,255,255,0.08)',
           }}
         >
           <h3
             style={{
               position: 'relative', margin: 0,
               fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 800,
-              fontSize: 'clamp(32px, 4.5vw, 56px)', lineHeight: 1, letterSpacing: '-0.04em', color: '#f6f8f6',
+              fontSize: 'clamp(38px, 5vw, 64px)', lineHeight: 1.1, letterSpacing: '-0.03em', color: '#ffffff',
             }}
           >
             The node is waiting.

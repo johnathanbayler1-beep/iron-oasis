@@ -59,14 +59,15 @@ const ACCENT = '#e6e6e6'
 // Linear-style translucent glass. Accent key gets a brighter milled edge + glow.
 // Monochrome only. backdrop-filter refracts the 3D scene behind the panel.
 const GLASS_BASE: React.CSSProperties = {
-  backdropFilter: 'blur(20px) saturate(110%)',
-  WebkitBackdropFilter: 'blur(20px) saturate(110%)',
+  backdropFilter: 'blur(16px) saturate(110%)',
+  WebkitBackdropFilter: 'blur(16px) saturate(110%)',
 } as React.CSSProperties
 const MATERIAL: Record<string, React.CSSProperties> = {
   light: {
     ...GLASS_BASE,
     background: 'rgba(255,255,255,0.02)',
     border: '1px solid rgba(255,255,255,0.04)',
+    borderTop: '1px solid rgba(255,255,255,0.08)',
   },
   chrome: {
     ...GLASS_BASE,
@@ -77,6 +78,7 @@ const MATERIAL: Record<string, React.CSSProperties> = {
     ...GLASS_BASE,
     background: 'rgba(255,255,255,0.02)',
     border: '1px solid rgba(255,255,255,0.04)',
+    borderTop: '1px solid rgba(255,255,255,0.08)',
   },
 }
 
@@ -382,7 +384,7 @@ export default function GymSpin() {
                 top: '50%',
                 transform: 'translateY(-50%)',
                 width: 'min(440px, 82vw)',
-                padding: 'clamp(28px, 3vw, 40px)',
+                padding: 'clamp(34px, 3.6vw, 48px)',
                 borderRadius: 12,
                 opacity: 0,
                 transformStyle: 'preserve-3d',

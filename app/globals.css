@@ -241,13 +241,14 @@ html.lenis-stopped body {
 .io-tier {
   position: relative;
   border: 1px solid rgba(255,255,255,0.04);
+  border-top: 1px solid rgba(255,255,255,0.08);
   background: rgba(255,255,255,0.02);
-  padding: clamp(32px, 4vw, 48px);
+  padding: clamp(38px, 4.8vw, 58px);
   border-radius: 12px;
   cursor: pointer;
   overflow: hidden;
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   transition:
     opacity 0.7s ease,
     transform 0.7s cubic-bezier(0.32, 0.72, 0, 1),

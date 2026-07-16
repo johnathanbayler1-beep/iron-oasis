@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { SplitText } from 'gsap/SplitText'
+import { CustomEase } from 'gsap/CustomEase'
 
 // The honest walkthrough — the process, stated plainly, before the close.
 // Calm editorial: numbered steps, one glass panel for the model. No hype.
@@ -21,15 +23,28 @@ export function HowItWorks() {
   useEffect(() => {
     const wrap = wrapRef.current
     if (!wrap) return
-    gsap.registerPlugin(ScrollTrigger)
+    gsap.registerPlugin(ScrollTrigger, SplitText, CustomEase)
+    CustomEase.create('appleOut', '0.16, 1, 0.3, 1')
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
+    let split: SplitText | undefined
     const ctx = gsap.context(() => {
       const steps = gsap.utils.toArray<HTMLElement>('[data-step]')
       const fades = gsap.utils.toArray<HTMLElement>('[data-fade]')
       if (reduce) {
         gsap.set([...steps, ...fades], { opacity: 1, y: 0 })
         return
+      }
+      // H2 — brutalist masked word reveal, scrubbed to scroll position
+      const h2 = wrap.querySelector<HTMLElement>('[data-headline]')
+      if (h2) {
+        split = new SplitText(h2, { type: 'lines,words', mask: 'lines' })
+        gsap.fromTo(
+          split.words,
+          { yPercent: 110 },
+          { yPercent: 0, stagger: 0.06, ease: 'appleOut',
+            scrollTrigger: { trigger: h2, start: 'top 88%', end: 'top 42%', scrub: 0.6 } },
+        )
       }
       gsap.fromTo(
         fades,
@@ -46,7 +61,7 @@ export function HowItWorks() {
       )
     }, wrap)
 
-    return () => ctx.revert()
+    return () => { ctx.revert(); split?.revert() }
   }, [])
 
   return (
@@ -70,7 +85,7 @@ export function HowItWorks() {
         </div>
 
         <h2
-          data-fade
+          data-headline
           style={{
             margin: '20px 0 clamp(48px, 7vh, 96px)',
             fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 800,

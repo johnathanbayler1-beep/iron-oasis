@@ -98,16 +98,21 @@ body {
   border-color: rgba(255, 255, 255, 0.22);
 }
 
-/* Primary variant — understated, a touch elevated from base. Quiet, no glow. */
+/* Primary variant — understated, a touch elevated from base. Quiet, no glow.
+   GSAP owns transform here (magnetic pull + press in Kinetic.tsx) — CSS must
+   not transition or set transform, or the two fight. */
 .io-btn--accent {
   color: #fff;
   border-color: rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.08);
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
+.io-btn--accent:active { transform: none; }
 @media (hover: hover) and (pointer: fine) {
   .io-btn--accent:hover {
     border-color: rgba(255, 255, 255, 0.22);
     background: rgba(255, 255, 255, 0.11);
+    transform: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {

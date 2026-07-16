@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { SmoothScroll } from '@/components/SmoothScroll';
 import { OverlayMenu } from '@/components/OverlayMenu';
+import { Kinetic } from '@/components/Kinetic';
 
 // Premium sans stack. Variable name kept as --font-grotesk for compat with
 // existing inline styles — all display type now renders Inter / -apple-system.
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${grotesk.variable} ${jetbrains.variable}`}>
       <body className="bg-black text-white antialiased">
         <OverlayMenu />
+        <Kinetic />
         <SmoothScroll>{children}</SmoothScroll>
       </body>
     </html>

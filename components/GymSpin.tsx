@@ -266,12 +266,13 @@ export default function GymSpin() {
         const ps   = i * SLOT
         const exit = i < BEATS.length - 1 ? ps + SLOT * 0.65 : 0.92
 
-        // Entry: each key snaps in as a physical object — a slight rotateX tilt +
-        // translateZ push, resolving to flat. Spatial but restrained (perspective:1400).
+        // Entry: masked reveal — the key unmasks bottom-up out of the dark while
+        // settling down into place. Final inset is negative so the hover tilt
+        // never clips against the mask edge.
         tl.fromTo(
           el,
-          { opacity: 0, y: 40, z: -90, rotateX: -14, filter: 'blur(10px)' },
-          { opacity: 1, y: 0, z: 0, rotateX: 0, filter: 'blur(0px)', duration: 0.2, ease: 'power3.out', immediateRender: false },
+          { opacity: 1, y: 60, clipPath: 'inset(100% -10% -10% -10%)' },
+          { y: 0, clipPath: 'inset(-10% -10% -10% -10%)', duration: 0.2, ease: 'power4.out', immediateRender: false },
           ps,
         )
         // Exit — soft settle out
@@ -411,6 +412,7 @@ export default function GymSpin() {
                 transform: 'translateY(-50%)',
                 width: 'min(440px, 82vw)',
                 opacity: 0,
+                clipPath: 'inset(100% -10% -10% -10%)',
                 transformStyle: 'preserve-3d',
                 willChange: 'transform, opacity, filter',
                 pointerEvents: 'auto',

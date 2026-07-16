@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 const FAQS = [
   {
     q: 'How does this work?',
-    a: 'You get an access key, book a session in the app, and have the entire private node to yourself.',
+    a: 'You get an access key, book a session in the app, and have the entire private space to yourself.',
   },
   {
     q: 'What is the cost?',
@@ -14,7 +14,7 @@ const FAQS = [
   },
   {
     q: 'Are there other people?',
-    a: 'No. When you book, the private node is yours for your session — no one else is there.',
+    a: 'No. When you book, the private space is yours for your session — no one else is there.',
   },
 ];
 

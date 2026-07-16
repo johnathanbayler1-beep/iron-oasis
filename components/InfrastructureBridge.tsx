@@ -9,7 +9,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText } from 'gsap/SplitText'
 import { CustomEase } from 'gsap/CustomEase'
 
-const SCROLL_VH = 190 // longer runway — each beat dwells and reads before the next (sticky-pinned, beats are fractional so pacing scales cleanly)
+const SCROLL_VH = 160 // tightened runway — kills trailing dead zone, beats still dwell — each beat dwells and reads before the next (sticky-pinned, beats are fractional so pacing scales cleanly)
 
 // ═══════════════════════════════════════════════════════════════════════
 // ASSET SWAP ZONE — primitives are placeholders. Studio pipeline live:
@@ -135,7 +135,7 @@ function BridgeRig({
 
 const BEATS = [
   { window: '0.02,0.35', side: 'right', head: 'CLAIM YOUR KEY.', body: 'Pick an Access Key in the app. Premium equipment, zero sharing, 24/7 access. No contracts, no hidden fees.' },
-  { window: '0.33,0.67', side: 'left',  head: 'BOOK YOUR SESSION.',  body: 'Reserve a 1-hour block. Park on the street, walk up the property — the entire private node is yours, no one else.' },
+  { window: '0.33,0.67', side: 'left',  head: 'BOOK YOUR SESSION.',  body: 'Reserve a 1-hour block. Park on the street, walk up the property — the entire space is yours, no one else.' },
   { window: '0.65,0.98', side: 'right', head: 'UNLOCK WITH YOUR KEY.', body: 'The Yale smart lock opens for your key alone. A frictionless, private walk-in — every time.' },
 ]
 

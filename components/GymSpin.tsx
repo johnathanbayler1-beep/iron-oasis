@@ -59,30 +59,34 @@ const BEATS = [
 
 const ACCENT = '#e6e6e6'
 
-// Linear-style translucent glass. Accent key gets a brighter milled edge + glow.
-// Monochrome only. backdrop-filter refracts the 3D scene behind the panel.
+// 21st.dev-grade dark glass: 1px gradient border (padding-box/border-box trick),
+// subtle SVG grain, deep translucent fill. Monochrome only; backdrop-filter
+// refracts the 3D scene behind the panel.
+const NOISE =
+  `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E")`
+
 const GLASS_BASE: React.CSSProperties = {
-  backdropFilter: 'blur(16px) saturate(110%)',
-  WebkitBackdropFilter: 'blur(16px) saturate(110%)',
+  backdropFilter: 'blur(20px) saturate(120%)',
+  WebkitBackdropFilter: 'blur(20px) saturate(120%)',
+  border: '1px solid transparent',
+  backgroundOrigin: 'border-box',
+  backgroundClip: 'padding-box, padding-box, border-box',
 } as React.CSSProperties
+
+const gradientGlass = (fillTop: string, edgeTop: string, edgeBottom: string): React.CSSProperties => ({
+  ...GLASS_BASE,
+  backgroundImage: [
+    `linear-gradient(180deg, ${fillTop}, rgba(8,8,10,0.55))`,
+    NOISE,
+    `linear-gradient(180deg, ${edgeTop}, ${edgeBottom})`,
+  ].join(', '),
+  boxShadow: '0 24px 64px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)',
+})
+
 const MATERIAL: Record<string, React.CSSProperties> = {
-  light: {
-    ...GLASS_BASE,
-    background: 'rgba(255,255,255,0.02)',
-    border: '1px solid rgba(255,255,255,0.04)',
-    borderTop: '1px solid rgba(255,255,255,0.08)',
-  },
-  chrome: {
-    ...GLASS_BASE,
-    background: 'rgba(255,255,255,0.035)',
-    border: '1px solid rgba(255,255,255,0.08)',
-  },
-  heavy: {
-    ...GLASS_BASE,
-    background: 'rgba(255,255,255,0.02)',
-    border: '1px solid rgba(255,255,255,0.04)',
-    borderTop: '1px solid rgba(255,255,255,0.08)',
-  },
+  light:  gradientGlass('rgba(24,24,28,0.5)',  'rgba(255,255,255,0.16)', 'rgba(255,255,255,0.03)'),
+  chrome: gradientGlass('rgba(30,30,34,0.55)', 'rgba(255,255,255,0.28)', 'rgba(255,255,255,0.05)'),
+  heavy:  gradientGlass('rgba(24,24,28,0.5)',  'rgba(255,255,255,0.16)', 'rgba(255,255,255,0.03)'),
 }
 
 // Sleek monochrome geometry — floats above the card in preserve-3d, anchors each key.
@@ -333,8 +337,8 @@ export default function GymSpin() {
 
   return (
     <>
-      {/* 360vh scroll track — longer runway slows the scrub so each key reads before the next */}
-      <div ref={trackRef} style={{ height: '360vh', position: 'relative', zIndex: 1 }} />
+      {/* 300vh scroll track — each key still dwells, dead tail trimmed */}
+      <div ref={trackRef} style={{ height: '300vh', position: 'relative', zIndex: 1 }} />
 
       {/* Fixed Canvas — hidden until section is active */}
       <div
@@ -453,18 +457,18 @@ export default function GymSpin() {
               <span
                 style={{
                   display: 'block', marginTop: 18,
-                  fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 800,
-                  fontSize: 'clamp(2.4rem, 4vw, 3.4rem)', lineHeight: 1, letterSpacing: '-0.035em',
-                  color: '#f6f8f6',
+                  fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 700,
+                  fontSize: 'clamp(1.35rem, 1.8vw, 1.7rem)', lineHeight: 1.1, letterSpacing: '-0.02em',
+                  color: 'rgba(246,248,246,0.85)',
                 }}
               >
                 {beat.name}
               </span>
               <span
                 style={{
-                  display: 'block', marginTop: 12,
-                  fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 700,
-                  fontSize: 'clamp(1.3rem, 2vw, 1.7rem)', lineHeight: 1, letterSpacing: '-0.02em',
+                  display: 'block', marginTop: 10,
+                  fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 800,
+                  fontSize: 'clamp(2.6rem, 4.2vw, 3.6rem)', lineHeight: 1, letterSpacing: '-0.04em',
                   color: '#fff',
                 }}
               >
@@ -477,7 +481,7 @@ export default function GymSpin() {
                 style={{
                   display: 'block', marginTop: 10,
                   fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 400,
-                  fontSize: 16, lineHeight: 1.5, color: 'rgba(255,255,255,0.62)',
+                  fontSize: 16, lineHeight: 1.5, color: 'rgba(255,255,255,0.72)',
                 }}
               >
                 {beat.tagline}

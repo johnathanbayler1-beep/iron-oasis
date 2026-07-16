@@ -12,7 +12,7 @@ const STEPS = [
   { n: '01', k: 'The App', line: 'Book your private window and get your access pass — right from your phone.' },
   { n: '02', k: 'The Location', line: 'Arrive at 3011 Blimey Drive, Windsor. A quiet, calm residential street. Park out front, walk up.' },
   { n: '03', k: 'The Access', line: 'Enter your code into the Yale Assure smart lock. It opens for your key alone.' },
-  { n: '04', k: 'The Experience', line: '24/7 private access. Zero sharing. The entire private node is yours, and yours alone.' },
+  { n: '04', k: 'The Experience', line: '24/7 private access. Zero sharing. The entire space is yours, and yours alone. We do not operate like a gym.' },
 ]
 
 const ACCENT = '#d4d7da'
@@ -93,7 +93,7 @@ export function HowItWorks() {
             letterSpacing: '-0.045em', color: '#fff',
           }}
         >
-          Four steps to your private node.
+          Four steps to your private space.
         </h2>
 
         <div style={{ perspective: 1400 }}>

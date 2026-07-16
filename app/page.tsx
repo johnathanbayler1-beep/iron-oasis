@@ -10,7 +10,7 @@ const ScrollExplode = dynamic(
 )
 const InfrastructureBridge = dynamic(
   () => import('../components/InfrastructureBridge'),
-  { ssr: false, loading: () => <div style={{ width: '100%', height: '300vh', background: '#000' }} /> }
+  { ssr: false, loading: () => <div style={{ width: '100%', height: '160vh', background: '#000' }} /> }
 )
 import GymSpin from '@/components/GymSpinLazy';
 import GymScene from '@/app/components/GymSceneLazy';

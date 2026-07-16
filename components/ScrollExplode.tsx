@@ -12,13 +12,13 @@ declare global {
 const FRAME_COUNT   = 121          // logo_000.webp … logo_120.webp
 const FRAMES_PATH   = '/frames/'   // → public/frames/
 const FRAME_EXT     = 'webp'       // full-res 1200px WebP
-const SCROLL_VH     = 200          // desktop scroll distance in vh — lengthened runway slows the scrub so the gateway reads deliberately (windows are fractional, handoff stays synced)
-const SCROLL_VH_MOB = 200          // mobile matches desktop
+const SCROLL_VH     = 170          // tightened runway — snappier scrub, no dead tail (windows are fractional, handoff stays synced)
+const SCROLL_VH_MOB = 170          // mobile matches desktop
 const INTRO_DUR     = 1.6          // animate-in duration in seconds
 const MOBILE_BP     = 768          // px — below this we use mobile tuning
 
 // Tagline — emerges as the logo explodes. Swap copy freely.
-const TAGLINE_1 = 'ONE PRIVATE NODE.'
+const TAGLINE_1 = 'WE ARE NOT A GYM.'
 const TAGLINE_2 = 'ZERO SHARING.'
 // reveal windows in scroll-progress (0–1): [start, fullyVisible]
 // widened for the 140vh scale — old windows spanned ~100vh of travel at 700vh,
@@ -469,16 +469,16 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
             margin: '16px 0 0',
           }}
         >
-          Your private node is live.
+          This is not a gym.
         </h1>
         <p
           style={{
             fontFamily: 'var(--font-grotesk), sans-serif', fontSize: 'clamp(15px, 1.7vw, 19px)',
-            color: 'rgba(255,255,255,0.55)', margin: '18px 0 0', maxWidth: '32ch',
+            color: 'rgba(255,255,255,0.55)', margin: '18px 0 0', maxWidth: '44ch',
             marginInline: 'auto', lineHeight: 1.5,
           }}
         >
-          Private autonomy, on your key.
+          100% privacy. Zero sharing. 24/7 access — the entire space is yours alone.
         </p>
         </div>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', pointerEvents: 'auto', marginTop: 'auto' }}>

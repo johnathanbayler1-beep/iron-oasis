@@ -8,7 +8,7 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 const MODEL_URL = '/gym-space-2k.glb'
-const SCROLL_VH = 140 // eased spline reaches the end sooner; trim the dead tail
+const SCROLL_VH = 280 // doubled runway — halves camera speed per scroll pixel
 
 const _lookAt = new THREE.Vector3()
 const _camPos = new THREE.Vector3()
@@ -179,7 +179,7 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
       trigger: section,
       start:   'top top',
       end:     'bottom bottom',
-      scrub:   0.5,
+      scrub:   1,
       onUpdate(self) {
         progressRef.current = self.progress
         invalidateRef.current()

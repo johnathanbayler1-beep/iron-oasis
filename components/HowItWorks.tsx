@@ -9,10 +9,11 @@ import { CustomEase } from 'gsap/CustomEase'
 // The honest walkthrough — the process, stated plainly, before the close.
 // Calm editorial: numbered steps, one glass panel for the model. No hype.
 const STEPS = [
-  { n: '01', k: 'The App', line: 'Book your private window and get your access pass — right from your phone.' },
-  { n: '02', k: 'The Location', line: 'Arrive at 3011 Blimey Drive, Windsor. A quiet, calm residential street. Park out front, walk up.' },
-  { n: '03', k: 'The Access', line: 'Enter your code into the Yale Assure smart lock. It opens for your key alone.' },
-  { n: '04', k: 'The Experience', line: '24/7 private access. Zero sharing. The entire space is yours, and yours alone. We do not operate like a gym.' },
+  { n: '01', k: 'Download the App', line: 'Get the Iron Oasis app. Your Access Key lives on your phone.' },
+  { n: '02', k: 'Book a Solo Window', line: 'Reserve a one-hour solo window. The whole space, held for you alone.' },
+  { n: '03', k: 'Arrive', line: 'Park on the street at 3011 Blimey Drive, Windsor. A quiet residential setting — walk up the property.' },
+  { n: '04', k: 'Enter', line: 'Your code opens the Yale smart lock. It answers to your key alone.' },
+  { n: '05', k: 'Total Autonomy', line: '24/7 private access. Zero sharing. Every square foot is yours for the session.' },
 ]
 
 const ACCENT = '#d4d7da'
@@ -93,7 +94,7 @@ export function HowItWorks() {
             letterSpacing: '-0.045em', color: '#fff',
           }}
         >
-          Four steps to your private space.
+          Five steps to total autonomy.
         </h2>
 
         <div style={{ perspective: 1400 }}>

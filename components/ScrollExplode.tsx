@@ -18,7 +18,7 @@ const INTRO_DUR     = 1.6          // animate-in duration in seconds
 const MOBILE_BP     = 768          // px — below this we use mobile tuning
 
 // Tagline — emerges as the logo explodes. Swap copy freely.
-const TAGLINE_1 = 'WE ARE NOT A GYM.'
+const TAGLINE_1 = 'PRIVATE ACCESS.'
 const TAGLINE_2 = 'ZERO SHARING.'
 // reveal windows in scroll-progress (0–1): [start, fullyVisible]
 // widened for the 140vh scale — old windows spanned ~100vh of travel at 700vh,
@@ -49,7 +49,6 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
   const line1Ref   = useRef<HTMLDivElement>(null)
   const line2Ref   = useRef<HTMLDivElement>(null)
   const heroRef    = useRef<HTMLDivElement>(null)
-  const brickRef   = useRef<HTMLDivElement>(null)
   const heroTextRef      = useRef<HTMLDivElement>(null)
   const primaryCtaRef    = useRef<HTMLButtonElement>(null)
   const secondaryCtaRef  = useRef<HTMLAnchorElement>(null)
@@ -239,11 +238,6 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
           if (!scrollLocked.current) {
             canvas.style.opacity = String(1 - ramp(self.progress, 0.88, 1))
           }
-          // black → brick-wall crossfade under the spin; returns to black for the 3D handoff
-          if (brickRef.current) {
-            const o = ramp(self.progress, 0.45, 0.85) * (1 - ramp(self.progress, 0.9, 0.99))
-            brickRef.current.style.opacity = String(o)
-          }
           const idx = Math.round(self.progress * (FRAME_COUNT - 1))
           if (idx !== frameRef.current) {
             frameRef.current = idx
@@ -404,32 +398,13 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         </div>
       )}
 
-      {/* brick wall — sits under the canvas; the difference blend re-keys the logo
-          from white-on-black to dark-on-brick as this layer fades in */}
-      <div
-        ref={brickRef}
-        aria-hidden="true"
-        style={{
-          position: 'fixed', inset: 0, zIndex: 0, opacity: 0, pointerEvents: 'none',
-          backgroundColor: '#d8d7d3',
-          backgroundImage: [
-            'linear-gradient(335deg, #c9c8c3 23px, transparent 23px)',
-            'linear-gradient(155deg, #c9c8c3 23px, transparent 23px)',
-            'linear-gradient(335deg, #c9c8c3 23px, transparent 23px)',
-            'linear-gradient(155deg, #c9c8c3 23px, transparent 23px)',
-          ].join(', '),
-          backgroundSize: '116px 58px',
-          backgroundPosition: '0px 2px, 4px 62px, 58px 31px, 62px 91px',
-        }}
-      />
-
       {/* canvas — position:fixed, stays pinned while the section scrolls */}
       <canvas
         ref={canvasRef}
         style={{
           position: 'fixed', top: 0, left: 0,
           width: '100vw', height: '100vh', zIndex: 0,
-          display: 'block', opacity: 0, mixBlendMode: 'difference',
+          display: 'block', opacity: 0,
         }}
       />
 
@@ -469,7 +444,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
             margin: '16px 0 0',
           }}
         >
-          This is not a gym.
+          A premium private space.
         </h1>
         <p
           style={{
@@ -478,7 +453,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
             marginInline: 'auto', lineHeight: 1.5,
           }}
         >
-          100% privacy. Zero sharing. 24/7 access — the entire space is yours alone.
+          Park on the street, walk up, the space is yours.
         </p>
         </div>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', pointerEvents: 'auto', marginTop: 'auto' }}>

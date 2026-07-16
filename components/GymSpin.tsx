@@ -279,6 +279,16 @@ export default function GymSpin() {
           { y: 0, clipPath: 'inset(-10% -10% -10% -10%)', duration: 0.2, ease: 'power4.out', immediateRender: false },
           ps,
         )
+        // Price lands last — after the card has settled and the perks have read
+        const price = el.querySelector<HTMLElement>('[data-price]')
+        if (price) {
+          tl.fromTo(
+            price,
+            { opacity: 0 },
+            { opacity: 1, duration: 0.05, ease: 'power2.out', immediateRender: false },
+            ps + 0.16,
+          )
+        }
         // Exit — soft settle out
         tl.fromTo(
           el,
@@ -337,8 +347,8 @@ export default function GymSpin() {
 
   return (
     <>
-      {/* 300vh scroll track — each key still dwells, dead tail trimmed */}
-      <div ref={trackRef} style={{ height: '300vh', position: 'relative', zIndex: 1 }} />
+      {/* 260vh scroll track — each key still dwells, dead tail before HowItWorks trimmed */}
+      <div ref={trackRef} style={{ height: '260vh', position: 'relative', zIndex: 1 }} />
 
       {/* Fixed Canvas — hidden until section is active */}
       <div
@@ -467,19 +477,6 @@ export default function GymSpin() {
               <span
                 style={{
                   display: 'block', marginTop: 10,
-                  fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 800,
-                  fontSize: 'clamp(2.6rem, 4.2vw, 3.6rem)', lineHeight: 1, letterSpacing: '-0.04em',
-                  color: '#fff',
-                }}
-              >
-                {beat.price}
-                <span style={{ marginLeft: 6, fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.5)', letterSpacing: 0 }}>
-                  / month
-                </span>
-              </span>
-              <span
-                style={{
-                  display: 'block', marginTop: 10,
                   fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 400,
                   fontSize: 16, lineHeight: 1.5, color: 'rgba(255,255,255,0.72)',
                 }}
@@ -500,12 +497,27 @@ export default function GymSpin() {
                     <span style={{ fontSize: 13, fontWeight: 500, letterSpacing: '0.02em', color: 'rgba(255,255,255,0.5)' }}>
                       {label}
                     </span>
-                    <span style={{ fontSize: 15, fontWeight: 600, color: '#fff', textAlign: 'right' }}>
+                    <span style={{ fontSize: 17, fontWeight: 600, color: '#fff', textAlign: 'right' }}>
                       {value}
                     </span>
                   </li>
                 ))}
               </ul>
+
+              {/* price — deliberately last and smallest; perks carry the card */}
+              <span
+                data-price
+                style={{
+                  display: 'block', marginTop: 20, paddingTop: 14,
+                  borderTop: '1px solid rgba(255,255,255,0.1)',
+                  fontFamily: 'var(--font-jetbrains), monospace', fontWeight: 500,
+                  fontSize: 12, letterSpacing: '0.08em',
+                  color: 'rgba(255,255,255,0.45)',
+                  opacity: 0, willChange: 'opacity',
+                }}
+              >
+                {beat.price} / month
+              </span>
               </div>
             </div>
           ))}

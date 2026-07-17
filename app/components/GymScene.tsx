@@ -2,12 +2,14 @@
 
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Environment, useGLTF } from '@react-three/drei'
+import { Environment, Preload, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
-const MODEL_URL = '/gym-space-2k.glb'
+useGLTF.setDecoderPath('/draco/')
+
+const MODEL_URL = '/gym-space-2k-opt.glb'
 const SCROLL_VH = 280 // doubled runway — halves camera speed per scroll pixel
 
 const _lookAt = new THREE.Vector3()
@@ -199,6 +201,13 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
             : 1
           el.style.opacity   = String(o)
           el.style.transform = `translateY(${(1 - o) * 24}px)`
+          // body trails the headline — staggered fade-up within the same beat
+          const body = el.querySelector<HTMLElement>('p')
+          if (body) {
+            const ob = Math.max(0, Math.min(1, (o - 0.3) / 0.7))
+            body.style.opacity   = String(ob)
+            body.style.transform = `translateY(${(1 - ob) * 20}px)`
+          }
         })
       },
     })
@@ -252,7 +261,7 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
             <ambientLight intensity={0.6} />
             <directionalLight position={[5, 5, 5]} intensity={1.2} />
             <Suspense fallback={null}>
-              <Environment preset="apartment" />
+              <Environment files="/hdri/lebombo_1k.hdr" />
               <Model waypointsRef={waypointsRef} curveRef={curveRef} />
               <CameraRig
                 waypointsRef={waypointsRef}
@@ -260,13 +269,14 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
                 progressRef={progressRef}
                 invalidateRef={invalidateRef}
               />
+              <Preload all />
             </Suspense>
           </Canvas>
         )}
 
         {/* scroll-animated copy layered over the 3D canvas — beats on the 40% flanks */}
         {[
-          { window: '0.04,0.36', side: 'left',  head: 'ONE KEY.',       body: 'Frictionless access. Park. Walk up. The space is yours.' },
+          { window: '0.04,0.36', side: 'left',  head: 'ONE KEY.',       body: 'Frictionless isolation. Park, walk up — the entire compound is yours.' },
           { window: '0.34,0.67', side: 'right', head: 'ZERO SHARING.',  body: 'Every rack and machine is yours for the whole session.' },
           { window: '0.65,0.98', side: 'left',  head: 'PURE PRIVACY.',  body: 'Premium equipment, quiet residential setting. Reset between sessions.' },
         ].map((beat) => (
@@ -292,6 +302,7 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
                 fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 900,
                 fontSize: 'clamp(48px, 8vw, 120px)', lineHeight: 0.9,
                 letterSpacing: '-0.03em', color: '#fff', textTransform: 'uppercase',
+                textWrap: 'balance',
                 textShadow: '0 4px 60px rgba(0,0,0,0.95), 0 0 24px rgba(0,0,0,0.9)',
               }}
             >
@@ -299,8 +310,11 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
             </div>
             <p
               style={{
-                marginTop: 20, fontFamily: 'var(--font-grotesk), sans-serif', fontSize: 18,
-                color: 'rgba(255,255,255,0.92)', lineHeight: 1.6, fontWeight: 500,
+                marginTop: 20, fontFamily: 'var(--font-grotesk), sans-serif',
+                fontSize: 'clamp(18px, 1.5vw, 22px)', maxWidth: '34ch',
+                marginLeft: beat.side === 'right' ? 'auto' : 0,
+                color: 'rgba(255,255,255,0.95)', lineHeight: 1.55, fontWeight: 500,
+                textWrap: 'balance', willChange: 'opacity, transform',
                 textShadow: '0 0 32px rgba(0,0,0,1), 0 2px 12px rgba(0,0,0,0.9)',
               }}
             >

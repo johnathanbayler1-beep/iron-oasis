@@ -12,14 +12,14 @@ declare global {
 const FRAME_COUNT   = 121          // logo_000.webp … logo_120.webp
 const FRAMES_PATH   = '/frames/'   // → public/frames/
 const FRAME_EXT     = 'webp'       // full-res 1200px WebP
-const SCROLL_VH     = 170          // tightened runway — snappier scrub, no dead tail (windows are fractional, handoff stays synced)
-const SCROLL_VH_MOB = 170          // mobile matches desktop
+const SCROLL_VH     = 150          // tightened runway — snappier scrub, no dead tail (windows are fractional, handoff stays synced)
+const SCROLL_VH_MOB = 150          // mobile matches desktop
 const INTRO_DUR     = 1.6          // animate-in duration in seconds
 const MOBILE_BP     = 768          // px — below this we use mobile tuning
 
 // Tagline — emerges as the logo explodes. Swap copy freely.
-const TAGLINE_1 = 'PRIVATE ACCESS.'
-const TAGLINE_2 = 'ZERO SHARING.'
+const TAGLINE_1 = 'ABSOLUTE AUTONOMY.'
+const TAGLINE_2 = 'ZERO SHARED OXYGEN.'
 // reveal windows in scroll-progress (0–1): [start, fullyVisible]
 // widened for the 140vh scale — old windows spanned ~100vh of travel at 700vh,
 // same fractions over 40vh of travel would pop instead of emerge
@@ -444,16 +444,17 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
             margin: '16px 0 0',
           }}
         >
-          A premium private space.
+          Absolute spatial autonomy.
         </h1>
         <p
           style={{
             fontFamily: 'var(--font-grotesk), sans-serif', fontSize: 'clamp(15px, 1.7vw, 19px)',
-            color: 'rgba(255,255,255,0.55)', margin: '18px 0 0', maxWidth: '44ch',
+            fontWeight: 500, letterSpacing: '-0.01em',
+            color: 'rgba(255,255,255,0.75)', margin: '18px 0 0', maxWidth: '44ch',
             marginInline: 'auto', lineHeight: 1.5,
           }}
         >
-          Park on the street, walk up, the space is yours.
+          Frictionless isolation. Park, walk up — the entire compound is yours.
         </p>
         </div>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', pointerEvents: 'auto', marginTop: 'auto' }}>
@@ -467,7 +468,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
               opacity: 0, willChange: 'opacity, transform',
             }}
           >
-            Get access
+            Initiate Access
           </button>
           <a
             ref={secondaryCtaRef}
@@ -478,7 +479,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
               opacity: 0, willChange: 'opacity, transform',
             }}
           >
-            See the space
+            Secure Your Window
           </a>
         </div>
       </div>

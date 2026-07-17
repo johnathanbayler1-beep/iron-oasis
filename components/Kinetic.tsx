@@ -43,7 +43,7 @@ export function Kinetic() {
     // ── magnetic CTAs ──
     let active: HTMLElement | null = null
     const release = (el: HTMLElement) =>
-      gsap.to(el, { x: 0, y: 0, duration: 0.5, ease: 'power4.out', overwrite: 'auto' })
+      gsap.to(el, { x: 0, y: 0, rotateX: 0, rotateY: 0, duration: 0.5, ease: 'power4.out', overwrite: 'auto' })
     const onMove = (e: MouseEvent) => {
       const btn = (e.target as Element | null)?.closest?.('.io-btn--accent') as HTMLElement | null
       if (btn !== active) {
@@ -58,6 +58,10 @@ export function Kinetic() {
       gsap.to(btn, {
         x: gsap.utils.clamp(-10, 10, (e.clientX - cx) * 0.18),
         y: gsap.utils.clamp(-10, 10, (e.clientY - cy) * 0.18),
+        // physical face — button tilts toward the cursor like a plate on a pivot
+        rotateY: gsap.utils.clamp(-6, 6, (e.clientX - cx) * 0.08),
+        rotateX: gsap.utils.clamp(-6, 6, -(e.clientY - cy) * 0.08),
+        transformPerspective: 1000,
         duration: 0.4,
         ease: 'power4.out',
         overwrite: 'auto',

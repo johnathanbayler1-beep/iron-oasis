@@ -15,6 +15,7 @@ const InfrastructureBridge = dynamic(
 import GymSpin from '@/components/GymSpinLazy';
 import GymScene from '@/app/components/GymSceneLazy';
 import { HowItWorks } from '@/components/HowItWorks';
+import { BookingNode } from '@/app/components/BookingNode';
 import { FinalClose } from '@/components/FinalClose';
 
 export default function Home() {
@@ -35,6 +36,9 @@ export default function Home() {
 
       {/* Phase 3 — 360 spin: Access Keys carry the value stack and pricing */}
       {gymMounted && <GymSpin />}
+
+      {/* Booking node — live occupancy + secure access windows */}
+      <BookingNode />
 
       {/* Phase 4 — how it works: the process + the model, stated plainly */}
       <HowItWorks />

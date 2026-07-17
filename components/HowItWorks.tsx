@@ -136,7 +136,8 @@ export function HowItWorks() {
                   style={{
                     margin: '12px 0 0', maxWidth: 640,
                     fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 400,
-                    fontSize: 'clamp(16px, 1.6vw, 20px)', lineHeight: 1.55, color: '#a1a1aa',
+                    fontSize: 'clamp(16px, 1.6vw, 20px)', lineHeight: 1.5,
+                    letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.75)',
                   }}
                 >
                   {s.line}
@@ -172,7 +173,8 @@ export function HowItWorks() {
           <span
             style={{
               fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 400,
-              fontSize: 'clamp(17px, 1.8vw, 22px)', lineHeight: 1.5, color: '#a1a1aa',
+              fontSize: 'clamp(17px, 1.8vw, 22px)', lineHeight: 1.5,
+              letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.75)',
             }}
           >
             No hidden fees. No contracts. No cancellation fees. Cancel any time — your key just stops renewing.

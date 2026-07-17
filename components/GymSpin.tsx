@@ -2,14 +2,15 @@
 
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Environment, Lightformer, Preload, useGLTF } from '@react-three/drei'
+import { Environment, Lightformer, Preload, useGLTF, useProgress } from '@react-three/drei'
 import * as THREE from 'three'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { CustomEase } from 'gsap/CustomEase'
 
 useGLTF.setDecoderPath('/draco/')
 
-const MODEL_URL = '/gym-space-2k.glb'
+const MODEL_URL = '/gym-space-2k-opt.glb'
 
 // Access Keys — access tiers. Cards sit in the right rail, never over the model.
 const BEATS = [
@@ -21,6 +22,7 @@ const BEATS = [
     accent: false,
     glyph: 'spark' as const,
     weight: 'light' as const,
+    cta: 'Initiate Access',
     specs: [
       ['Access', '3 days / week'],
       ['Hours', 'Non-peak only'],
@@ -35,6 +37,7 @@ const BEATS = [
     accent: true,
     glyph: 'grid' as const,
     weight: 'chrome' as const,
+    cta: 'Secure Your Window',
     specs: [
       ['Access', '4 days / week'],
       ['Hours', 'Peak included'],
@@ -49,6 +52,7 @@ const BEATS = [
     accent: false,
     glyph: 'diamond' as const,
     weight: 'heavy' as const,
+    cta: 'Claim Key',
     specs: [
       ['Access', 'Every day'],
       ['Hours', '24/7 · peak & non-peak'],
@@ -59,35 +63,20 @@ const BEATS = [
 
 const ACCENT = '#e6e6e6'
 
-// 21st.dev-grade dark glass: 1px gradient border (padding-box/border-box trick),
-// subtle SVG grain, deep translucent fill. Monochrome only; backdrop-filter
-// refracts the 3D scene behind the panel.
-const NOISE =
-  `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E")`
-
-const GLASS_BASE: React.CSSProperties = {
-  backdropFilter: 'blur(20px) saturate(120%)',
-  WebkitBackdropFilter: 'blur(20px) saturate(120%)',
-  border: '1px solid transparent',
-  backgroundOrigin: 'border-box',
-  backgroundClip: 'padding-box, padding-box, border-box',
-} as React.CSSProperties
-
-const gradientGlass = (fillTop: string, edgeTop: string, edgeBottom: string): React.CSSProperties => ({
-  ...GLASS_BASE,
-  backgroundImage: [
-    `linear-gradient(180deg, ${fillTop}, rgba(8,8,10,0.55))`,
-    NOISE,
-    `linear-gradient(180deg, ${edgeTop}, ${edgeBottom})`,
-  ].join(', '),
-  boxShadow: '0 24px 64px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06)',
-})
-
-const MATERIAL: Record<string, React.CSSProperties> = {
-  light:  gradientGlass('rgba(24,24,28,0.5)',  'rgba(255,255,255,0.16)', 'rgba(255,255,255,0.03)'),
-  chrome: gradientGlass('rgba(30,30,34,0.55)', 'rgba(255,255,255,0.28)', 'rgba(255,255,255,0.05)'),
-  heavy:  gradientGlass('rgba(24,24,28,0.5)',  'rgba(255,255,255,0.16)', 'rgba(255,255,255,0.03)'),
+// True glassmorphism — near-transparent fill so backdrop-filter refracts the
+// 3D scene behind the panel. Monochrome only.
+const CARD_GLASS: React.CSSProperties = {
+  background: 'linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03) 42%, rgba(0,0,0,0.06))',
+  backdropFilter: 'blur(32px) saturate(160%)',
+  WebkitBackdropFilter: 'blur(32px) saturate(160%)',
+  border: '1px solid rgba(255,255,255,0.14)',
+  boxShadow:
+    'inset 0 0 0 1px rgba(255,255,255,0.1), inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -40px 64px rgba(0,0,0,0.32), 0 12px 32px rgba(0,0,0,0.5), 0 48px 110px rgba(0,0,0,0.8)',
 }
+
+// film grain over the glass — kills gradient banding, adds physical surface
+const NOISE_URI =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")"
 
 // Sleek monochrome geometry — floats above the card in preserve-3d, anchors each key.
 function KeyGlyph({ variant, bright }: { variant: 'spark' | 'grid' | 'diamond'; bright: boolean }) {
@@ -222,18 +211,37 @@ export default function GymSpin() {
     const r = e.currentTarget.getBoundingClientRect()
     const nx = (e.clientX - r.left) / r.width - 0.5
     const ny = (e.clientY - r.top) / r.height - 0.5
-    gsap.to(el, { rotateY: nx * 5, rotateX: -ny * 5, y: -2, duration: 0.5, ease: 'power3.out', overwrite: 'auto' })
+    // magnetic drift (x) + plate tilt — card follows the cursor like a physical object
+    gsap.to(el, { x: nx * 10, rotateY: nx * 7, rotateX: -ny * 7, y: -6, z: 28, scale: 1.02, transformPerspective: 1000, duration: 0.5, ease: 'cardHover', overwrite: 'auto' })
   }
   const tiltReset = (i: number) => () => {
     const el = tiltRefs.current[i]
     if (!el) return
-    gsap.to(el, { rotateX: 0, rotateY: 0, y: 0, duration: 0.7, ease: 'power3.out', overwrite: 'auto' })
+    gsap.to(el, { x: 0, rotateX: 0, rotateY: 0, y: 0, z: 0, scale: 1, duration: 0.7, ease: 'power3.out', overwrite: 'auto' })
   }
 
   const [inView, setInView] = useState(false)
   // latch: once mounted the GL context lives for the page lifetime. Remounting on
   // every scroll in/out churns the context and triggers "Context Lost".
   const [canvasMounted, setCanvasMounted] = useState(false)
+
+  // R3F load sync — the UI layer stays hidden until the GLB is fully parsed,
+  // so cards never float over an unpainted black canvas.
+  const { progress } = useProgress()
+  const assetsReady = progress === 100
+  const readyRef = useRef(false)
+
+  useEffect(() => {
+    if (!assetsReady || readyRef.current || !textWrap.current) return
+    readyRef.current = true
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (inView && !reduce) {
+      textWrap.current.style.visibility = 'visible'
+      gsap.fromTo(textWrap.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out' })
+    } else {
+      gsap.set(textWrap.current, { opacity: 1, y: 0 })
+    }
+  }, [assetsReady, inView])
 
   useEffect(() => {
     const el = trackRef.current
@@ -249,7 +257,8 @@ export default function GymSpin() {
   useEffect(() => { if (inView) setCanvasMounted(true) }, [inView])
 
   useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger)
+    gsap.registerPlugin(ScrollTrigger, CustomEase)
+    if (!CustomEase.get('cardHover')) CustomEase.create('cardHover', '0.32, 0.72, 0, 1')
 
     const ctx = gsap.context(() => {
       // Reset proxy on each mount
@@ -258,7 +267,7 @@ export default function GymSpin() {
       const tl = gsap.timeline({ paused: true })
       ;(window as any).__timelines = { ...((window as any).__timelines ?? {}), gymSpin: tl }
 
-      // Spin arc: −π/4 → π/2 across the full 300vh scroll
+      // Spin arc: −π/4 → π/2 across the full 200vh scroll
       tl.to(spinProxy, { rotationY: Math.PI / 2, duration: 1, ease: 'none' }, 0)
 
       // Beat text — Spatial Z-Push entry + blur exit
@@ -268,17 +277,25 @@ export default function GymSpin() {
 
         const SLOT = 1 / BEATS.length                              // ~0.333 per beat
         const ps   = i * SLOT
-        const exit = i < BEATS.length - 1 ? ps + SLOT * 0.65 : 0.92
+        // exit hugs the next entry (0.8 of slot) and the last card holds to 0.97 —
+        // kills the empty-rail dead zones between keys and the black tail before HowItWorks
+        const exit = i < BEATS.length - 1 ? ps + SLOT * 0.8 : 0.97
 
         // Entry: masked reveal — the key unmasks bottom-up out of the dark while
         // settling down into place. Final inset is negative so the hover tilt
         // never clips against the mask edge.
         tl.fromTo(
           el,
-          { opacity: 1, y: 60, clipPath: 'inset(100% -10% -10% -10%)' },
-          { y: 0, clipPath: 'inset(-10% -10% -10% -10%)', duration: 0.2, ease: 'power4.out', immediateRender: false },
+          { opacity: 1, y: 60, z: -140, rotateX: 9, clipPath: 'inset(100% -10% -10% -10%)' },
+          { y: 0, z: 0, rotateX: 0, clipPath: 'inset(-10% -10% -10% -10%)', duration: 0.2, ease: 'power4.out', immediateRender: false },
           ps,
         )
+        // Inner copy — staggered fade-up trailing the mask reveal
+        const reveals = el.querySelectorAll<HTMLElement>('[data-reveal]')
+        if (reveals.length) {
+          gsap.set(reveals, { opacity: 0, y: 20 })
+          tl.to(reveals, { opacity: 1, y: 0, duration: 0.07, stagger: 0.018, ease: 'power3.out' }, ps + 0.04)
+        }
         // Price lands last — after the card has settled and the perks have read
         const price = el.querySelector<HTMLElement>('[data-price]')
         if (price) {
@@ -292,8 +309,8 @@ export default function GymSpin() {
         // Exit — soft settle out
         tl.fromTo(
           el,
-          { opacity: 1, y: 0,   filter: 'blur(0px)' },
-          { opacity: 0, y: -20, filter: 'blur(5px)', duration: 0.12, ease: 'power2.in', immediateRender: false },
+          { opacity: 1, y: 0,   z: 0,   filter: 'blur(0px)' },
+          { opacity: 0, y: -20, z: -60, filter: 'blur(5px)', duration: 0.12, ease: 'power2.in', immediateRender: false },
           exit,
         )
       })
@@ -302,7 +319,8 @@ export default function GymSpin() {
         if (!canvasWrap.current) return
         canvasWrap.current.style.visibility = 'visible'
         if (!textWrap.current) return
-        textWrap.current.style.visibility = 'visible'
+        // canvas first, UI second: reveal only once the model has loaded
+        if (readyRef.current) textWrap.current.style.visibility = 'visible'
         _invalidate?.()
         requestAnimationFrame(() => _invalidate?.())
       }
@@ -347,8 +365,8 @@ export default function GymSpin() {
 
   return (
     <>
-      {/* 260vh scroll track — each key still dwells, dead tail before HowItWorks trimmed */}
-      <div ref={trackRef} style={{ height: '260vh', position: 'relative', zIndex: 1 }} />
+      {/* 200vh scroll track — each key still dwells, dead tail before HowItWorks trimmed */}
+      <div ref={trackRef} style={{ height: '200vh', position: 'relative', zIndex: 1 }} />
 
       {/* Fixed Canvas — hidden until section is active */}
       <div
@@ -371,7 +389,7 @@ export default function GymSpin() {
             <ambientLight intensity={0.15} />
             <directionalLight position={[5, 8, 5]} intensity={3.0} />
             <Suspense fallback={null}>
-              <Environment preset="studio">
+              <Environment files="/hdri/studio_small_03_1k.hdr">
                 {/* hard overhead + side strips for specular kicks on the hardware */}
                 <Lightformer intensity={5} position={[0, 6, -4]} rotation-x={Math.PI / 2} scale={[14, 2, 1]} />
                 <Lightformer intensity={2.5} position={[-6, 2, 0]} rotation-y={Math.PI / 2} scale={[10, 1.5, 1]} />
@@ -387,7 +405,7 @@ export default function GymSpin() {
       {/* Fixed text layer — right rail of tactile key cards, model stays left */}
       <div
         ref={textWrap}
-        style={{ position: 'fixed', inset: 0, zIndex: 10, pointerEvents: 'none', visibility: 'hidden' }}
+        style={{ position: 'fixed', inset: 0, zIndex: 10, pointerEvents: 'none', visibility: 'hidden', opacity: 0 }}
       >
         {/* right-side scrim panel — gives the split its edge, keeps cards legible */}
         <div
@@ -435,19 +453,31 @@ export default function GymSpin() {
               <div
                 ref={el => { tiltRefs.current[i] = el }}
                 style={{
+                  position: 'relative',
                   padding: 'clamp(34px, 3.6vw, 48px)',
+                  paddingBottom: 'clamp(88px, 8vw, 108px)',
                   borderRadius: 12,
                   transformStyle: 'preserve-3d',
                   willChange: 'transform',
-                  ...MATERIAL[beat.weight],
+                  ...CARD_GLASS,
                 }}
               >
+              {/* film grain layer — physical surface over the glass */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: 'absolute', inset: 0, borderRadius: 12,
+                  backgroundImage: NOISE_URI, backgroundSize: '120px 120px',
+                  opacity: 0.05, pointerEvents: 'none',
+                }}
+              />
               <KeyGlyph variant={beat.glyph} bright={beat.accent} />
               <span
+                data-reveal
                 style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   fontFamily: 'var(--font-jetbrains), monospace', fontSize: 12, fontWeight: 700,
-                  letterSpacing: '0.22em', color: beat.accent ? ACCENT : 'rgba(255,255,255,0.55)',
+                  letterSpacing: '0.22em', color: beat.accent ? '#fff' : 'rgba(255,255,255,0.7)',
                 }}
               >
                 {beat.index}
@@ -465,20 +495,23 @@ export default function GymSpin() {
               </span>
 
               <span
+                data-reveal
                 style={{
                   display: 'block', marginTop: 18,
                   fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 700,
-                  fontSize: 'clamp(1.35rem, 1.8vw, 1.7rem)', lineHeight: 1.1, letterSpacing: '-0.02em',
-                  color: 'rgba(246,248,246,0.85)',
+                  fontSize: 'clamp(1.6rem, 2.2vw, 2rem)', lineHeight: 1.05, letterSpacing: '-0.02em',
+                  color: '#fff',
                 }}
               >
                 {beat.name}
               </span>
               <span
+                data-reveal
                 style={{
                   display: 'block', marginTop: 10,
-                  fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 400,
-                  fontSize: 16, lineHeight: 1.5, color: 'rgba(255,255,255,0.72)',
+                  fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 500,
+                  fontSize: 17, lineHeight: 1.5, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.85)',
+                  textWrap: 'balance',
                 }}
               >
                 {beat.tagline}
@@ -488,36 +521,55 @@ export default function GymSpin() {
                 {beat.specs.map(([label, value]) => (
                   <li
                     key={label}
+                    data-reveal
                     style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16,
                       padding: '12px 0', borderTop: '1px solid rgba(255,255,255,0.1)',
                       fontFamily: 'var(--font-grotesk), sans-serif',
                     }}
                   >
-                    <span style={{ fontSize: 13, fontWeight: 500, letterSpacing: '0.02em', color: 'rgba(255,255,255,0.5)' }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.02em', color: '#fff' }}>
                       {label}
                     </span>
-                    <span style={{ fontSize: 17, fontWeight: 600, color: '#fff', textAlign: 'right' }}>
+                    <span style={{ fontSize: 17, fontWeight: 700, color: '#fff', textAlign: 'right' }}>
                       {value}
                     </span>
                   </li>
                 ))}
               </ul>
 
-              {/* price — deliberately last and smallest; perks carry the card */}
+              {/* price — demoted, pinned to the card's absolute bottom; perks carry the card */}
               <span
                 data-price
                 style={{
-                  display: 'block', marginTop: 20, paddingTop: 14,
-                  borderTop: '1px solid rgba(255,255,255,0.1)',
+                  position: 'absolute',
+                  bottom: 'clamp(22px, 2.2vw, 30px)',
+                  left: 'clamp(34px, 3.6vw, 48px)',
                   fontFamily: 'var(--font-jetbrains), monospace', fontWeight: 500,
-                  fontSize: 12, letterSpacing: '0.08em',
-                  color: 'rgba(255,255,255,0.45)',
+                  fontSize: 13, letterSpacing: '0.08em',
+                  color: 'rgba(255,255,255,0.6)',
                   opacity: 0, willChange: 'opacity',
                 }}
               >
                 {beat.price} / month
               </span>
+
+              {/* CTA — magnetic physics via Kinetic's .io-btn--accent delegation */}
+              <button
+                type="button"
+                className="io-btn io-btn--accent"
+                style={{
+                  position: 'absolute',
+                  bottom: 'clamp(16px, 1.8vw, 24px)',
+                  right: 'clamp(34px, 3.6vw, 48px)',
+                  padding: '14px 28px',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  willChange: 'transform',
+                }}
+              >
+                {beat.cta}
+              </button>
               </div>
             </div>
           ))}

@@ -7,12 +7,13 @@ import { CustomEase } from 'gsap/CustomEase'
 import { spinState } from '@/components/scenes/SpinContent'
 
 const CARD_GLASS: React.CSSProperties = {
-  background: 'rgba(0,0,0,0.92) !important',
-  backdropFilter: 'blur(24px) !important',
-  WebkitBackdropFilter: 'blur(24px) !important',
+  background: 'rgba(20, 20, 20, 0.4)',
+  backdropFilter: 'blur(32px)',
+  WebkitBackdropFilter: 'blur(32px)',
   willChange: 'transform, opacity',
-  border: '1px solid rgba(255,255,255,0.15) !important',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.5) !important',
+  border: '1px solid rgba(255,255,255,0.1)',
+  borderTop: '1px solid rgba(255,255,255,0.28)',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
 }
 
 const NOISE_URI =
@@ -54,7 +55,7 @@ const TIERS: AccessTier[] = [
   },
 ]
 
-const cardsProxy = { intro: 0 }
+const cardsProxy = TIERS.map(() => ({ intro: 0 }))
 
 export default function GymSpin({ onActive }: { onActive?: (active: boolean) => void }) {
   const trackRef   = useRef<HTMLDivElement>(null)
@@ -102,8 +103,10 @@ export default function GymSpin({ onActive }: { onActive?: (active: boolean) => 
       ;(window as any).__timelines = { ...((window as any).__timelines ?? {}), gymSpin: tl }
 
       tl.to(spinState.rotationRef, { current: Math.PI / 2, duration: 1, ease: 'none' }, 0)
-      cardsProxy.intro = 0
-      tl.fromTo(cardsProxy, { intro: 0 }, { intro: 1, duration: 0.8, ease: 'power3.out' }, 0.2)
+      cardsProxy.forEach((p, i) => {
+        p.intro = 0
+        tl.fromTo(p, { intro: 0 }, { intro: 1, duration: 0.6, ease: 'power3.out' }, 0.2 + i * 0.15)
+      })
 
       if (!trackRef.current) {
         console.error('[GymSpin] scrollTrackRef is null at ScrollTrigger init — aborting context')
@@ -127,8 +130,10 @@ export default function GymSpin({ onActive }: { onActive?: (active: boolean) => 
           tl.progress(self.progress)
           if (domRaf === null) {
             domRaf = requestAnimationFrame(() => {
-              const clampedIntro = Math.min(1, Math.max(0, cardsProxy.intro))
-              overlayRef.current?.style.setProperty('--cards-intro', String(clampedIntro))
+              cardsProxy.forEach((p, i) => {
+                const clamped = Math.min(1, Math.max(0, p.intro))
+                overlayRef.current?.style.setProperty(`--card-intro-${i}`, String(clamped))
+              })
               spinState.invalidateRef.current()
               domRaf = null
             })
@@ -156,9 +161,6 @@ export default function GymSpin({ onActive }: { onActive?: (active: boolean) => 
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           gap: 'clamp(16px, 2vw, 28px)', padding: '0 6%', perspective: 1400,
           pointerEvents: 'none',
-          opacity: 'var(--cards-intro, 0)',
-          transform: 'translateY(calc((1 - var(--cards-intro, 0)) * 40px))',
-          transition: 'opacity 0.2s linear',
         }}
       >
         {TIERS.map((tier, i) => (
@@ -172,18 +174,21 @@ export default function GymSpin({ onActive }: { onActive?: (active: boolean) => 
               padding: 'clamp(28px, 2.6vw, 36px)', color: '#fff',
               pointerEvents: 'auto', cursor: 'default', transformStyle: 'preserve-3d',
               border: tier.featured ? '1px solid rgba(255,255,255,0.28)' : CARD_GLASS.border,
+              opacity: `var(--card-intro-${i}, 0)`,
+              transform: `translateY(calc((1 - var(--card-intro-${i}, 0)) * 40px))`,
+              transition: 'opacity 0.2s linear',
             }}
           >
             <Grain />
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <h3 style={{ fontSize: 'clamp(20px, 1.6vw, 24px)', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>{tier.name}</h3>
+              <h3 style={{ fontSize: 'clamp(20px, 1.6vw, 24px)', fontWeight: 800, letterSpacing: '-0.02em', margin: 0, color: '#EAEAEA' }}>{tier.name}</h3>
               {tier.featured && (
                 <span style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.8)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 999, padding: '3px 8px' }}>
                   Priority
                 </span>
               )}
             </div>
-            <p style={{ position: 'relative', fontSize: 14, color: '#EAEAEA', fontFamily: 'monospace', marginBottom: 16 }}>
+            <p style={{ position: 'relative', fontSize: 14, color: '#EAEAEA', marginBottom: 16 }}>
               {tier.price}<span style={{ marginLeft: 4, color: 'rgba(255,255,255,0.5)' }}>/mo</span>
             </p>
             <div style={{ position: 'relative', height: 1, background: 'rgba(255,255,255,0.1)', marginBottom: 16 }} />

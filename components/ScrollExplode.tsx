@@ -442,9 +442,9 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         </span>
         <h1
           style={{
-            fontFamily: 'var(--font-display), sans-serif', fontWeight: 900,
+            fontFamily: 'monospace', fontWeight: 900,
             fontSize: 'clamp(44px, 6.6vw, 108px)', lineHeight: 0.9,
-            letterSpacing: '-0.04em', textTransform: 'uppercase', color: '#fff',
+            letterSpacing: '-0.04em', textTransform: 'uppercase', color: '#EAEAEA',
             margin: '16px 0 0',
           }}
         >
@@ -452,7 +452,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         </h1>
         <p
           style={{
-            fontFamily: 'var(--font-grotesk), sans-serif', fontSize: 'clamp(15px, 1.7vw, 19px)',
+            fontFamily: 'monospace', fontSize: 'clamp(15px, 1.7vw, 19px)',
             fontWeight: 500, letterSpacing: '-0.01em',
             color: 'rgba(255,255,255,0.75)', margin: '18px 0 0', maxWidth: '44ch',
             marginInline: 'auto', lineHeight: 1.5,
@@ -499,9 +499,9 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
           justifyContent: 'space-between',
           padding: '0 4vw',
           pointerEvents: 'none',
-          fontFamily: 'var(--font-display), sans-serif',
+          fontFamily: 'monospace',
           fontWeight: 900,
-          color: '#fff',
+          color: '#EAEAEA',
           zIndex: 2,
           mixBlendMode: 'difference',
         }}

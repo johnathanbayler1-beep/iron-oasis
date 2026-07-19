@@ -4,8 +4,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ── IRON OASIS — Industrial-Brutalist key surface ──────────── */
-/* Strict Black / White / Zinc. No gold. No soft shadows. */
+/* ── IRON OASIS — Premium Cinematic Spatial surface ──────────── */
+/* Strict Black / White / Zinc. No gold. Deep glass, soft depth. */
 @theme {
   --color-black: #000000;
   --color-white: #ffffff;
@@ -157,19 +157,6 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   .io-btn { transition: none; }
-}
-
-/* Industrial heading contract: opt-in via .io-brutalist.
-   No text-shadow, no size override — clamp() sizes stay tuned.
-   Never apply to Canvas/WebGL containers. */
-.io-brutalist {
-  text-transform: uppercase;
-  letter-spacing: -0.03em;
-  font-weight: 800;
-  color: var(--text-primary);
-  border-bottom: var(--edge-hard) solid var(--accent-node);
-  padding-bottom: 0.25rem;
-  display: inline-block;
 }
 
 /* Lenis: disable native smooth so the JS smoother owns scroll */

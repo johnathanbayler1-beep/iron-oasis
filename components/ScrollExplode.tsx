@@ -172,6 +172,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         const batchPromises: Promise<void>[] = []
         for (let i = batchStart; i < batchEnd; i++) {
           const img = new Image()
+          img.fetchPriority = 'low' // ponytail: don't compete with LCP for bandwidth
           imgs[i] = img
           batchPromises.push(
             new Promise<void>((resolve) => {
@@ -197,7 +198,10 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
       }
       imagesRef.current = imgs
     }
-    preloadFrames()
+    // ponytail: defer past first paint so 121 frames don't block LCP
+    const ric = window.requestIdleCallback ?? ((cb: IdleRequestCallback) => setTimeout(() => cb({} as IdleDeadline), 0))
+    const idleId = ric(preloadFrames)
+    return () => window.cancelIdleCallback?.(idleId as number)
   }, [])
 
   /* ── intro animate-in → hand off to scroll-scrub ───────────────────── */

@@ -14,6 +14,7 @@ const MODEL_URL = '/gym-space-2k-opt.glb'
 export const spinState = {
   rotationRef: { current: -Math.PI / 4 } as { current: number },
   invalidateRef: { current: () => {} } as { current: () => void },
+  focusRef: { current: 0 } as { current: number }, // 0 = sharp hero focus, 1 = full bokeh (pricing cards in view)
 }
 
 function SpinModel({ onReady }: { onReady: () => void }) {

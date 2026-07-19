@@ -127,6 +127,8 @@ export default function GymSpin({ onActive }: { onActive?: (active: boolean) => 
           overlayRef.current?.style.removeProperty('opacity')
         },
         onUpdate(self) {
+          spinState.focusRef.current = self.progress
+          spinState.invalidateRef.current()
           tl.progress(self.progress)
           if (domRaf === null) {
             domRaf = requestAnimationFrame(() => {

@@ -9,14 +9,17 @@ declare global {
 }
 
 // ─── config ────────────────────────────────────────────────────────────────
+const FRAME_COUNT   = 121          // logo_000.webp … logo_120.webp
+const FRAMES_PATH   = '/frames/'   // → public/frames/
+const FRAME_EXT     = 'webp'       // full-res 1200px WebP
 const SCROLL_VH     = 150          // tightened runway — snappier scrub, no dead tail (windows are fractional, handoff stays synced)
 const SCROLL_VH_MOB = 150          // mobile matches desktop
 const INTRO_DUR     = 1.6          // animate-in duration in seconds
 const MOBILE_BP     = 768          // px — below this we use mobile tuning
 
 // Tagline — emerges as the logo explodes. Swap copy freely.
-const TAGLINE_1 = 'COMPLETE PRIVACY.'
-const TAGLINE_2 = 'ZERO SHARED OXYGEN.'
+const TAGLINE_1 = 'PRIVATE ACCESS.'
+const TAGLINE_2 = 'ZERO SHARING.'
 // reveal windows in scroll-progress (0–1): [start, fullyVisible]
 // widened for the 140vh scale — old windows spanned ~100vh of travel at 700vh,
 // same fractions over 40vh of travel would pop instead of emerge
@@ -25,6 +28,10 @@ const T2_WINDOW: [number, number] = [0.45, 0.80]
 // hero overlay fades out over this scroll window (in viewport-heights scrolled)
 const HERO_WINDOW: [number, number] = [0.05, 0.85]
 // ───────────────────────────────────────────────────────────────────────────
+
+function pad(n: number) {
+  return String(n).padStart(3, '0')
+}
 
 // 0 below `start`, 1 at/after `end`, linear between — used to map scroll → reveal
 function ramp(p: number, start: number, end: number) {
@@ -37,7 +44,7 @@ interface ScrollExplodeProps {
 
 export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
   const sectionRef = useRef<HTMLDivElement>(null)
-  const videoRef   = useRef<HTMLVideoElement>(null)
+  const canvasRef  = useRef<HTMLCanvasElement>(null)
   const cueRef     = useRef<HTMLDivElement>(null)
   const line1Ref   = useRef<HTMLDivElement>(null)
   const line2Ref   = useRef<HTMLDivElement>(null)
@@ -47,6 +54,8 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
   const secondaryCtaRef  = useRef<HTMLAnchorElement>(null)
 
   const handlePWADownload = () => console.log('PWA Prompt Triggered')
+  const imagesRef  = useRef<HTMLImageElement[]>([])
+  const frameRef     = useRef(0)
   const scrollLocked  = useRef(false)   // tracks whether we own the overflow lock
   const heroInRef     = useRef(false)   // hero stays hidden until the intro reveals it
   const cueGoneRef    = useRef(false)   // scroll cue fades once, on first scroll
@@ -54,12 +63,32 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
   const floatTweenRef = useRef<gsap.core.Tween | null>(null)
   const lastTaglineProgressRef  = useRef<number>(-1)
   const gymPreloadFiredRef      = useRef(false)
-  const [ready, setReady]       = useState(true)
+  const [loadPct, setLoadPct]   = useState(0)
+  const [ready, setReady]       = useState(false)
   const [scrollVh, setScrollVh] = useState(SCROLL_VH)
 
   /* ── pick scroll length once, on mount, based on viewport width ─────── */
   useEffect(() => {
     setScrollVh(window.innerWidth < MOBILE_BP ? SCROLL_VH_MOB : SCROLL_VH)
+  }, [])
+
+  /* ── draw a frame to canvas (DPR-aware, letterbox-centered) ─────────── */
+  const draw = useCallback((index: number) => {
+    const canvas = canvasRef.current
+    const img    = imagesRef.current[index]
+    if (!canvas || !img?.complete) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    // canvas.width/height are device pixels; math runs in that space so the
+    // chrome stays sharp on retina / high-DPI screens instead of going soft.
+    const cw = canvas.width
+    const ch = canvas.height
+    ctx.fillStyle = '#000'
+    ctx.fillRect(0, 0, cw, ch)
+    const scale = Math.min(cw / img.naturalWidth, ch / img.naturalHeight)
+    const dw = img.naturalWidth  * scale
+    const dh = img.naturalHeight * scale
+    ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh)
   }, [])
 
   /* ── drive tagline reveal straight off scroll progress ──────────────── */
@@ -95,16 +124,93 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  /* ── canvas resize (backing store = device pixels) ──────────────────── */
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const setSize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5)
+      canvas.width  = Math.round(window.innerWidth  * dpr)
+      canvas.height = Math.round(window.innerHeight * dpr)
+      draw(frameRef.current)
+      // ScrollTrigger auto-refreshes on resize; manual call would desync Lenis
+    }
+
+    let rafId = 0
+    const onResize = () => {
+      if (scrollLocked.current) return
+      cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(setSize)
+    }
+
+    setSize()
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      cancelAnimationFrame(rafId)
+    }
+  }, [draw])
+
+  /* ── preload all frames (decode before marking ready → no flash) ────── */
+  useEffect(() => {
+    let done = 0
+    const imgs: HTMLImageElement[] = new Array(FRAME_COUNT)
+
+    const tick = () => {
+      done++
+      if (done % 10 === 0 || done === FRAME_COUNT) {
+        setLoadPct(Math.round((done / FRAME_COUNT) * 100))
+      }
+      if (done === FRAME_COUNT) setReady(true)
+    }
+
+    const BATCH_SIZE = 10
+    const preloadFrames = async () => {
+      for (let batchStart = 0; batchStart < FRAME_COUNT; batchStart += BATCH_SIZE) {
+        const batchEnd = Math.min(batchStart + BATCH_SIZE, FRAME_COUNT)
+        const batchPromises: Promise<void>[] = []
+        for (let i = batchStart; i < batchEnd; i++) {
+          const img = new Image()
+          imgs[i] = img
+          batchPromises.push(
+            new Promise<void>((resolve) => {
+              let settled = false
+              const finish = () => {
+                if (settled) return
+                settled = true
+                tick(); resolve()
+              }
+              img.onload = () => {
+                finish()                        // ready on load; never gate on decode
+                img.decode?.().catch(() => {})  // fire-and-forget: warm cache, never block
+              }
+              img.onerror = finish
+              // src set AFTER handlers: cached frames fire load synchronously,
+              // and an already-complete image would otherwise never call onload.
+              img.src = `${FRAMES_PATH}logo_${pad(i)}.${FRAME_EXT}`
+              if (img.complete && img.onload) img.onload(new Event('load'))
+            })
+          )
+        }
+        await Promise.all(batchPromises)
+      }
+      imagesRef.current = imgs
+    }
+    preloadFrames()
+  }, [])
+
   /* ── intro animate-in → hand off to scroll-scrub ───────────────────── */
   useEffect(() => {
     if (!ready) return
     gsap.registerPlugin(ScrollTrigger)
 
-    const video   = videoRef.current
+    const canvas  = canvasRef.current
     const section = sectionRef.current
     const cue     = cueRef.current
-    if (!video || !section) return
+    if (!canvas || !section) return
 
+    draw(0)
     updateTagline(0) // tagline starts hidden
 
     const reduceMotion =
@@ -123,14 +229,19 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         trigger: section,
         start:   'top top',
         end:     'bottom top',   // scrub spans the FULL 140vh section so the canvas fade lands exactly at the GymScene handoff — no trailing dead zone
-        scrub:   1.5, invalidateOnRefresh: true,   // heavier smoothing — keeps the long scrub deliberate, not snappy
+        scrub:   1,   // heavier smoothing — keeps the long scrub deliberate, not snappy
         onUpdate(self) {
           if (self.progress > 0.001) fadeCue()
-          // progress-driven handoff — video dissolves over the last 12% of the
+          // progress-driven handoff — canvas dissolves over the last 12% of the
           // scrub, exactly as the 3D scene slides in underneath. No timed fade,
           // no dead zone.
           if (!scrollLocked.current) {
-            video.style.opacity = String(1 - ramp(self.progress, 0.88, 1))
+            canvas.style.opacity = String(1 - ramp(self.progress, 0.88, 1))
+          }
+          const idx = Math.round(self.progress * (FRAME_COUNT - 1))
+          if (idx !== frameRef.current) {
+            frameRef.current = idx
+            draw(idx)
           }
           const p = self.progress
           if (Math.abs(p - lastTaglineProgressRef.current) > 0.002) {
@@ -148,7 +259,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
 
     // accessibility: skip the cinematic intro, go straight to scroll control
     if (reduceMotion) {
-      gsap.set(video, { opacity: 1, scale: 1, filter: 'blur(0px)' })
+      gsap.set(canvas, { opacity: 1, scale: 1, filter: 'blur(0px)' })
       if (cue) gsap.set(cue, { opacity: 0.55 })
       if (heroRef.current) {
         heroInRef.current = true
@@ -172,7 +283,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
       _w.__timelines = _w.__timelines ?? {}
       _w.__timelines['scrollExplodeIntro'] = tl
       tl.fromTo(
-        video,
+        canvas,
         { opacity: 0, scale: 0.86, filter: 'blur(12px)' },
         {
           opacity:  1,
@@ -198,15 +309,6 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
               { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out', immediateRender: false },
               '-=0.6',
             )
-            const introLines = heroTextRef.current.querySelectorAll<HTMLElement>('[data-intro-line]')
-            if (introLines.length) {
-              tl.fromTo(
-                introLines,
-                { opacity: 0, y: 18 },
-                { opacity: 1, y: 0, duration: 0.6, stagger: 0.12, ease: 'power2.out', immediateRender: false },
-                '-=0.55',
-              )
-            }
           }
           if (primaryCtaRef.current) {
             tl.fromTo(
@@ -250,7 +352,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         scrollLocked.current = false
       }
     }
-  }, [ready, updateTagline])
+  }, [ready, draw, updateTagline])
 
   /* ── sine-yoyo float on .io-hero-headline__float ───────────────────── */
   useEffect(() => {
@@ -265,18 +367,44 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
   /* ── render ─────────────────────────────────────────────────────────── */
   return (
     <>
-      {/* video — position:fixed, stays pinned while the section scrolls */}
-      <video
-        ref={videoRef}
-        src="/spin.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
+      {/* preload overlay */}
+      {!ready && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'fixed', inset: 0, background: '#000',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            gap: 14, zIndex: 9999,
+          }}
+        >
+          <div style={{ width: 180, height: 1, background: 'rgba(255,255,255,0.08)' }}>
+            <div
+              style={{
+                width: `${loadPct}%`, height: '100%',
+                background: '#fff', transition: 'width 0.25s linear',
+              }}
+            />
+          </div>
+          <span
+            style={{
+              color: 'rgba(255,255,255,0.2)', fontSize: 10,
+              letterSpacing: '0.2em', fontFamily: 'monospace',
+              textTransform: 'uppercase',
+            }}
+          >
+            {loadPct}%
+          </span>
+        </div>
+      )}
+
+      {/* canvas — position:fixed, stays pinned while the section scrolls */}
+      <canvas
+        ref={canvasRef}
         style={{
           position: 'fixed', top: 0, left: 0,
           width: '100vw', height: '100vh', zIndex: 0,
-          display: 'block', objectFit: 'cover', opacity: 1,
+          display: 'block', opacity: 0,
         }}
       />
 
@@ -316,19 +444,17 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
             margin: '16px 0 0',
           }}
         >
-          Complete privacy.
+          Your private space. Zero sharing.
         </h1>
         <p
           style={{
-            fontFamily: 'var(--font-grotesk), sans-serif', fontSize: 'clamp(18px, 1.7vw, 20px)',
+            fontFamily: 'var(--font-grotesk), sans-serif', fontSize: 'clamp(15px, 1.7vw, 19px)',
             fontWeight: 500, letterSpacing: '-0.01em',
             color: 'rgba(255,255,255,0.75)', margin: '18px 0 0', maxWidth: '44ch',
             marginInline: 'auto', lineHeight: 1.5,
           }}
         >
-          <span data-intro-line style={{ display: 'block' }}>Your key opens the door.</span>
-          <span data-intro-line style={{ display: 'block' }}>The entire space is yours.</span>
-          <span data-intro-line style={{ display: 'block' }}>Completely unbothered.</span>
+          Frictionless isolation. Park, walk up — the entire private space is yours.
         </p>
         </div>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', pointerEvents: 'auto', marginTop: 'auto' }}>
@@ -342,7 +468,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
               opacity: 0, willChange: 'opacity, transform',
             }}
           >
-            Acquire Key
+            Download to Access
           </button>
           <a
             ref={secondaryCtaRef}
@@ -353,7 +479,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
               opacity: 0, willChange: 'opacity, transform',
             }}
           >
-            Book a session
+            Acquire Key
           </a>
         </div>
       </div>

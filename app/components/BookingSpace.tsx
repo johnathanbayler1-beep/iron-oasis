@@ -4,16 +4,15 @@ import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
-// Booking Node — live occupancy + smart-lock time-slot generation.
+// Booking Space — preview of in-app scheduling: live occupancy + smart-lock sessions.
 // Sits below GymSpin: same glass, same grain, same calm.
 
 const ACCENT = '#e6e6e6'
 const SUB = 'rgba(255,255,255,0.75)'
 
 const CARD_GLASS: React.CSSProperties = {
-  background: 'linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03) 42%, rgba(0,0,0,0.06))',
-  backdropFilter: 'blur(32px) saturate(160%)',
-  WebkitBackdropFilter: 'blur(32px) saturate(160%)',
+  background: '#0a0a0a',
+  willChange: 'transform, opacity',
   border: '1px solid rgba(255,255,255,0.14)',
   boxShadow:
     'inset 0 0 0 1px rgba(255,255,255,0.1), inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -40px 64px rgba(0,0,0,0.32), 0 12px 32px rgba(0,0,0,0.5), 0 48px 110px rgba(0,0,0,0.8)',
@@ -48,13 +47,13 @@ function buildSlots() {
   })
 }
 
-// Live Capacity Meter — radial gauge. 0 = vacant node, ready for entry.
+// Live Capacity Meter — radial gauge. 0 = vacant space, ready for entry.
 function CapacityGauge({ occupancy }: { occupancy: number }) {
   const R = 84
   const C = 2 * Math.PI * R
   return (
     <div style={{ position: 'relative', width: 220, height: 220, flexShrink: 0 }}>
-      <svg viewBox="0 0 220 220" width="220" height="220" aria-label="Spatial capacity">
+      <svg viewBox="0 0 220 220" width="220" height="220" aria-label="Live capacity">
         <circle cx="110" cy="110" r={R} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="6" />
         <circle
           cx="110" cy="110" r={R} fill="none"
@@ -75,14 +74,14 @@ function CapacityGauge({ occupancy }: { occupancy: number }) {
           {Math.round(occupancy * 100)}%
         </span>
         <span style={{ fontFamily: 'var(--font-jetbrains), monospace', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: SUB }}>
-          SPATIAL CAPACITY
+          LIVE CAPACITY
         </span>
       </div>
     </div>
   )
 }
 
-export function BookingNode() {
+export function BookingSpace() {
   const wrapRef = useRef<HTMLDivElement>(null)
   const [slots] = useState(buildSlots)
   const [selected, setSelected] = useState<number | null>(null)
@@ -94,7 +93,7 @@ export function BookingNode() {
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
     const ctx = gsap.context(() => {
-      const fades = gsap.utils.toArray<HTMLElement>('[data-node-fade]')
+      const fades = gsap.utils.toArray<HTMLElement>('[data-space-fade]')
       if (reduce) {
         gsap.set(fades, { opacity: 1, y: 0 })
         return
@@ -121,18 +120,18 @@ export function BookingNode() {
     >
       <div style={{ maxWidth: 1180, margin: '0 auto' }}>
         <span
-          data-node-fade
+          data-space-fade
           style={{
             display: 'block', fontFamily: 'var(--font-jetbrains), monospace',
             fontSize: 12, fontWeight: 700, letterSpacing: '0.22em', color: SUB,
             marginBottom: 'clamp(20px, 2.4vw, 32px)',
           }}
         >
-          BOOKING — SECURE ACCESS WINDOW
+          SCHEDULING — IRON OASIS APP
         </span>
 
         <h2
-          data-node-fade
+          data-space-fade
           style={{
             color: '#ffffff', fontWeight: 700, letterSpacing: '-0.03em',
             fontSize: 'clamp(34px, 4.6vw, 64px)', lineHeight: 1.04,
@@ -140,20 +139,21 @@ export function BookingNode() {
             marginBottom: 'clamp(16px, 2vw, 24px)',
           }}
         >
-          Claim the window. The lock does the rest.
+          Reserve the window. The lock does the rest.
         </h2>
 
         <p
-          data-node-fade
+          data-space-fade
           style={{
             color: SUB, letterSpacing: '-0.01em', fontSize: 'clamp(15px, 1.3vw, 18px)',
             lineHeight: 1.6, maxWidth: '52ch', textWrap: 'balance',
             marginBottom: 'clamp(48px, 6vw, 80px)',
           }}
         >
-          Live occupancy, read straight from the Location. Pick a window, and Dynamic
-          Key Generation issues a one-time code to the Yale smart lock. Autonomous
-          Entry — no desk, no handoff, zero sharing.
+          Unshared blocks managed exclusively via the Iron Oasis app. Live
+          occupancy, read straight from the Location. Hold a block in the app,
+          and a one-time code is issued to the Yale smart lock. No desk, no
+          handoff, zero sharing.
         </p>
 
         <div
@@ -166,7 +166,7 @@ export function BookingNode() {
         >
           {/* Live Capacity Meter */}
           <div
-            data-node-fade
+            data-space-fade
             style={{
               position: 'relative', borderRadius: 12, ...CARD_GLASS,
               padding: 'clamp(34px, 3.6vw, 48px)',
@@ -182,13 +182,13 @@ export function BookingNode() {
                 textAlign: 'center', textWrap: 'balance', maxWidth: '26ch', margin: 0,
               }}
             >
-              Node is vacant. Every Solo Window holds the entire Location for one key.
+              The space is vacant. Every Session holds the entire Location for one Key.
             </p>
           </div>
 
           {/* Slot grid */}
           <div
-            data-node-fade
+            data-space-fade
             style={{
               position: 'relative', borderRadius: 12, ...CARD_GLASS,
               padding: 'clamp(34px, 3.6vw, 48px)',
@@ -243,8 +243,8 @@ export function BookingNode() {
               }}
             >
               {selected !== null
-                ? 'Window held. Dynamic Key Generation arms your code at the top of the hour.'
-                : 'Select a Secure Access Window. Struck slots are already claimed.'}
+                ? 'Block held. In the app, your one-time code arms at the top of the hour.'
+                : 'Availability shown as it appears in the app. Struck blocks are already claimed.'}
             </p>
           </div>
         </div>

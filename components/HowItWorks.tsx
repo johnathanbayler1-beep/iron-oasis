@@ -13,7 +13,7 @@ const STEPS = [
   { n: '02', k: 'Book a Solo Window', line: 'Reserve a one-hour solo window. The whole space, held for you alone.' },
   { n: '03', k: 'Arrive', line: 'Park on the street at 3011 Blimey Drive, Windsor. A quiet residential setting — walk up the property.' },
   { n: '04', k: 'Enter', line: 'Your code opens the Yale smart lock. It answers to your key alone.' },
-  { n: '05', k: 'Total Autonomy', line: '24/7 private access. Zero sharing. Every square foot is yours for the session.' },
+  { n: '05', k: 'Complete Privacy', line: '24/7 private access. Zero sharing. Every square foot is yours for the session.' },
 ]
 
 const ACCENT = '#d4d7da'
@@ -44,7 +44,7 @@ export function HowItWorks() {
           split.words,
           { yPercent: 110 },
           { yPercent: 0, stagger: 0.06, ease: 'appleOut',
-            scrollTrigger: { trigger: h2, start: 'top 88%', end: 'top 42%', scrub: 0.6 } },
+            scrollTrigger: { trigger: h2, start: 'top 88%', end: 'top 42%', scrub: 1.5, invalidateOnRefresh: true } },
         )
       }
       gsap.fromTo(
@@ -94,7 +94,7 @@ export function HowItWorks() {
             letterSpacing: '-0.045em', color: '#fff',
           }}
         >
-          Five steps to total autonomy.
+          Five steps to complete privacy.
         </h2>
 
         <div style={{ perspective: 1400 }}>
@@ -154,9 +154,8 @@ export function HowItWorks() {
             marginTop: 'clamp(56px, 8vh, 96px)',
             display: 'flex', flexDirection: 'column', gap: 16,
             padding: 'clamp(40px, 5vw, 72px)', borderRadius: 12,
-            background: 'rgba(255,255,255,0.02)',
-            backdropFilter: 'blur(20px) saturate(115%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(115%)',
+            background: '#0a0a0a',
+            willChange: 'transform, opacity',
             border: '1px solid rgba(255,255,255,0.04)',
             borderTop: '1px solid rgba(255,255,255,0.08)',
           }}

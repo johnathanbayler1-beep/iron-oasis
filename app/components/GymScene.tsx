@@ -1,150 +1,23 @@
 'use client'
 
-import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Environment, Preload, useGLTF } from '@react-three/drei'
-import * as THREE from 'three'
+import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { gymSceneState } from '@/components/scenes/GymSceneContent'
 
-useGLTF.setDecoderPath('/draco/')
-
-const MODEL_URL = '/gym-space-2k-opt.glb'
 const SCROLL_VH = 280 // doubled runway — halves camera speed per scroll pixel
 
-const _lookAt = new THREE.Vector3()
-const _camPos = new THREE.Vector3()
-
-type WayPoint = { pos: THREE.Vector3; lookAt: THREE.Vector3 }
-
-function Model({ waypointsRef, curveRef }: {
-  waypointsRef: { current: WayPoint[] }
-  curveRef: { current: THREE.CatmullRomCurve3 | null }
-}) {
-  const { scene } = useGLTF(MODEL_URL)
-  const cloned  = useMemo(() => scene.clone(true), [scene])
-
-  useLayoutEffect(() => {
-    const box    = new THREE.Box3().setFromObject(cloned)
-    const size   = box.getSize(new THREE.Vector3())
-    const center = box.getCenter(new THREE.Vector3())
-    const c = center
-    const s = size
-    console.log('[GymScene] center:', center.toArray(), 'size:', size.toArray())
-    ;(window as any).__gymBBox = { center: center.toArray(), size: size.toArray() }
-
-    waypointsRef.current = [
-      {
-        pos:    new THREE.Vector3(c.x,               c.y + s.y * 0.25, c.z + s.z * 1.4),
-        lookAt: c.clone(),
-      },
-      {
-        pos:    new THREE.Vector3(c.x - s.x * 0.5,  c.y + s.y * 0.2,  c.z + s.z * 0.5),
-        lookAt: c.clone(),
-      },
-      {
-        pos:    new THREE.Vector3(c.x + s.x * 0.1,  c.y + s.y * 0.05, c.z + s.z * 0.1),
-        lookAt: new THREE.Vector3(c.x, c.y + s.y * 0.15, c.z - s.z * 0.3),
-      },
-      {
-        pos:    new THREE.Vector3(c.x + s.x * 0.45, c.y + s.y * 0.2,  c.z - s.z * 0.2),
-        lookAt: c.clone(),
-      },
-      {
-        pos:    new THREE.Vector3(c.x,               c.y + s.y * 0.5,  c.z + s.z * 0.6),
-        lookAt: c.clone(),
-      },
-    ]
-
-    curveRef.current = new THREE.CatmullRomCurve3(
-      waypointsRef.current.map((w) => w.pos),
-      false,           // not closed
-      'centripetal',   // avoids overshoot/cusps at waypoints
-    )
-  }, [cloned, waypointsRef, curveRef])
-
-  return <primitive object={cloned} />
-}
-
-function CameraRig({
-  waypointsRef,
-  curveRef,
-  progressRef,
-  invalidateRef,
+export default function GymScene({
+  onReady,
+  onActive,
 }: {
-  waypointsRef:  { current: WayPoint[] }
-  curveRef:      { current: THREE.CatmullRomCurve3 | null }
-  progressRef:   { current: number }
-  invalidateRef: { current: () => void }
+  onReady?: () => void
+  onActive?: (active: boolean) => void
 }) {
-  const { camera, invalidate } = useThree()
-  const lastProgRef   = useRef(progressRef.current)
-  const lastChangeRef = useRef(Date.now())
-
-  useEffect(() => {
-    invalidateRef.current = invalidate
-  }, [invalidate, invalidateRef])
-
-  useFrame(() => {
-    const pts = waypointsRef.current
-    if (pts.length < 2) return
-
-    const prog    = progressRef.current
-    const changed = prog !== lastProgRef.current
-    if (changed) {
-      lastProgRef.current   = prog
-      lastChangeRef.current = Date.now()
-    }
-
-    const idle  = Date.now() - lastChangeRef.current > 1500
-    const curve = curveRef.current
-    if (!curve) return
-
-    // power4.inOut easing on global progress → one continuous C1 glide
-    const p = prog
-    const eased = p < 0.5
-      ? 8 * p * p * p * p
-      : 1 - Math.pow(-2 * p + 2, 4) / 2
-
-    curve.getPoint(eased, _camPos)
-    camera.position.copy(_camPos)
-
-    // lookAt still piecewise-lerped across the raw waypoint targets
-    const scaled = eased * (pts.length - 1)
-    const lo     = Math.floor(scaled)
-    const hi     = Math.min(lo + 1, pts.length - 1)
-    const t      = scaled - lo
-    _lookAt.lerpVectors(pts[lo].lookAt, pts[hi].lookAt, t)
-
-    // idle drift: heavily reduced — barely-there, never fights the frame-synced feel
-    if (idle) {
-      const now = Date.now()
-      camera.position.x += Math.sin(now * 0.0004) * 0.0008
-      camera.position.y += Math.cos(now * 0.0003) * 0.0004
-    }
-
-    camera.lookAt(_lookAt)
-
-    if (idle || changed) invalidate()
-  })
-
-  return null
-}
-
-export default function GymScene({ onReady }: { onReady?: () => void }) {
-  const sectionRef     = useRef<HTMLDivElement>(null)
-  const stickyRef      = useRef<HTMLDivElement>(null)
-  const progressRef    = useRef(0)
-  const waypointsRef   = useRef<WayPoint[]>([])
-  const curveRef       = useRef<THREE.CatmullRomCurve3 | null>(null)
-  const invalidateRef  = useRef<() => void>(() => {})
-  const readyFiredRef  = useRef(false)
+  const sectionRef    = useRef<HTMLDivElement>(null)
+  const stickyRef     = useRef<HTMLDivElement>(null)
+  const readyFiredRef = useRef(false)
   const [inView, setInView] = useState(false)
-  // permanently mounted once entered — remounting the Canvas thrashes the WebGL
-  // context (browser throttles creation → "Context Lost" black void). Cull by
-  // demand-frameloop + opacity, never by unmounting the GL context.
-  const [canvasMounted, setCanvasMounted] = useState(false)
-  useEffect(() => { if (inView) setCanvasMounted(true) }, [inView])
 
   useEffect(() => {
     if (!inView || readyFiredRef.current) return
@@ -165,12 +38,12 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
     const el = sectionRef.current
     if (!el) return
     const observer = new IntersectionObserver(
-      ([entry]) => setInView(entry.isIntersecting),
+      ([entry]) => { setInView(entry.isIntersecting); onActive?.(entry.isIntersecting) },
       { threshold: 0 },
     )
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
+  }, [onActive])
 
   useEffect(() => {
     const section = sectionRef.current
@@ -181,16 +54,13 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
       trigger: section,
       start:   'top top',
       end:     'bottom bottom',
-      scrub:   1,
+      scrub:   1.5, invalidateOnRefresh: true,
       onUpdate(self) {
-        progressRef.current = self.progress
-        invalidateRef.current()
-        // scroll-driven text beats — triangle ramp: fade in to mid-window, out by end
+        gymSceneState.progressRef.current = self.progress
+        gymSceneState.invalidateRef.current()
         const beats = sectionRef.current?.querySelectorAll<HTMLElement>('[data-beat]')
         beats?.forEach((el) => {
           const [a, b] = (el.dataset.beat ?? '0,1').split(',').map(Number)
-          // trapezoid: ramp in over first 28%, HOLD centered, ramp out over last 28%.
-          // The hold is the dwell — the card pins readable instead of flashing past.
           const span = b - a
           const inEnd = a + span * 0.28
           const outStart = b - span * 0.28
@@ -201,7 +71,6 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
             : 1
           el.style.opacity   = String(o)
           el.style.transform = `translateY(${(1 - o) * 24}px)`
-          // body trails the headline — staggered fade-up within the same beat
           const body = el.querySelector<HTMLElement>('p')
           if (body) {
             const ob = Math.max(0, Math.min(1, (o - 0.3) / 0.7))
@@ -212,21 +81,18 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
       },
     })
 
-    // handoff crossfade — canvas layer fades in while the section slides over
-    // the hero's fixed canvas, so the 3D scene is revealed without a hard cut
     const fadeSt = ScrollTrigger.create({
       trigger: section,
       start:   'top bottom',
       end:     'top top',
-      scrub:   true,
+      scrub:   1.5, invalidateOnRefresh: true,
       onUpdate(self) {
         if (!stickyRef.current) return
         stickyRef.current.style.opacity = String(0.15 + self.progress * 0.85)
-        invalidateRef.current()
+        gymSceneState.invalidateRef.current()
       },
     })
 
-    // dynamic 3D mount shifts layout — recompute all trigger positions
     const rid = requestAnimationFrame(() => ScrollTrigger.refresh())
 
     return () => { cancelAnimationFrame(rid); st.kill(); fadeSt.kill() }
@@ -245,38 +111,8 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
           willChange: 'opacity',
         }}
       >
-        {canvasMounted && (
-          <Canvas
-            frameloop="demand"
-            dpr={[1, 1.5]}
-            performance={{ min: 0.5 }}
-            camera={{ fov: 45, near: 0.1, far: 1000 }}
-            gl={{ antialias: false, powerPreference: 'high-performance' }}
-            style={{ background: '#000', display: 'block', width: '100%', height: '100%' }}
-            onCreated={({ gl }) => {
-              gl.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault() }, false)
-              gl.domElement.addEventListener('webglcontextrestored', () => {}, false)
-            }}
-          >
-            <ambientLight intensity={0.6} />
-            <directionalLight position={[5, 5, 5]} intensity={1.2} />
-            <Suspense fallback={null}>
-              <Environment files="/hdri/lebombo_1k.hdr" />
-              <Model waypointsRef={waypointsRef} curveRef={curveRef} />
-              <CameraRig
-                waypointsRef={waypointsRef}
-                curveRef={curveRef}
-                progressRef={progressRef}
-                invalidateRef={invalidateRef}
-              />
-              <Preload all />
-            </Suspense>
-          </Canvas>
-        )}
-
-        {/* scroll-animated copy layered over the 3D canvas — beats on the 40% flanks */}
         {[
-          { window: '0.04,0.36', side: 'left',  head: 'ONE KEY.',       body: 'Frictionless isolation. Park, walk up — the entire compound is yours.' },
+          { window: '0.04,0.36', side: 'left',  head: 'ONE KEY.',       body: 'Frictionless isolation. Park, walk up — the entire private facility is yours.' },
           { window: '0.34,0.67', side: 'right', head: 'ZERO SHARING.',  body: 'Every rack and machine is yours for the whole session.' },
           { window: '0.65,0.98', side: 'left',  head: 'PURE PRIVACY.',  body: 'Premium equipment, quiet residential setting. Reset between sessions.' },
         ].map((beat) => (
@@ -325,8 +161,4 @@ export default function GymScene({ onReady }: { onReady?: () => void }) {
       </div>
     </section>
   )
-}
-
-if (typeof window !== 'undefined') {
-  useGLTF.preload(MODEL_URL)
 }

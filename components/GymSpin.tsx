@@ -1,207 +1,66 @@
 'use client'
 
-import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Environment, Lightformer, Preload, useGLTF, useProgress } from '@react-three/drei'
-import * as THREE from 'three'
+import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { CustomEase } from 'gsap/CustomEase'
+import { spinState } from '@/components/scenes/SpinContent'
 
-useGLTF.setDecoderPath('/draco/')
-
-const MODEL_URL = '/gym-space-2k-opt.glb'
-
-// Access Keys — access tiers. Cards sit in the right rail, never over the model.
-const BEATS = [
-  {
-    index: 'KEY 01',
-    name: 'Oasis Lite',
-    tagline: 'Your first key to the space.',
-    price: '$99',
-    accent: false,
-    glyph: 'spark' as const,
-    weight: 'light' as const,
-    cta: 'Initiate Access',
-    specs: [
-      ['Access', '3 days / week'],
-      ['Hours', 'Non-peak only'],
-      ['Locked', '3 PM – 8 PM'],
-    ],
-  },
-  {
-    index: 'KEY 02',
-    name: 'Oasis Plus',
-    tagline: 'Peak hours, unlocked.',
-    price: '$125',
-    accent: true,
-    glyph: 'grid' as const,
-    weight: 'chrome' as const,
-    cta: 'Secure Your Window',
-    specs: [
-      ['Access', '4 days / week'],
-      ['Hours', 'Peak included'],
-      ['Booking', 'Standard window'],
-    ],
-  },
-  {
-    index: 'KEY 03',
-    name: 'Oasis Max',
-    tagline: 'The whole space, any hour.',
-    price: '$149',
-    accent: false,
-    glyph: 'diamond' as const,
-    weight: 'heavy' as const,
-    cta: 'Claim Key',
-    specs: [
-      ['Access', 'Every day'],
-      ['Hours', '24/7 · peak & non-peak'],
-      ['Priority', '48-hour booking window'],
-    ],
-  },
-]
-
-const ACCENT = '#e6e6e6'
-
-// True glassmorphism — near-transparent fill so backdrop-filter refracts the
-// 3D scene behind the panel. Monochrome only.
 const CARD_GLASS: React.CSSProperties = {
-  background: 'linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03) 42%, rgba(0,0,0,0.06))',
-  backdropFilter: 'blur(32px) saturate(160%)',
-  WebkitBackdropFilter: 'blur(32px) saturate(160%)',
-  border: '1px solid rgba(255,255,255,0.14)',
-  boxShadow:
-    'inset 0 0 0 1px rgba(255,255,255,0.1), inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -40px 64px rgba(0,0,0,0.32), 0 12px 32px rgba(0,0,0,0.5), 0 48px 110px rgba(0,0,0,0.8)',
+  background: 'rgba(0,0,0,0.92) !important',
+  backdropFilter: 'blur(24px) !important',
+  WebkitBackdropFilter: 'blur(24px) !important',
+  willChange: 'transform, opacity',
+  border: '1px solid rgba(255,255,255,0.15) !important',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.5) !important',
 }
 
-// film grain over the glass — kills gradient banding, adds physical surface
 const NOISE_URI =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")"
 
-// Sleek monochrome geometry — floats above the card in preserve-3d, anchors each key.
-function KeyGlyph({ variant, bright }: { variant: 'spark' | 'grid' | 'diamond'; bright: boolean }) {
-  const s = bright ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.32)'
+function Grain() {
   return (
-    <svg
-      viewBox="0 0 100 100"
+    <div
       aria-hidden="true"
       style={{
-        position: 'absolute',
-        top: 'clamp(24px, 2.6vw, 34px)',
-        right: 'clamp(24px, 2.8vw, 36px)',
-        width: 'clamp(30px, 3.4vw, 42px)',
-        height: 'clamp(30px, 3.4vw, 42px)',
-        transform: 'translateZ(40px)',
-        pointerEvents: 'none',
-        overflow: 'visible',
+        position: 'absolute', inset: 0, borderRadius: 12,
+        backgroundImage: NOISE_URI, backgroundSize: '120px 120px',
+        opacity: 0.05, pointerEvents: 'none',
       }}
-      fill="none"
-      stroke={s}
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      {variant === 'spark' && (
-        <g>
-          {[0, 45, 90, 135, 180, 225, 270, 315].map((a, i) => {
-            const r = i % 2 ? 20 : 34
-            const rad = (a * Math.PI) / 180
-            return <line key={a} x1={50} y1={50} x2={50 + Math.cos(rad) * r} y2={50 + Math.sin(rad) * r} />
-          })}
-          <circle cx={50} cy={50} r={3.5} />
-        </g>
-      )}
-      {variant === 'grid' && (
-        <g>
-          <line x1={50} y1={50} x2={24} y2={30} />
-          <line x1={50} y1={50} x2={78} y2={36} />
-          <line x1={50} y1={50} x2={52} y2={80} />
-          <circle cx={50} cy={50} r={7} />
-          <circle cx={24} cy={30} r={4} />
-          <circle cx={78} cy={36} r={4} />
-          <circle cx={52} cy={80} r={4} />
-        </g>
-      )}
-      {variant === 'diamond' && (
-        <g>
-          <path d="M38 26 L62 26 L82 44 L50 86 L18 44 Z" />
-          <line x1={18} y1={44} x2={82} y2={44} />
-          <line x1={38} y1={26} x2={50} y2={44} />
-          <line x1={62} y1={26} x2={50} y2={44} />
-          <line x1={18} y1={44} x2={50} y2={86} />
-          <line x1={82} y1={44} x2={50} y2={86} />
-          <line x1={50} y1={44} x2={50} y2={86} />
-        </g>
-      )}
-    </svg>
+    />
   )
 }
 
-// GSAP → R3F invalidate bridge (GymSpin is a page singleton)
-let _invalidate: (() => void) | null = null
+type AccessTier = { name: string; price: string; featured: boolean; features: string[] }
 
-// Spin proxy — GSAP scrubs rotationY; useFrame applies it each tick
-const spinProxy = { rotationY: -Math.PI / 4 }
+const TIERS: AccessTier[] = [
+  {
+    name: 'Oasis Lite',
+    price: '$99',
+    featured: false,
+    features: ['3 days per week', '1hr Booking Windows', 'Non-peak hours (3–8pm restricted)', 'Entire Private Space, Zero Sharing'],
+  },
+  {
+    name: 'Oasis Plus',
+    price: '$125',
+    featured: true,
+    features: ['4 days per week', '1hr Booking Windows', 'Peak hours included', 'Entire Private Space, Zero Sharing'],
+  },
+  {
+    name: 'Oasis Max',
+    price: '$149',
+    featured: false,
+    features: ['7 days per week', '48hr Priority Booking Window', 'All hours, 24/7 Access', 'Entire Private Space, Zero Sharing'],
+  },
+]
 
-// ─── R3F sub-tree ─────────────────────────────────────────────────────────────
+const cardsProxy = { intro: 0 }
 
-function SpinModel() {
-  const { scene }   = useGLTF(MODEL_URL)
-  const clonedScene = useMemo(() => scene.clone(true), [scene])
-  const groupRef    = useRef<THREE.Group>(null)
-  const { camera, invalidate } = useThree()
-
-  useEffect(() => {
-    _invalidate = invalidate
-    return () => { _invalidate = null }
-  }, [invalidate])
-
-  useLayoutEffect(() => {
-    const box    = new THREE.Box3().setFromObject(clonedScene)
-    const size   = box.getSize(new THREE.Vector3())
-    const center = box.getCenter(new THREE.Vector3())
-    clonedScene.position.sub(center)
-
-    const maxDim = Math.max(size.x, size.y, size.z)
-    const persp  = camera as THREE.PerspectiveCamera
-    const fov    = (persp.fov * Math.PI) / 180
-    // 0.9 — camera pushed in tight so the model fills the frame edge to edge;
-    // 1.4 left dark void borders visible around the space
-    const dist   = ((maxDim / 2) / Math.tan(fov / 2)) * 0.9
-
-    camera.position.set(0, size.y * 0.08, dist)
-    camera.near = Math.max(dist / 100, 0.01)
-    camera.far  = dist * 100
-    camera.lookAt(0, 0, 0)
-    persp.updateProjectionMatrix()
-    invalidate()
-  }, [clonedScene, camera, invalidate])
-
-  useFrame(() => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y = spinProxy.rotationY
-    }
-  })
-
-  return (
-    <group ref={groupRef}>
-      <primitive object={clonedScene} />
-    </group>
-  )
-}
-
-// ─── Main component ───────────────────────────────────────────────────────────
-
-export default function GymSpin() {
+export default function GymSpin({ onActive }: { onActive?: (active: boolean) => void }) {
   const trackRef   = useRef<HTMLDivElement>(null)
-  const canvasWrap = useRef<HTMLDivElement>(null)
-  const textWrap   = useRef<HTMLDivElement>(null)
-  const parallaxEl = useRef<HTMLDivElement>(null)
-  const beatRefs   = useRef<(HTMLDivElement | null)[]>([])
+  const overlayRef = useRef<HTMLDivElement>(null)
   const tiltRefs   = useRef<(HTMLDivElement | null)[]>([])
 
-  // Restrained mouse tilt — ±2.5deg, GSAP-owned so it never fights the scrub
-  // timeline (timeline drives the outer beat el, tilt drives the inner card).
   const canTilt = () =>
     window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
     !window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -211,125 +70,40 @@ export default function GymSpin() {
     const r = e.currentTarget.getBoundingClientRect()
     const nx = (e.clientX - r.left) / r.width - 0.5
     const ny = (e.clientY - r.top) / r.height - 0.5
-    // magnetic drift (x) + plate tilt — card follows the cursor like a physical object
-    gsap.to(el, { x: nx * 10, rotateY: nx * 7, rotateX: -ny * 7, y: -6, z: 28, scale: 1.02, transformPerspective: 1000, duration: 0.5, ease: 'cardHover', overwrite: 'auto' })
+    gsap.to(el, { rotateY: nx * 10, rotateX: -ny * 10, y: -4, duration: 0.5, ease: 'power3.out', overwrite: 'auto' })
   }
   const tiltReset = (i: number) => () => {
     const el = tiltRefs.current[i]
     if (!el) return
-    gsap.to(el, { x: 0, rotateX: 0, rotateY: 0, y: 0, z: 0, scale: 1, duration: 0.7, ease: 'power3.out', overwrite: 'auto' })
+    gsap.to(el, { rotateX: 0, rotateY: 0, y: 0, duration: 0.7, ease: 'power3.out', overwrite: 'auto' })
   }
-
-  const [inView, setInView] = useState(false)
-  // latch: once mounted the GL context lives for the page lifetime. Remounting on
-  // every scroll in/out churns the context and triggers "Context Lost".
-  const [canvasMounted, setCanvasMounted] = useState(false)
-
-  // R3F load sync — the UI layer stays hidden until the GLB is fully parsed,
-  // so cards never float over an unpainted black canvas.
-  const { progress } = useProgress()
-  const assetsReady = progress === 100
-  const readyRef = useRef(false)
-
-  useEffect(() => {
-    if (!assetsReady || readyRef.current || !textWrap.current) return
-    readyRef.current = true
-    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    if (inView && !reduce) {
-      textWrap.current.style.visibility = 'visible'
-      gsap.fromTo(textWrap.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out' })
-    } else {
-      gsap.set(textWrap.current, { opacity: 1, y: 0 })
-    }
-  }, [assetsReady, inView])
 
   useEffect(() => {
     const el = trackRef.current
     if (!el) return
     const observer = new IntersectionObserver(
-      ([entry]) => setInView(entry.isIntersecting),
+      ([entry]) => onActive?.(entry.isIntersecting),
       { threshold: 0 },
     )
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
-
-  useEffect(() => { if (inView) setCanvasMounted(true) }, [inView])
+  }, [onActive])
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger, CustomEase)
     if (!CustomEase.get('cardHover')) CustomEase.create('cardHover', '0.32, 0.72, 0, 1')
 
+    let domRaf: number | null = null
+
     const ctx = gsap.context(() => {
-      // Reset proxy on each mount
-      spinProxy.rotationY = -Math.PI / 4
+      spinState.rotationRef.current = -Math.PI / 4
 
       const tl = gsap.timeline({ paused: true })
       ;(window as any).__timelines = { ...((window as any).__timelines ?? {}), gymSpin: tl }
 
-      // Spin arc: −π/4 → π/2 across the full 200vh scroll
-      tl.to(spinProxy, { rotationY: Math.PI / 2, duration: 1, ease: 'none' }, 0)
-
-      // Beat text — Spatial Z-Push entry + blur exit
-      BEATS.forEach((beat, i) => {
-        const el = beatRefs.current[i]
-        if (!el) return
-
-        const SLOT = 1 / BEATS.length                              // ~0.333 per beat
-        const ps   = i * SLOT
-        // exit hugs the next entry (0.8 of slot) and the last card holds to 0.97 —
-        // kills the empty-rail dead zones between keys and the black tail before HowItWorks
-        const exit = i < BEATS.length - 1 ? ps + SLOT * 0.8 : 0.97
-
-        // Entry: masked reveal — the key unmasks bottom-up out of the dark while
-        // settling down into place. Final inset is negative so the hover tilt
-        // never clips against the mask edge.
-        tl.fromTo(
-          el,
-          { opacity: 1, y: 60, z: -140, rotateX: 9, clipPath: 'inset(100% -10% -10% -10%)' },
-          { y: 0, z: 0, rotateX: 0, clipPath: 'inset(-10% -10% -10% -10%)', duration: 0.2, ease: 'power4.out', immediateRender: false },
-          ps,
-        )
-        // Inner copy — staggered fade-up trailing the mask reveal
-        const reveals = el.querySelectorAll<HTMLElement>('[data-reveal]')
-        if (reveals.length) {
-          gsap.set(reveals, { opacity: 0, y: 20 })
-          tl.to(reveals, { opacity: 1, y: 0, duration: 0.07, stagger: 0.018, ease: 'power3.out' }, ps + 0.04)
-        }
-        // Price lands last — after the card has settled and the perks have read
-        const price = el.querySelector<HTMLElement>('[data-price]')
-        if (price) {
-          tl.fromTo(
-            price,
-            { opacity: 0 },
-            { opacity: 1, duration: 0.05, ease: 'power2.out', immediateRender: false },
-            ps + 0.16,
-          )
-        }
-        // Exit — soft settle out
-        tl.fromTo(
-          el,
-          { opacity: 1, y: 0,   z: 0,   filter: 'blur(0px)' },
-          { opacity: 0, y: -20, z: -60, filter: 'blur(5px)', duration: 0.12, ease: 'power2.in', immediateRender: false },
-          exit,
-        )
-      })
-
-      const show = () => {
-        if (!canvasWrap.current) return
-        canvasWrap.current.style.visibility = 'visible'
-        if (!textWrap.current) return
-        // canvas first, UI second: reveal only once the model has loaded
-        if (readyRef.current) textWrap.current.style.visibility = 'visible'
-        _invalidate?.()
-        requestAnimationFrame(() => _invalidate?.())
-      }
-      const hide = () => {
-        if (!canvasWrap.current) return
-        canvasWrap.current.style.visibility = 'hidden'
-        if (!textWrap.current) return
-        textWrap.current.style.visibility = 'hidden'
-      }
+      tl.to(spinState.rotationRef, { current: Math.PI / 2, duration: 1, ease: 'none' }, 0)
+      cardsProxy.intro = 0
+      tl.fromTo(cardsProxy, { intro: 0 }, { intro: 1, duration: 0.8, ease: 'power3.out' }, 0.2)
 
       if (!trackRef.current) {
         console.error('[GymSpin] scrollTrackRef is null at ScrollTrigger init — aborting context')
@@ -339,244 +113,96 @@ export default function GymSpin() {
       ScrollTrigger.create({
         trigger: trackRef.current,
         start:   'top top',
-        end:     'bottom bottom',
-        scrub:   1.6,
-        onEnter:     show,
-        onLeave:     hide,
-        onEnterBack: show,
-        onLeaveBack: hide,
+        end:     () => `+=${trackRef.current?.offsetHeight ?? 1000}`,
+        scrub:   1.5, invalidateOnRefresh: true,
+        onLeave() {
+          overlayRef.current?.style.setProperty('opacity', '0')
+          if (overlayRef.current) overlayRef.current.style.visibility = 'hidden'
+        },
+        onEnterBack() {
+          if (overlayRef.current) overlayRef.current.style.visibility = 'visible'
+          overlayRef.current?.style.removeProperty('opacity')
+        },
         onUpdate(self) {
           tl.progress(self.progress)
-          _invalidate?.()
-          if (!parallaxEl.current) return
-          // Motion Law 2: parallax written directly to DOM — no GSAP.to()
-          parallaxEl.current.style.transform = `translateY(${-self.progress * 120}px)`
+          if (domRaf === null) {
+            domRaf = requestAnimationFrame(() => {
+              const clampedIntro = Math.min(1, Math.max(0, cardsProxy.intro))
+              overlayRef.current?.style.setProperty('--cards-intro', String(clampedIntro))
+              spinState.invalidateRef.current()
+              domRaf = null
+            })
+          }
         },
       })
-
     })
 
-    // dynamic 3D mount shifts layout — recompute trigger positions, gated so a
-    // fast unmount can't fire a refresh against dead triggers
     const rid = requestAnimationFrame(() => ScrollTrigger.refresh())
 
-    return () => { cancelAnimationFrame(rid); ctx.revert() }
+    return () => { cancelAnimationFrame(rid); if (domRaf !== null) cancelAnimationFrame(domRaf); ctx.revert() }
   }, [])
 
   return (
     <>
-      {/* 200vh scroll track — each key still dwells, dead tail before HowItWorks trimmed */}
-      <div ref={trackRef} style={{ height: '200vh', position: 'relative', zIndex: 1 }} />
+      {/* 300vh scroll track — dead tail before HowItWorks trimmed */}
+      <div ref={trackRef} style={{ height: '300vh', position: 'relative', zIndex: 1 }} />
 
-      {/* Fixed Canvas — hidden until section is active */}
+      {/* DOM glass card overlay — reads --cards-intro set by the scrub timeline above.
+          Positioned fixed to sit over the shared Canvas while this section is active. */}
       <div
-        ref={canvasWrap}
-        style={{ position: 'fixed', inset: 0, zIndex: 0, visibility: 'hidden', willChange: 'transform' }}
+        ref={overlayRef}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 50,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          gap: 'clamp(16px, 2vw, 28px)', padding: '0 6%', perspective: 1400,
+          pointerEvents: 'none',
+          opacity: 'var(--cards-intro, 0)',
+          transform: 'translateY(calc((1 - var(--cards-intro, 0)) * 40px))',
+          transition: 'opacity 0.2s linear',
+        }}
       >
-        {canvasMounted && (
-          <Canvas
-            frameloop="demand"
-            dpr={[1, 1.25]}
-            performance={{ min: 0.5 }}
-            camera={{ fov: 45, near: 0.1, far: 1000 }}
-            gl={{ powerPreference: 'high-performance', antialias: false }}
-            style={{ display: 'block', width: '100%', height: '100%' }}
-            onCreated={({ gl }) => {
-              gl.setClearColor('#000000', 1)
-              gl.domElement.addEventListener('webglcontextlost', (e) => e.preventDefault(), false)
+        {TIERS.map((tier, i) => (
+          <div
+            key={tier.name}
+            ref={(el) => { tiltRefs.current[i] = el }}
+            onMouseMove={tiltMove(i)}
+            onMouseLeave={tiltReset(i)}
+            style={{
+              position: 'relative', width: 280, borderRadius: 12, ...CARD_GLASS,
+              padding: 'clamp(28px, 2.6vw, 36px)', color: '#fff',
+              pointerEvents: 'auto', cursor: 'default', transformStyle: 'preserve-3d',
+              border: tier.featured ? '1px solid rgba(255,255,255,0.28)' : CARD_GLASS.border,
             }}
           >
-            <ambientLight intensity={0.15} />
-            <directionalLight position={[5, 8, 5]} intensity={3.0} />
-            <Suspense fallback={null}>
-              <Environment files="/hdri/studio_small_03_1k.hdr">
-                {/* hard overhead + side strips for specular kicks on the hardware */}
-                <Lightformer intensity={5} position={[0, 6, -4]} rotation-x={Math.PI / 2} scale={[14, 2, 1]} />
-                <Lightformer intensity={2.5} position={[-6, 2, 0]} rotation-y={Math.PI / 2} scale={[10, 1.5, 1]} />
-                <Lightformer intensity={2} position={[6, 0, 2]} rotation-y={-Math.PI / 2} scale={[10, 1, 1]} color="#ffffff" />
-              </Environment>
-              <SpinModel />
-              <Preload all />
-            </Suspense>
-          </Canvas>
-        )}
-      </div>
-
-      {/* Fixed text layer — right rail of tactile key cards, model stays left */}
-      <div
-        ref={textWrap}
-        style={{ position: 'fixed', inset: 0, zIndex: 10, pointerEvents: 'none', visibility: 'hidden', opacity: 0 }}
-      >
-        {/* right-side scrim panel — gives the split its edge, keeps cards legible */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute', top: 0, right: 0, bottom: 0, width: 'min(56vw, 900px)',
-            background: 'linear-gradient(90deg, transparent, rgba(0,0,0,0.55) 42%, rgba(0,0,0,0.82))',
-          }}
-        />
-
-        {/* section eyebrow — anchored, doesn't overlap the model */}
-        <span
-          style={{
-            position: 'absolute', top: 'clamp(28px, 6vh, 64px)', right: 'clamp(24px, 6vw, 96px)',
-            fontFamily: 'var(--font-jetbrains), monospace', fontSize: 12, fontWeight: 700,
-            letterSpacing: '0.34em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)',
-          }}
-        >
-          Access Keys
-        </span>
-
-        <div
-          ref={parallaxEl}
-          style={{ position: 'absolute', inset: 0, perspective: 1400, willChange: 'transform' }}
-        >
-          {BEATS.map((beat, i) => (
-            <div
-              key={i}
-              ref={el => { beatRefs.current[i] = el }}
-              onMouseMove={tiltMove(i)}
-              onMouseLeave={tiltReset(i)}
+            <Grain />
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <h3 style={{ fontSize: 'clamp(20px, 1.6vw, 24px)', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>{tier.name}</h3>
+              {tier.featured && (
+                <span style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.8)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 999, padding: '3px 8px' }}>
+                  Priority
+                </span>
+              )}
+            </div>
+            <p style={{ position: 'relative', fontSize: 14, color: '#EAEAEA', fontFamily: 'monospace', marginBottom: 16 }}>
+              {tier.price}<span style={{ marginLeft: 4, color: 'rgba(255,255,255,0.5)' }}>/mo</span>
+            </p>
+            <div style={{ position: 'relative', height: 1, background: 'rgba(255,255,255,0.1)', marginBottom: 16 }} />
+            <ul style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 10, listStyle: 'none', margin: 0, padding: 0, marginBottom: 24 }}>
+              {tier.features.map((f) => (
+                <li key={f} style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', lineHeight: 1.3 }}>{f}</li>
+              ))}
+            </ul>
+            <button
               style={{
-                position: 'absolute',
-                right: 'clamp(24px, 6vw, 96px)',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: 'min(440px, 82vw)',
-                opacity: 0,
-                clipPath: 'inset(100% -10% -10% -10%)',
-                transformStyle: 'preserve-3d',
-                willChange: 'transform, opacity, filter',
-                pointerEvents: 'auto',
+                position: 'relative', width: '100%', borderRadius: 8, padding: '10px 0',
+                background: '#000', color: '#fff', fontWeight: 600, fontSize: 14, border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
               }}
             >
-              <div
-                ref={el => { tiltRefs.current[i] = el }}
-                style={{
-                  position: 'relative',
-                  padding: 'clamp(34px, 3.6vw, 48px)',
-                  paddingBottom: 'clamp(88px, 8vw, 108px)',
-                  borderRadius: 12,
-                  transformStyle: 'preserve-3d',
-                  willChange: 'transform',
-                  ...CARD_GLASS,
-                }}
-              >
-              {/* film grain layer — physical surface over the glass */}
-              <div
-                aria-hidden="true"
-                style={{
-                  position: 'absolute', inset: 0, borderRadius: 12,
-                  backgroundImage: NOISE_URI, backgroundSize: '120px 120px',
-                  opacity: 0.05, pointerEvents: 'none',
-                }}
-              />
-              <KeyGlyph variant={beat.glyph} bright={beat.accent} />
-              <span
-                data-reveal
-                style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  fontFamily: 'var(--font-jetbrains), monospace', fontSize: 12, fontWeight: 700,
-                  letterSpacing: '0.22em', color: beat.accent ? '#fff' : 'rgba(255,255,255,0.7)',
-                }}
-              >
-                {beat.index}
-                {beat.accent && (
-                  <span
-                    style={{
-                      padding: '5px 12px', borderRadius: 8, fontSize: 11, letterSpacing: '0.06em',
-                      color: 'rgba(255,255,255,0.75)', background: 'rgba(255,255,255,0.06)',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                    }}
-                  >
-                    Most popular
-                  </span>
-                )}
-              </span>
-
-              <span
-                data-reveal
-                style={{
-                  display: 'block', marginTop: 18,
-                  fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 700,
-                  fontSize: 'clamp(1.6rem, 2.2vw, 2rem)', lineHeight: 1.05, letterSpacing: '-0.02em',
-                  color: '#fff',
-                }}
-              >
-                {beat.name}
-              </span>
-              <span
-                data-reveal
-                style={{
-                  display: 'block', marginTop: 10,
-                  fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 500,
-                  fontSize: 17, lineHeight: 1.5, letterSpacing: '-0.01em', color: 'rgba(255,255,255,0.85)',
-                  textWrap: 'balance',
-                }}
-              >
-                {beat.tagline}
-              </span>
-
-              <ul style={{ listStyle: 'none', margin: '24px 0 0', padding: 0 }}>
-                {beat.specs.map(([label, value]) => (
-                  <li
-                    key={label}
-                    data-reveal
-                    style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16,
-                      padding: '12px 0', borderTop: '1px solid rgba(255,255,255,0.1)',
-                      fontFamily: 'var(--font-grotesk), sans-serif',
-                    }}
-                  >
-                    <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.02em', color: '#fff' }}>
-                      {label}
-                    </span>
-                    <span style={{ fontSize: 17, fontWeight: 700, color: '#fff', textAlign: 'right' }}>
-                      {value}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              {/* price — demoted, pinned to the card's absolute bottom; perks carry the card */}
-              <span
-                data-price
-                style={{
-                  position: 'absolute',
-                  bottom: 'clamp(22px, 2.2vw, 30px)',
-                  left: 'clamp(34px, 3.6vw, 48px)',
-                  fontFamily: 'var(--font-jetbrains), monospace', fontWeight: 500,
-                  fontSize: 13, letterSpacing: '0.08em',
-                  color: 'rgba(255,255,255,0.6)',
-                  opacity: 0, willChange: 'opacity',
-                }}
-              >
-                {beat.price} / month
-              </span>
-
-              {/* CTA — magnetic physics via Kinetic's .io-btn--accent delegation */}
-              <button
-                type="button"
-                className="io-btn io-btn--accent"
-                style={{
-                  position: 'absolute',
-                  bottom: 'clamp(16px, 1.8vw, 24px)',
-                  right: 'clamp(34px, 3.6vw, 48px)',
-                  padding: '14px 28px',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  willChange: 'transform',
-                }}
-              >
-                {beat.cta}
-              </button>
-              </div>
-            </div>
-          ))}
-        </div>
+              Acquire Key
+            </button>
+          </div>
+        ))}
       </div>
     </>
   )
 }
-
-useGLTF.preload(MODEL_URL)

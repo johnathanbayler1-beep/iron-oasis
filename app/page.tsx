@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { RevealObserver } from '@/components/RevealObserver';
+import { SharedCanvas, type ActiveSection } from '@/components/scenes/SharedCanvas'
 
 const ScrollExplode = dynamic(
   () => import('../components/ScrollExplode'),
@@ -14,13 +15,23 @@ const InfrastructureBridge = dynamic(
 )
 import GymSpin from '@/components/GymSpinLazy';
 import GymScene from '@/app/components/GymSceneLazy';
-import { HowItWorks } from '@/components/HowItWorks';
-import { BookingNode } from '@/app/components/BookingNode';
 import { FinalClose } from '@/components/FinalClose';
+
+const HowItWorks = dynamic(() => import('@/components/HowItWorks').then(m => m.HowItWorks), { ssr: false })
+const BookingSpace = dynamic(() => import('@/app/components/BookingSpace').then(m => m.BookingSpace), { ssr: false })
+const AccessInterface = dynamic(() => import('@/components/AccessInterface').then(m => m.AccessInterface), { ssr: false })
 
 export default function Home() {
   const [gymMounted, setGymMounted] = useState(false)
   const preloadGym = useCallback(() => setGymMounted(true), [])
+
+  const [activeSection, setActiveSection] = useState<ActiveSection>('gymScene')
+  const activate = useCallback((section: Exclude<ActiveSection, null>) => (active: boolean) => {
+    if (active) setActiveSection(section)
+  }, [])
+  const onGymSceneActive = activate('gymScene')
+  const onBridgeActive   = activate('bridge')
+  const onSpinActive     = activate('spin')
 
   return (
     <main className="relative min-h-screen" style={{ backgroundColor: '#000', minHeight: '100vh', position: 'relative' }}>
@@ -29,16 +40,22 @@ export default function Home() {
       {/* Phase 1 — gateway hero: 121-frame logo sequence, scrub hands off to the 3D scene */}
       <ScrollExplode onPreloadGym={preloadGym} />
 
-      {gymMounted && <GymScene />}
+      {/* Single shared Canvas — swaps content by active scroll section */}
+      {gymMounted && <SharedCanvas activeSection={activeSection} onSpinReady={() => {}} />}
 
-      {/* Phase 2 — infrastructure bridge: app interface + Yale Assure, keyed autonomy narrative */}
-      {gymMounted && <InfrastructureBridge />}
+      {gymMounted && <GymScene onActive={onGymSceneActive} />}
+
+      {/* Phase 2 — infrastructure bridge: app interface + Yale Assure, keyed privacy narrative */}
+      {gymMounted && <InfrastructureBridge onActive={onBridgeActive} />}
 
       {/* Phase 3 — 360 spin: Access Keys carry the value stack and pricing */}
-      {gymMounted && <GymSpin />}
+      {gymMounted && <GymSpin onActive={onSpinActive} />}
 
-      {/* Booking node — live occupancy + secure access windows */}
-      <BookingNode />
+      {/* App scheduling preview — unshared blocks managed via the Iron Oasis app */}
+      <BookingSpace />
+
+      {/* In-app smart-lock preview — encrypted key generation */}
+      <AccessInterface />
 
       {/* Phase 4 — how it works: the process + the model, stated plainly */}
       <HowItWorks />

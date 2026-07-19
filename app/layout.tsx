@@ -1,9 +1,13 @@
 import type { Metadata } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import { Inter, JetBrains_Mono, Geist } from 'next/font/google';
 import './globals.css';
 import { SmoothScroll } from '@/components/SmoothScroll';
 import { OverlayMenu } from '@/components/OverlayMenu';
 import { Kinetic } from '@/components/Kinetic';
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+
 
 // Premium sans stack. Variable name kept as --font-grotesk for compat with
 // existing inline styles — all display type now renders Inter / -apple-system.
@@ -29,7 +33,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${grotesk.variable} ${jetbrains.variable}`}>
+    <html lang="en" className={cn(grotesk.variable, jetbrains.variable, "font-sans", geist.variable)}>
       <body className="bg-black text-white antialiased">
         <OverlayMenu />
         <Kinetic />

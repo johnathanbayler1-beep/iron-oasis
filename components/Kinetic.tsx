@@ -30,7 +30,7 @@ export function Kinetic() {
           trigger: document.documentElement,
           start: 0,
           end: 'max',
-          scrub: 0.6,
+          scrub: 1.5, invalidateOnRefresh: true,
           animation: gsap.fromTo(
             lineRef.current,
             { scaleY: 0 },

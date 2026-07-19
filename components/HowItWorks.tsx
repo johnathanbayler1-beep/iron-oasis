@@ -69,7 +69,7 @@ export function HowItWorks() {
     <section
       ref={wrapRef}
       style={{
-        position: 'relative', zIndex: 20, background: '#000',
+        position: 'relative', zIndex: 20,
         padding: 'clamp(120px, 18vh, 240px) 6%',
         borderTop: '1px solid rgba(255,255,255,0.1)',
       }}
@@ -154,7 +154,9 @@ export function HowItWorks() {
             marginTop: 'clamp(56px, 8vh, 96px)',
             display: 'flex', flexDirection: 'column', gap: 16,
             padding: 'clamp(40px, 5vw, 72px)', borderRadius: 12,
-            background: '#0a0a0a',
+            background: 'rgba(15, 15, 15, 0.45)',
+            backdropFilter: 'blur(32px) saturate(150%)',
+            WebkitBackdropFilter: 'blur(32px) saturate(150%)',
             willChange: 'transform, opacity',
             border: '1px solid rgba(255,255,255,0.04)',
             borderTop: '1px solid rgba(255,255,255,0.08)',

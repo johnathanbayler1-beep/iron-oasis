@@ -15,7 +15,7 @@ export function FinalClose() {
   return (
     <section
       style={{
-        position: 'relative', zIndex: 20, background: '#000',
+        position: 'relative', zIndex: 20,
         padding: 'clamp(120px, 18vh, 240px) 6%',
         borderTop: '1px solid rgba(255,255,255,0.14)',
       }}

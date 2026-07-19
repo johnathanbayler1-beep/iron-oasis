@@ -86,7 +86,7 @@ export default function InfrastructureBridge({ onActive }: { onActive?: (active:
   }, [])
 
   return (
-    <section ref={sectionRef} style={{ height: `${SCROLL_VH}vh`, position: 'relative', background: '#000' }}>
+    <section ref={sectionRef} style={{ height: `${SCROLL_VH}vh`, position: 'relative' }}>
       <div style={{ position: 'sticky', top: 0, width: '100%', height: '100vh', overflow: 'hidden' }}>
         {BEATS.map((beat) => (
           <div

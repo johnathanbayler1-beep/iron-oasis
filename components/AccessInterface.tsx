@@ -11,7 +11,9 @@ const SUB = 'rgba(255,255,255,0.75)'
 const MONO = 'var(--font-jetbrains), monospace'
 
 const PANEL_GLASS: React.CSSProperties = {
-  background: '#0a0a0a',
+  background: 'rgba(15, 15, 15, 0.45)',
+  backdropFilter: 'blur(32px) saturate(150%)',
+  WebkitBackdropFilter: 'blur(32px) saturate(150%)',
   willChange: 'transform, opacity',
   border: '1px solid rgba(255,255,255,0.1)',
   boxShadow:
@@ -71,7 +73,7 @@ export function AccessInterface() {
     <section
       ref={rootRef}
       className="relative"
-      style={{ background: '#000', padding: 'clamp(96px, 14vh, 180px) 24px' }}
+      style={{ padding: 'clamp(96px, 14vh, 180px) 24px' }}
     >
       <div style={{ maxWidth: 960, margin: '0 auto', display: 'grid', gap: 20, gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
         {/* Panel 1 — Live Occupancy */}

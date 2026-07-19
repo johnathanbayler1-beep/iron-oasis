@@ -7,13 +7,12 @@ import { CustomEase } from 'gsap/CustomEase'
 import { spinState } from '@/components/scenes/SpinContent'
 
 const CARD_GLASS: React.CSSProperties = {
-  background: 'rgba(20, 20, 20, 0.4)',
-  backdropFilter: 'blur(32px)',
-  WebkitBackdropFilter: 'blur(32px)',
+  background: 'rgba(15, 15, 15, 0.45)',
+  backdropFilter: 'blur(40px) saturate(150%)',
+  WebkitBackdropFilter: 'blur(40px) saturate(150%)',
   willChange: 'transform, opacity',
-  border: '1px solid rgba(255,255,255,0.1)',
-  borderTop: '1px solid rgba(255,255,255,0.28)',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+  border: '1px solid transparent',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.03)',
 }
 
 const NOISE_URI =
@@ -61,22 +60,58 @@ export default function GymSpin({ onActive }: { onActive?: (active: boolean) => 
   const trackRef   = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const tiltRefs   = useRef<(HTMLDivElement | null)[]>([])
+  const btnRefs    = useRef<(HTMLButtonElement | null)[]>([])
+  const btnTextRefs = useRef<(HTMLSpanElement | null)[]>([])
+  const quickRefs  = useRef<Array<{ x: (v: number) => void; y: (v: number) => void; tx: (v: number) => void; ty: (v: number) => void } | null>>([])
 
   const canTilt = () =>
     window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
     !window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const tiltMove = (i: number) => (e: React.MouseEvent<HTMLDivElement>) => {
     const el = tiltRefs.current[i]
-    if (!el || !canTilt()) return
+    if (!el) return
     const r = e.currentTarget.getBoundingClientRect()
-    const nx = (e.clientX - r.left) / r.width - 0.5
-    const ny = (e.clientY - r.top) / r.height - 0.5
+    const px = (e.clientX - r.left) / r.width
+    const py = (e.clientY - r.top) / r.height
+    el.style.setProperty('--mx', `${px * 100}%`)
+    el.style.setProperty('--my', `${py * 100}%`)
+    if (!canTilt()) return
+    const nx = px - 0.5
+    const ny = py - 0.5
     gsap.to(el, { rotateY: nx * 10, rotateX: -ny * 10, y: -4, duration: 0.5, ease: 'power3.out', overwrite: 'auto' })
   }
   const tiltReset = (i: number) => () => {
     const el = tiltRefs.current[i]
     if (!el) return
     gsap.to(el, { rotateX: 0, rotateY: 0, y: 0, duration: 0.7, ease: 'power3.out', overwrite: 'auto' })
+  }
+
+  const magneticMove = (i: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!canTilt()) return
+    const btn = btnRefs.current[i]
+    const txt = btnTextRefs.current[i]
+    if (!btn || !txt) return
+    if (!quickRefs.current[i]) {
+      quickRefs.current[i] = {
+        x:  gsap.quickTo(btn, 'x', { duration: 0.5, ease: 'power3' }),
+        y:  gsap.quickTo(btn, 'y', { duration: 0.5, ease: 'power3' }),
+        tx: gsap.quickTo(txt, 'x', { duration: 0.5, ease: 'power3' }),
+        ty: gsap.quickTo(txt, 'y', { duration: 0.5, ease: 'power3' }),
+      }
+    }
+    const r = e.currentTarget.getBoundingClientRect()
+    const relX = e.clientX - (r.left + r.width / 2)
+    const relY = e.clientY - (r.top + r.height / 2)
+    const q = quickRefs.current[i]!
+    q.x(relX * 0.2); q.y(relY * 0.2)
+    q.tx(relX * 0.35); q.ty(relY * 0.35)
+  }
+  const magneticLeave = (i: number) => () => {
+    const btn = btnRefs.current[i]
+    const txt = btnTextRefs.current[i]
+    if (!btn || !txt) return
+    gsap.to(btn, { x: 0, y: 0, duration: 0.9, ease: 'elastic.out(1, 0.3)', overwrite: 'auto' })
+    gsap.to(txt, { x: 0, y: 0, duration: 0.9, ease: 'elastic.out(1, 0.3)', overwrite: 'auto' })
   }
 
   useEffect(() => {
@@ -168,14 +203,14 @@ export default function GymSpin({ onActive }: { onActive?: (active: boolean) => 
         {TIERS.map((tier, i) => (
           <div
             key={tier.name}
+            className="pricing-card"
             ref={(el) => { tiltRefs.current[i] = el }}
             onMouseMove={tiltMove(i)}
             onMouseLeave={tiltReset(i)}
             style={{
               position: 'relative', width: 280, borderRadius: 12, ...CARD_GLASS,
-              padding: 'clamp(28px, 2.6vw, 36px)', color: '#fff',
+              padding: 'clamp(28px, 2.6vw, 36px)', color: '#F5F5F7', fontFamily: 'var(--font-display)',
               pointerEvents: 'auto', cursor: 'default', transformStyle: 'preserve-3d',
-              border: tier.featured ? '1px solid rgba(255,255,255,0.28)' : CARD_GLASS.border,
               opacity: `var(--card-intro-${i}, 0)`,
               transform: `translateY(calc((1 - var(--card-intro-${i}, 0)) * 40px))`,
               transition: 'opacity 0.2s linear',
@@ -183,33 +218,56 @@ export default function GymSpin({ onActive }: { onActive?: (active: boolean) => 
           >
             <Grain />
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <h3 style={{ fontSize: 'clamp(20px, 1.6vw, 24px)', fontWeight: 800, letterSpacing: '-0.02em', margin: 0, color: '#EAEAEA' }}>{tier.name}</h3>
+              <h3 style={{ fontSize: 'clamp(20px, 1.6vw, 24px)', fontWeight: 800, letterSpacing: '-0.02em', margin: 0, color: '#F5F5F7' }}>{tier.name}</h3>
               {tier.featured && (
-                <span style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.8)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 999, padding: '3px 8px' }}>
+                <span style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(245,245,247,0.8)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 999, padding: '3px 8px' }}>
                   Priority
                 </span>
               )}
             </div>
-            <p style={{ position: 'relative', fontSize: 14, color: '#EAEAEA', marginBottom: 16 }}>
-              {tier.price}<span style={{ marginLeft: 4, color: 'rgba(255,255,255,0.5)' }}>/mo</span>
+            <p style={{ position: 'relative', fontSize: 'clamp(14px, 1.2vw, 16px)', color: '#F5F5F7', marginBottom: 16 }}>
+              {tier.price}<span style={{ marginLeft: 4, color: 'rgba(245,245,247,0.5)' }}>/mo</span>
             </p>
             <div style={{ position: 'relative', height: 1, background: 'rgba(255,255,255,0.1)', marginBottom: 16 }} />
             <ul style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 10, listStyle: 'none', margin: 0, padding: 0, marginBottom: 24 }}>
               {tier.features.map((f) => (
-                <li key={f} style={{ fontSize: 15, fontWeight: 600, letterSpacing: '-0.01em', lineHeight: 1.3 }}>{f}</li>
+                <li key={f} style={{ fontSize: 'clamp(13px, 1.1vw, 15px)', fontWeight: 600, letterSpacing: '-0.01em', lineHeight: 1.3 }}>{f}</li>
               ))}
             </ul>
             <button
+              ref={(el) => { btnRefs.current[i] = el }}
+              onMouseMove={magneticMove(i)}
+              onMouseLeave={magneticLeave(i)}
               style={{
                 position: 'relative', width: '100%', borderRadius: 8, padding: '10px 0',
-                background: '#000', color: '#fff', fontWeight: 600, fontSize: 14, border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
+                background: '#000', color: '#F5F5F7', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 14, border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
               }}
             >
-              Acquire Key
+              <span ref={(el) => { btnTextRefs.current[i] = el }} style={{ display: 'inline-block' }}>Acquire Key</span>
             </button>
           </div>
         ))}
       </div>
+
+      <style jsx>{`
+        .pricing-card::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          padding: 1px;
+          background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.6), transparent 55%);
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+        .pricing-card:hover::before {
+          opacity: 1;
+        }
+      `}</style>
     </>
   )
 }

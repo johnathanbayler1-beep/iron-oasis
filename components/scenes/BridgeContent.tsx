@@ -1,8 +1,8 @@
 'use client'
 
-import { Suspense, useEffect, useRef } from 'react'
+import { Suspense, useEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import { Environment, Lightformer, MeshTransmissionMaterial } from '@react-three/drei'
+import { Environment, Lightformer, MeshTransmissionMaterial, Text } from '@react-three/drei'
 import * as THREE from 'three'
 
 // module-level state — InfrastructureBridge.tsx (scroll owner) writes progress
@@ -10,6 +10,59 @@ import * as THREE from 'three'
 export const bridgeState = {
   progressRef: { current: 0 } as { current: number },
   invalidateRef: { current: () => {} } as { current: () => void },
+}
+
+const HEADLINE_BEATS: { window: [number, number]; side: 'left' | 'right'; text: string }[] = [
+  { window: [0.02, 0.35], side: 'right', text: 'CLAIM YOUR KEY.' },
+  { window: [0.33, 0.67], side: 'left',  text: 'BOOK YOUR SESSION.' },
+  { window: [0.65, 0.98], side: 'right', text: 'UNLOCK WITH YOUR KEY.' },
+]
+
+function KineticHeadline({ window: [a, b], side, text }: { window: [number, number]; side: 'left' | 'right'; text: string }) {
+  const groupRef = useRef<THREE.Group>(null)
+  const matRef   = useRef<THREE.MeshStandardMaterial>(null)
+  const _pos   = useMemo(() => new THREE.Vector3(), [])
+  const _fwd   = useMemo(() => new THREE.Vector3(), [])
+  const _right = useMemo(() => new THREE.Vector3(), [])
+
+  useFrame(({ camera }) => {
+    const grp = groupRef.current
+    if (!grp) return
+    const p    = bridgeState.progressRef.current
+    const span = b - a
+    const inEnd    = a + span * 0.3
+    const outStart = b - span * 0.3
+    const o = p <= a || p >= b ? 0
+      : p < inEnd ? (p - a) / (inEnd - a)
+      : p > outStart ? (b - p) / (b - outStart)
+      : 1
+
+    camera.getWorldDirection(_fwd)
+    _right.crossVectors(_fwd, camera.up).normalize()
+    const depth = THREE.MathUtils.lerp(10, 2.2, o)
+    const xOff  = (side === 'left' ? -1 : 1) * 1.7
+    _pos.copy(camera.position).addScaledVector(_fwd, depth).addScaledVector(_right, xOff)
+    grp.position.copy(_pos)
+    grp.quaternion.copy(camera.quaternion)
+    grp.visible = o > 0.01
+    if (matRef.current) matRef.current.opacity = o
+  })
+
+  return (
+    <group ref={groupRef}>
+      <Text
+        fontSize={0.6}
+        letterSpacing={-0.03}
+        maxWidth={4}
+        anchorX={side === 'left' ? 'left' : 'right'}
+        anchorY="middle"
+        textAlign={side}
+      >
+        {text}
+        <meshStandardMaterial ref={matRef} color="#eaeaea" metalness={0.8} roughness={0.2} transparent depthWrite={false} />
+      </Text>
+    </group>
+  )
 }
 
 function Phone() {
@@ -111,6 +164,9 @@ export function BridgeContent() {
           <Lightformer intensity={2.5} position={[5, -1, 2]} rotation-y={-Math.PI / 2} scale={[8, 1, 1]} />
         </Environment>
         <BridgeRig />
+        {HEADLINE_BEATS.map((beat) => (
+          <KineticHeadline key={beat.text} {...beat} />
+        ))}
       </Suspense>
     </>
   )

@@ -18,9 +18,9 @@ const PRODUCTS: Product[] = [
 ]
 
 const GLASS_CARD: React.CSSProperties = {
-  background: 'rgba(20,20,20,0.4)',
-  backdropFilter: 'blur(32px)',
-  WebkitBackdropFilter: 'blur(32px)',
+  background: 'rgba(0,0,0,0.6)',
+  backdropFilter: 'blur(12px)',
+  WebkitBackdropFilter: 'blur(12px)',
   border: '1px solid rgba(255,255,255,0.1)',
 }
 

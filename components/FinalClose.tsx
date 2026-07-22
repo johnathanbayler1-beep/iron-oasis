@@ -56,6 +56,9 @@ export function FinalClose() {
               key={label}
               style={{
                 aspectRatio: '4 / 3',
+                background: 'rgba(0,0,0,0.6)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
                 borderRight: '1px solid rgba(255,255,255,0.14)',
                 borderBottom: '1px solid rgba(255,255,255,0.14)',
                 display: 'flex', flexDirection: 'column', justifyContent: 'space-between',

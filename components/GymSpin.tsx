@@ -7,11 +7,11 @@ import { CustomEase } from 'gsap/CustomEase'
 import { spinState } from '@/components/scenes/SpinContent'
 
 const CARD_GLASS: React.CSSProperties = {
-  background: 'rgba(15, 15, 15, 0.45)',
-  backdropFilter: 'blur(40px) saturate(150%)',
-  WebkitBackdropFilter: 'blur(40px) saturate(150%)',
+  background: 'rgba(0, 0, 0, 0.65)',
+  backdropFilter: 'blur(12px) saturate(150%)',
+  WebkitBackdropFilter: 'blur(12px) saturate(150%)',
   willChange: 'transform, opacity',
-  border: '1px solid transparent',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
   boxShadow: '0 8px 32px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.03)',
 }
 
@@ -266,6 +266,14 @@ export default function GymSpin({ onActive }: { onActive?: (active: boolean) => 
         }
         .pricing-card:hover::before {
           opacity: 1;
+        }
+        /* ponytail: !important overrides the inline bg/color; upgrade to a className if this button gains more states */
+        .pricing-card button {
+          transition: background 0.2s ease, color 0.2s ease;
+        }
+        .pricing-card button:hover {
+          background: #fff !important;
+          color: #000 !important;
         }
       `}</style>
     </>

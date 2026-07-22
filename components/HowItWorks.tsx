@@ -97,7 +97,7 @@ export function HowItWorks() {
           Five steps to complete privacy.
         </h2>
 
-        <div style={{ perspective: 1400 }}>
+        <div style={{ perspective: 1400, display: 'flex', flexDirection: 'column', gap: 16 }}>
           {STEPS.map((s) => (
             <div
               key={s.n}
@@ -107,8 +107,12 @@ export function HowItWorks() {
                 gridTemplateColumns: 'clamp(88px, 12vw, 168px) 1fr',
                 gap: 'clamp(20px, 4vw, 56px)',
                 alignItems: 'baseline',
-                padding: 'clamp(28px, 4vh, 44px) 0',
-                borderTop: '1px solid rgba(255,255,255,0.1)',
+                padding: 'clamp(28px, 4vh, 44px)',
+                background: 'rgba(0,0,0,0.6)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 16,
                 transformStyle: 'preserve-3d',
                 willChange: 'transform, opacity',
               }}
@@ -154,12 +158,11 @@ export function HowItWorks() {
             marginTop: 'clamp(56px, 8vh, 96px)',
             display: 'flex', flexDirection: 'column', gap: 16,
             padding: 'clamp(40px, 5vw, 72px)', borderRadius: 12,
-            background: 'rgba(15, 15, 15, 0.45)',
-            backdropFilter: 'blur(32px) saturate(150%)',
-            WebkitBackdropFilter: 'blur(32px) saturate(150%)',
+            background: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(12px) saturate(150%)',
+            WebkitBackdropFilter: 'blur(12px) saturate(150%)',
             willChange: 'transform, opacity',
-            border: '1px solid rgba(255,255,255,0.04)',
-            borderTop: '1px solid rgba(255,255,255,0.08)',
+            border: '1px solid rgba(255,255,255,0.1)',
           }}
         >
           <span

@@ -126,8 +126,9 @@ body {
 }
 @media (hover: hover) and (pointer: fine) {
   .io-btn:hover {
-    border-color: rgba(255, 255, 255, 0.45);
-    background: rgba(255, 255, 255, 0.07);
+    border-color: #fff;
+    background: #fff;
+    color: #000;
     transform: translateY(-3px);
   }
 }
@@ -150,8 +151,9 @@ body {
 .io-btn--accent:active { transform: none; }
 @media (hover: hover) and (pointer: fine) {
   .io-btn--accent:hover {
-    border-color: rgba(255, 255, 255, 0.22);
-    background: rgba(255, 255, 255, 0.11);
+    border-color: #fff;
+    background: #fff;
+    color: #000;
     transform: none;
   }
 }

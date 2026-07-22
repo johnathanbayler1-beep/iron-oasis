@@ -49,7 +49,7 @@ export function SharedCanvas({
       performance={{ min: 0.5 }}
       camera={{ fov: 45, near: 0.1, far: 1000 }}
       gl={{ antialias: false, powerPreference: 'high-performance' }}
-      style={{ position: 'fixed', inset: 0, zIndex: 1, display: 'block', width: '100%', height: '100%', background: 'transparent' }}
+      style={{ position: 'fixed', inset: 0, zIndex: 1, display: 'block', width: '100%', height: '100%', background: 'transparent', pointerEvents: 'none' }}
       onCreated={({ gl }) => {
         gl.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault() }, false)
       }}

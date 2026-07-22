@@ -18,7 +18,7 @@
   --color-zinc-400: #a1a1aa;
   --color-zinc-300: #d4d4d8;
 
-  --font-display: var(--font-grotesk), -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  --font-display: var(--font-display-face, var(--font-grotesk)), -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   --font-sans: var(--font-grotesk), -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 

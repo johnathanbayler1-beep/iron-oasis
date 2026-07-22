@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, JetBrains_Mono, Geist } from 'next/font/google';
+import { Inter, JetBrains_Mono, Geist, Syne } from 'next/font/google';
 import './globals.css';
 import { SmoothScroll } from '@/components/SmoothScroll';
 import { OverlayMenu } from '@/components/OverlayMenu';
@@ -18,6 +18,14 @@ const grotesk = Inter({
   display: 'swap',
 });
 
+// Display face — premium hierarchy for headlines only. Body stays Inter.
+const syne = Syne({
+  weight: ['700', '800'],
+  subsets: ['latin'],
+  variable: '--font-display-face',
+  display: 'swap',
+});
+
 const jetbrains = JetBrains_Mono({
   weight: ['400', '700'],
   subsets: ['latin'],
@@ -33,7 +41,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={cn(grotesk.variable, jetbrains.variable, "font-sans", geist.variable)}>
+    <html lang="en" className={cn(grotesk.variable, jetbrains.variable, syne.variable, "font-sans", geist.variable)}>
       <body className="bg-black text-white antialiased">
         <OverlayMenu />
         <Kinetic />

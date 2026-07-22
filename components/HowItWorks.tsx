@@ -89,7 +89,7 @@ export function HowItWorks() {
           data-headline
           style={{
             margin: '20px 0 clamp(48px, 7vh, 96px)',
-            fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 800,
+            fontFamily: 'var(--font-display), sans-serif', fontWeight: 800,
             fontSize: 'clamp(52px, 8vw, 120px)', lineHeight: 0.95,
             letterSpacing: '-0.045em', color: '#fff',
           }}

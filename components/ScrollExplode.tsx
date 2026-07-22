@@ -346,7 +346,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
           willChange: 'opacity, transform',
         }}
       >
-        <div ref={heroTextRef} style={{ opacity: 0, willChange: 'opacity, transform', mixBlendMode: 'difference' }}>
+        <div ref={heroTextRef} style={{ opacity: 0, willChange: 'opacity, transform' }}>
         <span
           style={{
             fontFamily: 'monospace', fontSize: 10, letterSpacing: '0.4em',
@@ -358,17 +358,17 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         </span>
         <h1
           style={{
-            fontFamily: 'monospace', fontWeight: 900,
+            fontFamily: 'var(--font-display), sans-serif', fontWeight: 800,
             fontSize: 'clamp(44px, 6.6vw, 108px)', lineHeight: 0.9,
-            letterSpacing: '-0.04em', textTransform: 'uppercase', color: '#EAEAEA',
-            margin: '16px 0 0',
+            letterSpacing: '-0.045em', textTransform: 'uppercase', color: '#EAEAEA',
+            textWrap: 'balance', margin: '16px 0 0',
           }}
         >
           Your private space. Zero sharing.
         </h1>
         <p
           style={{
-            fontFamily: 'monospace', fontSize: 'clamp(15px, 1.7vw, 19px)',
+            fontFamily: 'var(--font-grotesk), sans-serif', fontSize: 'clamp(15px, 1.7vw, 19px)',
             fontWeight: 500, letterSpacing: '-0.01em',
             color: 'rgba(255,255,255,0.75)', margin: '18px 0 0', maxWidth: '44ch',
             marginInline: 'auto', lineHeight: 1.5,

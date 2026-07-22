@@ -1,7 +1,7 @@
 # Iron Oasis — Project Protocol
 
 ## Canonical Branch
-- All active development must occur on: **rebuild-from-scratch**
+- All active development must occur on: **main**
 
 ## Brand Vocabulary (Canonical)
 - **Allowed**: Access Key, Key, Private Space, Space, Location, Private Access, Premium Equipment, Zero Sharing, 24/7 Access, Access, Booking, Session, Private, Windsor.

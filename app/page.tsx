@@ -16,11 +16,12 @@ const InfrastructureBridge = dynamic(
 import GymSpin from '@/components/GymSpinLazy';
 import GymScene from '@/app/components/GymSceneLazy';
 import { FinalClose } from '@/components/FinalClose';
-import { PeptideStore } from '@/components/PeptideStore';
+import { PeptideStore } from '@/components/PeptideStore'
 
 const HowItWorks = dynamic(() => import('@/components/HowItWorks').then(m => m.HowItWorks), { ssr: false })
 const BookingSpace = dynamic(() => import('@/app/components/BookingSpace').then(m => m.BookingSpace), { ssr: false })
 const AccessInterface = dynamic(() => import('@/components/AccessInterface').then(m => m.AccessInterface), { ssr: false })
+const AgentStormWidget = dynamic(() => import('@/components/AgentStormWidget').then(m => m.AgentStormWidget), { ssr: false })
 
 export default function Home() {
   const [gymMounted, setGymMounted] = useState(false)
@@ -37,6 +38,7 @@ export default function Home() {
   return (
     <main className="relative min-h-screen" style={{ backgroundColor: '#000', minHeight: '100vh', position: 'relative' }}>
       <RevealObserver />
+      <AgentStormWidget />
 
       {/* Phase 1 — gateway hero: 121-frame logo sequence, scrub hands off to the 3D scene */}
       <ScrollExplode onPreloadGym={preloadGym} />
@@ -66,6 +68,7 @@ export default function Home() {
 
       {/* Wellness peptide affiliate catalog — MakeWellness routing */}
       <PeptideStore />
+
     </main>
   );
 }

@@ -2,8 +2,61 @@
 
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import { Environment, Preload, useGLTF } from '@react-three/drei'
+import { Environment, Preload, Text, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
+
+const HEADLINE_BEATS: { window: [number, number]; side: 'left' | 'right'; text: string }[] = [
+  { window: [0.04, 0.36], side: 'left',  text: 'ONE KEY.' },
+  { window: [0.34, 0.67], side: 'right', text: 'ZERO SHARING.' },
+  { window: [0.65, 0.98], side: 'left',  text: 'PURE PRIVACY.' },
+]
+
+function KineticHeadline({ window: [a, b], side, text }: { window: [number, number]; side: 'left' | 'right'; text: string }) {
+  const groupRef = useRef<THREE.Group>(null)
+  const matRef   = useRef<THREE.MeshStandardMaterial>(null)
+  const _pos   = useMemo(() => new THREE.Vector3(), [])
+  const _fwd   = useMemo(() => new THREE.Vector3(), [])
+  const _right = useMemo(() => new THREE.Vector3(), [])
+
+  useFrame(({ camera }) => {
+    const grp = groupRef.current
+    if (!grp) return
+    const p    = gymSceneState.progressRef.current
+    const span = b - a
+    const inEnd    = a + span * 0.3
+    const outStart = b - span * 0.3
+    const o = p <= a || p >= b ? 0
+      : p < inEnd ? (p - a) / (inEnd - a)
+      : p > outStart ? (b - p) / (b - outStart)
+      : 1
+
+    camera.getWorldDirection(_fwd)
+    _right.crossVectors(_fwd, camera.up).normalize()
+    const depth = THREE.MathUtils.lerp(10, 2.2, o)
+    const xOff  = (side === 'left' ? -1 : 1) * 1.7
+    _pos.copy(camera.position).addScaledVector(_fwd, depth).addScaledVector(_right, xOff)
+    grp.position.copy(_pos)
+    grp.quaternion.copy(camera.quaternion)
+    grp.visible = o > 0.01
+    if (matRef.current) matRef.current.opacity = o
+  })
+
+  return (
+    <group ref={groupRef}>
+      <Text
+        fontSize={0.7}
+        letterSpacing={-0.03}
+        maxWidth={4}
+        anchorX={side === 'left' ? 'left' : 'right'}
+        anchorY="middle"
+        textAlign={side}
+      >
+        {text}
+        <meshStandardMaterial ref={matRef} color="#eaeaea" metalness={0.8} roughness={0.2} transparent depthWrite={false} />
+      </Text>
+    </group>
+  )
+}
 
 useGLTF.setDecoderPath('/draco/')
 
@@ -115,6 +168,9 @@ export function GymSceneContent() {
         <Environment files="/hdri/lebombo_1k.hdr" />
         <Model />
         <CameraRig />
+        {HEADLINE_BEATS.map((beat) => (
+          <KineticHeadline key={beat.text} {...beat} />
+        ))}
         <Preload all />
       </Suspense>
     </>

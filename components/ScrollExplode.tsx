@@ -9,9 +9,7 @@ declare global {
 }
 
 // ─── config ────────────────────────────────────────────────────────────────
-const FRAME_COUNT   = 121          // logo_000.webp … logo_120.webp
-const FRAMES_PATH   = '/frames/'   // → public/frames/
-const FRAME_EXT     = 'webp'       // full-res 1200px WebP
+const SPIN_SRC      = '/spin.mp4'  // → public/spin.mp4 — replaces legacy webp frame sequence
 const SCROLL_VH     = 150          // tightened runway — snappier scrub, no dead tail (windows are fractional, handoff stays synced)
 const SCROLL_VH_MOB = 150          // mobile matches desktop
 const INTRO_DUR     = 1.6          // animate-in duration in seconds
@@ -29,10 +27,6 @@ const T2_WINDOW: [number, number] = [0.45, 0.80]
 const HERO_WINDOW: [number, number] = [0.05, 0.85]
 // ───────────────────────────────────────────────────────────────────────────
 
-function pad(n: number) {
-  return String(n).padStart(3, '0')
-}
-
 // 0 below `start`, 1 at/after `end`, linear between — used to map scroll → reveal
 function ramp(p: number, start: number, end: number) {
   return Math.min(1, Math.max(0, (p - start) / (end - start)))
@@ -44,7 +38,7 @@ interface ScrollExplodeProps {
 
 export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
   const sectionRef = useRef<HTMLDivElement>(null)
-  const canvasRef  = useRef<HTMLCanvasElement>(null)
+  const videoRef   = useRef<HTMLVideoElement>(null)
   const cueRef     = useRef<HTMLDivElement>(null)
   const line1Ref   = useRef<HTMLDivElement>(null)
   const line2Ref   = useRef<HTMLDivElement>(null)
@@ -54,8 +48,6 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
   const secondaryCtaRef  = useRef<HTMLAnchorElement>(null)
 
   const handlePWADownload = () => console.log('PWA Prompt Triggered')
-  const imagesRef  = useRef<HTMLImageElement[]>([])
-  const frameRef     = useRef(0)
   const scrollLocked  = useRef(false)   // tracks whether we own the overflow lock
   const heroInRef     = useRef(false)   // hero stays hidden until the intro reveals it
   const cueGoneRef    = useRef(false)   // scroll cue fades once, on first scroll
@@ -63,32 +55,12 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
   const floatTweenRef = useRef<gsap.core.Tween | null>(null)
   const lastTaglineProgressRef  = useRef<number>(-1)
   const gymPreloadFiredRef      = useRef(false)
-  const [loadPct, setLoadPct]   = useState(0)
   const [ready, setReady]       = useState(false)
   const [scrollVh, setScrollVh] = useState(SCROLL_VH)
 
   /* ── pick scroll length once, on mount, based on viewport width ─────── */
   useEffect(() => {
     setScrollVh(window.innerWidth < MOBILE_BP ? SCROLL_VH_MOB : SCROLL_VH)
-  }, [])
-
-  /* ── draw a frame to canvas (DPR-aware, letterbox-centered) ─────────── */
-  const draw = useCallback((index: number) => {
-    const canvas = canvasRef.current
-    const img    = imagesRef.current[index]
-    if (!canvas || !img?.complete) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    // canvas.width/height are device pixels; math runs in that space so the
-    // chrome stays sharp on retina / high-DPI screens instead of going soft.
-    const cw = canvas.width
-    const ch = canvas.height
-    ctx.fillStyle = '#000'
-    ctx.fillRect(0, 0, cw, ch)
-    const scale = Math.min(cw / img.naturalWidth, ch / img.naturalHeight)
-    const dw = img.naturalWidth  * scale
-    const dh = img.naturalHeight * scale
-    ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh)
   }, [])
 
   /* ── drive tagline reveal straight off scroll progress ──────────────── */
@@ -124,84 +96,10 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  /* ── canvas resize (backing store = device pixels) ──────────────────── */
+  /* ── video element disabled (asset missing) → skip straight to intro ── */
+  // ponytail: video gate removed, spin.mp4 not shipped; re-add readiness check if video returns
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const setSize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.5)
-      canvas.width  = Math.round(window.innerWidth  * dpr)
-      canvas.height = Math.round(window.innerHeight * dpr)
-      draw(frameRef.current)
-      // ScrollTrigger auto-refreshes on resize; manual call would desync Lenis
-    }
-
-    let rafId = 0
-    const onResize = () => {
-      if (scrollLocked.current) return
-      cancelAnimationFrame(rafId)
-      rafId = requestAnimationFrame(setSize)
-    }
-
-    setSize()
-    window.addEventListener('resize', onResize)
-    return () => {
-      window.removeEventListener('resize', onResize)
-      cancelAnimationFrame(rafId)
-    }
-  }, [draw])
-
-  /* ── preload all frames (decode before marking ready → no flash) ────── */
-  useEffect(() => {
-    let done = 0
-    const imgs: HTMLImageElement[] = new Array(FRAME_COUNT)
-
-    const tick = () => {
-      done++
-      if (done % 10 === 0 || done === FRAME_COUNT) {
-        setLoadPct(Math.round((done / FRAME_COUNT) * 100))
-      }
-      if (done === FRAME_COUNT) setReady(true)
-    }
-
-    const BATCH_SIZE = 10
-    const preloadFrames = async () => {
-      for (let batchStart = 0; batchStart < FRAME_COUNT; batchStart += BATCH_SIZE) {
-        const batchEnd = Math.min(batchStart + BATCH_SIZE, FRAME_COUNT)
-        const batchPromises: Promise<void>[] = []
-        for (let i = batchStart; i < batchEnd; i++) {
-          const img = new Image()
-          img.fetchPriority = 'low' // ponytail: don't compete with LCP for bandwidth
-          imgs[i] = img
-          batchPromises.push(
-            new Promise<void>((resolve) => {
-              let settled = false
-              const finish = () => {
-                if (settled) return
-                settled = true
-                tick(); resolve()
-              }
-              img.onload = () => {
-                finish()                        // ready on load; never gate on decode
-                img.decode?.().catch(() => {})  // fire-and-forget: warm cache, never block
-              }
-              img.onerror = finish
-              // src set AFTER handlers: cached frames fire load synchronously,
-              // and an already-complete image would otherwise never call onload.
-              img.src = `${FRAMES_PATH}logo_${pad(i)}.${FRAME_EXT}`
-              if (img.complete && img.onload) img.onload(new Event('load'))
-            })
-          )
-        }
-        await Promise.all(batchPromises)
-      }
-      imagesRef.current = imgs
-    }
-    // ponytail: defer past first paint so 121 frames don't block LCP
-    const ric = window.requestIdleCallback ?? ((cb: IdleRequestCallback) => setTimeout(() => cb({} as IdleDeadline), 0))
-    const idleId = ric(preloadFrames)
-    return () => window.cancelIdleCallback?.(idleId as number)
+    setReady(true)
   }, [])
 
   /* ── intro animate-in → hand off to scroll-scrub ───────────────────── */
@@ -209,12 +107,11 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
     if (!ready) return
     gsap.registerPlugin(ScrollTrigger)
 
-    const canvas  = canvasRef.current
+    const video   = videoRef.current
     const section = sectionRef.current
     const cue     = cueRef.current
-    if (!canvas || !section) return
+    if (!section) return
 
-    draw(0)
     updateTagline(0) // tagline starts hidden
 
     const reduceMotion =
@@ -236,16 +133,11 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         scrub:   1,   // heavier smoothing — keeps the long scrub deliberate, not snappy
         onUpdate(self) {
           if (self.progress > 0.001) fadeCue()
-          // progress-driven handoff — canvas dissolves over the last 12% of the
-          // scrub, exactly as the 3D scene slides in underneath. No timed fade,
-          // no dead zone.
-          if (!scrollLocked.current) {
-            canvas.style.opacity = String(1 - ramp(self.progress, 0.88, 1))
-          }
-          const idx = Math.round(self.progress * (FRAME_COUNT - 1))
-          if (idx !== frameRef.current) {
-            frameRef.current = idx
-            draw(idx)
+          // progress-driven handoff — video dissolves over the last 12% of the
+          // scrub, exactly as the 3D scene (already live underneath, screen-blended)
+          // takes over. No timed fade, no dead zone.
+          if (!scrollLocked.current && video) {
+            video.style.opacity = String(1 - ramp(self.progress, 0.88, 1))
           }
           const p = self.progress
           if (Math.abs(p - lastTaglineProgressRef.current) > 0.002) {
@@ -263,7 +155,10 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
 
     // accessibility: skip the cinematic intro, go straight to scroll control
     if (reduceMotion) {
-      gsap.set(canvas, { opacity: 1, scale: 1, filter: 'blur(0px)' })
+      if (video) {
+        gsap.set(video, { opacity: 1, scale: 1, filter: 'blur(0px)' })
+        video.play().catch(() => {})
+      }
       if (cue) gsap.set(cue, { opacity: 0.55 })
       if (heroRef.current) {
         heroInRef.current = true
@@ -286,22 +181,31 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
       const _w = window as Window & { __timelines?: Record<string, gsap.core.Timeline> }
       _w.__timelines = _w.__timelines ?? {}
       _w.__timelines['scrollExplodeIntro'] = tl
-      tl.fromTo(
-        canvas,
-        { opacity: 0, scale: 0.86, filter: 'blur(12px)' },
-        {
-          opacity:  1,
-          scale:    1,
-          filter:   'blur(0px)',
-          duration: INTRO_DUR,
-          ease:     'power3.out',
-          onComplete() {
-            document.body.style.overflow = ''
-            scrollLocked.current = false
-            wireScrub()
-          },
-        }
-      )
+      if (video) {
+        tl.fromTo(
+          video,
+          { opacity: 0, scale: 0.86, filter: 'blur(12px)' },
+          {
+            opacity:  1,
+            scale:    1,
+            filter:   'blur(0px)',
+            duration: INTRO_DUR,
+            ease:     'power3.out',
+            onComplete() {
+              document.body.style.overflow = ''
+              scrollLocked.current = false
+              video.play().catch(() => {})
+              wireScrub()
+            },
+          }
+        )
+      } else {
+        tl.call(() => {
+          document.body.style.overflow = ''
+          scrollLocked.current = false
+          wireScrub()
+        }, [], INTRO_DUR)
+      }
       if (heroRef.current) {
         if (window.scrollY < window.innerHeight * 0.3) {
           // staged mount sequence: text → GET ACCESS → secondary CTA
@@ -356,7 +260,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         scrollLocked.current = false
       }
     }
-  }, [ready, draw, updateTagline])
+  }, [ready, updateTagline])
 
   /* ── sine-yoyo float on .io-hero-headline__float ───────────────────── */
   useEffect(() => {
@@ -371,46 +275,25 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
   /* ── render ─────────────────────────────────────────────────────────── */
   return (
     <>
-      {/* preload overlay */}
-      {!ready && (
-        <div
-          aria-hidden="true"
+      {/* spin.mp4 — position:fixed, stays pinned while the section scrolls.
+          mix-blend-mode:screen drops the video's black background out against
+          the persistent SharedCanvas underneath — no flat color blocks the handoff. */}
+      {false && (
+        <video
+          ref={videoRef}
+          src={SPIN_SRC}
+          muted
+          playsInline
+          preload="auto"
           style={{
-            position: 'fixed', inset: 0, background: '#000',
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            gap: 14, zIndex: 9999,
+            position: 'fixed', top: 0, left: 0,
+            width: '100vw', height: '100vh', zIndex: 0,
+            objectFit: 'cover',
+            display: 'block', opacity: 0,
+            mixBlendMode: 'screen',
           }}
-        >
-          <div style={{ width: 180, height: 1, background: 'rgba(255,255,255,0.08)' }}>
-            <div
-              style={{
-                width: `${loadPct}%`, height: '100%',
-                background: '#fff', transition: 'width 0.25s linear',
-              }}
-            />
-          </div>
-          <span
-            style={{
-              color: 'rgba(255,255,255,0.2)', fontSize: 10,
-              letterSpacing: '0.2em', fontFamily: 'monospace',
-              textTransform: 'uppercase',
-            }}
-          >
-            {loadPct}%
-          </span>
-        </div>
+        />
       )}
-
-      {/* canvas — position:fixed, stays pinned while the section scrolls */}
-      <canvas
-        ref={canvasRef}
-        style={{
-          position: 'fixed', top: 0, left: 0,
-          width: '100vw', height: '100vh', zIndex: 0,
-          display: 'block', opacity: 0,
-        }}
-      />
 
       {/* hero overlay — CTAs live over the gateway sequence, fade out on scroll */}
       <div

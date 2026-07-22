@@ -10,7 +10,7 @@ import { CustomEase } from 'gsap/CustomEase'
 // Calm editorial: numbered steps, one glass panel for the model. No hype.
 const STEPS = [
   { n: '01', k: 'Download the App', line: 'Get the Iron Oasis app. Your Access Key lives on your phone.' },
-  { n: '02', k: 'Book a Solo Window', line: 'Reserve a one-hour solo window. The whole space, held for you alone.' },
+  { n: '02', k: 'Book a Session', line: 'Reserve a one-hour session. The whole space, held for you alone.' },
   { n: '03', k: 'Arrive', line: 'Park on the street at 3011 Blimey Drive, Windsor. A quiet residential setting — walk up the property.' },
   { n: '04', k: 'Enter', line: 'Your code opens the Yale smart lock. It answers to your key alone.' },
   { n: '05', k: 'Complete Privacy', line: '24/7 private access. Zero sharing. Every square foot is yours for the session.' },

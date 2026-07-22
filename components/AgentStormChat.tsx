@@ -59,11 +59,24 @@ export function AgentStormChat({ onClose }: { onClose: () => void }) {
     }, 18);
   };
 
-  const ask = (q: string) => {
+  const ask = async (q: string) => {
     if (busy || !q.trim()) return;
     setLines((l) => [...l, { from: 'you', text: q }]);
-    typeOut(matchFaq(q));
     setInput('');
+    setBusy(true);
+    try {
+      const res = await fetch('/api/agent-storm', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ message: q }),
+      });
+      if (!res.ok) throw new Error('upstream');
+      const data = await res.json();
+      if (!data.answer) throw new Error('empty');
+      typeOut(data.answer);
+    } catch {
+      typeOut(matchFaq(q));
+    }
   };
 
   return (

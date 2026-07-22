@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { SplitText } from 'gsap/SplitText'
 import { CustomEase } from 'gsap/CustomEase'
 import { bridgeState } from '@/components/scenes/BridgeContent'
 
@@ -32,21 +31,8 @@ export default function InfrastructureBridge({ onActive }: { onActive?: (active:
   useEffect(() => {
     const section = sectionRef.current
     if (!section) return
-    gsap.registerPlugin(ScrollTrigger, SplitText, CustomEase)
+    gsap.registerPlugin(ScrollTrigger, CustomEase)
     if (!CustomEase.get('appleOut')) CustomEase.create('appleOut', '0.16, 1, 0.3, 1')
-
-    // Kowalski masked reveals — one scrub-driven timeline per beat heading
-    const splits: SplitText[] = []
-    const headTls = new Map<HTMLElement, gsap.core.Timeline>()
-    section.querySelectorAll<HTMLElement>('[data-beat]').forEach((el) => {
-      const head = el.querySelector<HTMLElement>('[data-head]')
-      if (!head) return
-      const split = new SplitText(head, { type: 'lines,words', mask: 'lines' })
-      splits.push(split)
-      const tl = gsap.timeline({ paused: true })
-      tl.fromTo(split.words, { yPercent: 110 }, { yPercent: 0, stagger: 0.08, duration: 1, ease: 'appleOut' })
-      headTls.set(el, tl)
-    })
 
     const st = ScrollTrigger.create({
       trigger: section,
@@ -69,8 +55,6 @@ export default function InfrastructureBridge({ onActive }: { onActive?: (active:
             : 1
           el.style.opacity   = String(o)
           el.style.transform = `translateY(${(1 - o) * 24}px)`
-          const entry = p <= a ? 0 : Math.min(1, (p - a) / (inEnd - a))
-          headTls.get(el)?.progress(entry)
         })
       },
     })
@@ -80,8 +64,6 @@ export default function InfrastructureBridge({ onActive }: { onActive?: (active:
     return () => {
       cancelAnimationFrame(rid)
       st.kill()
-      headTls.forEach((tl) => tl.kill())
-      splits.forEach((s) => s.revert())
     }
   }, [])
 
@@ -106,17 +88,6 @@ export default function InfrastructureBridge({ onActive }: { onActive?: (active:
               willChange: 'opacity, transform',
             }}
           >
-            <div
-              data-head
-              style={{
-                fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 900,
-                fontSize: 'clamp(40px, 6.5vw, 104px)', lineHeight: 0.9,
-                letterSpacing: '-0.03em', color: '#fff', textTransform: 'uppercase',
-                textShadow: '0 4px 60px rgba(0,0,0,0.95), 0 0 24px rgba(0,0,0,0.9)',
-              }}
-            >
-              {beat.head}
-            </div>
             <p
               style={{
                 marginTop: 20, fontFamily: 'var(--font-grotesk), sans-serif', fontSize: 18,

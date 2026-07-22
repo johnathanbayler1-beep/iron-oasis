@@ -133,17 +133,6 @@ export default function GymScene({
               willChange: 'opacity, transform',
             }}
           >
-            <div
-              style={{
-                fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 900,
-                fontSize: 'clamp(48px, 8vw, 120px)', lineHeight: 0.9,
-                letterSpacing: '-0.03em', color: '#fff', textTransform: 'uppercase',
-                textWrap: 'balance',
-                textShadow: '0 4px 60px rgba(0,0,0,0.95), 0 0 24px rgba(0,0,0,0.9)',
-              }}
-            >
-              {beat.head}
-            </div>
             <p
               style={{
                 marginTop: 20, fontFamily: 'var(--font-grotesk), sans-serif',

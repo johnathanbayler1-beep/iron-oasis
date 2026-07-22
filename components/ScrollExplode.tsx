@@ -9,7 +9,8 @@ declare global {
 }
 
 // ─── config ────────────────────────────────────────────────────────────────
-const SPIN_SRC      = '/spin.mp4'  // → public/spin.mp4 — replaces legacy webp frame sequence
+const FRAME_COUNT    = 121         // public/frames/logo_000.webp … logo_120.webp
+const frameSrc = (i: number) => `/frames/logo_${String(i).padStart(3, '0')}.webp`
 const SCROLL_VH     = 150          // tightened runway — snappier scrub, no dead tail (windows are fractional, handoff stays synced)
 const SCROLL_VH_MOB = 150          // mobile matches desktop
 const INTRO_DUR     = 1.6          // animate-in duration in seconds
@@ -38,7 +39,9 @@ interface ScrollExplodeProps {
 
 export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
   const sectionRef = useRef<HTMLDivElement>(null)
-  const videoRef   = useRef<HTMLVideoElement>(null)
+  const canvasRef  = useRef<HTMLCanvasElement>(null)
+  const framesRef  = useRef<HTMLImageElement[]>([])
+  const frameRef   = useRef(0)
   const cueRef     = useRef<HTMLDivElement>(null)
   const line1Ref   = useRef<HTMLDivElement>(null)
   const line2Ref   = useRef<HTMLDivElement>(null)
@@ -96,18 +99,54 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  /* ── video element disabled (asset missing) → skip straight to intro ── */
-  // ponytail: video gate removed, spin.mp4 not shipped; re-add readiness check if video returns
-  useEffect(() => {
-    setReady(true)
+  /* ── draw a given frame index onto the canvas, cover-fit to viewport ── */
+  const drawFrame = useCallback((idx: number) => {
+    const canvas = canvasRef.current
+    const img = framesRef.current[idx]
+    if (!canvas || !img?.complete) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    const w = canvas.width, h = canvas.height
+    const scale = Math.max(w / img.width, h / img.height)
+    const dw = img.width * scale, dh = img.height * scale
+    ctx.clearRect(0, 0, w, h)
+    ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh)
   }, [])
+
+  /* ── preload the 121-frame logo sequence, then mark ready ───────────── */
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const resize = () => {
+      if (!canvas) return
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+      drawFrame(frameRef.current)
+    }
+    resize()
+    window.addEventListener('resize', resize)
+
+    let loaded = 0
+    const imgs = Array.from({ length: FRAME_COUNT }, (_, i) => {
+      const img = new Image()
+      img.src = frameSrc(i)
+      img.onload = () => {
+        loaded += 1
+        if (i === 0) drawFrame(0)
+        if (loaded === FRAME_COUNT) setReady(true)
+      }
+      return img
+    })
+    framesRef.current = imgs
+
+    return () => window.removeEventListener('resize', resize)
+  }, [drawFrame])
 
   /* ── intro animate-in → hand off to scroll-scrub ───────────────────── */
   useEffect(() => {
     if (!ready) return
     gsap.registerPlugin(ScrollTrigger)
 
-    const video   = videoRef.current
+    const canvas  = canvasRef.current
     const section = sectionRef.current
     const cue     = cueRef.current
     if (!section) return
@@ -133,11 +172,16 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         scrub:   1,   // heavier smoothing — keeps the long scrub deliberate, not snappy
         onUpdate(self) {
           if (self.progress > 0.001) fadeCue()
-          // progress-driven handoff — video dissolves over the last 12% of the
+          // progress-driven handoff — frame sequence dissolves over the last 12% of the
           // scrub, exactly as the 3D scene (already live underneath, screen-blended)
           // takes over. No timed fade, no dead zone.
-          if (!scrollLocked.current && video) {
-            video.style.opacity = String(1 - ramp(self.progress, 0.88, 1))
+          if (!scrollLocked.current && canvas) {
+            canvas.style.opacity = String(1 - ramp(self.progress, 0.88, 1))
+            const idx = Math.round(ramp(self.progress, 0, 0.85) * (FRAME_COUNT - 1))
+            if (idx !== frameRef.current) {
+              frameRef.current = idx
+              drawFrame(idx)
+            }
           }
           const p = self.progress
           if (Math.abs(p - lastTaglineProgressRef.current) > 0.002) {
@@ -155,10 +199,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
 
     // accessibility: skip the cinematic intro, go straight to scroll control
     if (reduceMotion) {
-      if (video) {
-        gsap.set(video, { opacity: 1, scale: 1, filter: 'blur(0px)' })
-        video.play().catch(() => {})
-      }
+      if (canvas) gsap.set(canvas, { opacity: 1, scale: 1, filter: 'blur(0px)' })
       if (cue) gsap.set(cue, { opacity: 0.55 })
       if (heroRef.current) {
         heroInRef.current = true
@@ -181,9 +222,9 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
       const _w = window as Window & { __timelines?: Record<string, gsap.core.Timeline> }
       _w.__timelines = _w.__timelines ?? {}
       _w.__timelines['scrollExplodeIntro'] = tl
-      if (video) {
+      if (canvas) {
         tl.fromTo(
-          video,
+          canvas,
           { opacity: 0, scale: 0.86, filter: 'blur(12px)' },
           {
             opacity:  1,
@@ -194,7 +235,6 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
             onComplete() {
               document.body.style.overflow = ''
               scrollLocked.current = false
-              video.play().catch(() => {})
               wireScrub()
             },
           }
@@ -275,25 +315,18 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
   /* ── render ─────────────────────────────────────────────────────────── */
   return (
     <>
-      {/* spin.mp4 — position:fixed, stays pinned while the section scrolls.
-          mix-blend-mode:screen drops the video's black background out against
+      {/* 121-frame logo sequence — position:fixed, stays pinned while the section scrolls.
+          mix-blend-mode:screen drops the frame's black background out against
           the persistent SharedCanvas underneath — no flat color blocks the handoff. */}
-      {false && (
-        <video
-          ref={videoRef}
-          src={SPIN_SRC}
-          muted
-          playsInline
-          preload="auto"
-          style={{
-            position: 'fixed', top: 0, left: 0,
-            width: '100vw', height: '100vh', zIndex: 0,
-            objectFit: 'cover',
-            display: 'block', opacity: 0,
-            mixBlendMode: 'screen',
-          }}
-        />
-      )}
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: 'fixed', top: 0, left: 0,
+          width: '100vw', height: '100vh', zIndex: 0,
+          display: 'block', opacity: 0,
+          mixBlendMode: 'screen',
+        }}
+      />
 
       {/* hero overlay — CTAs live over the gateway sequence, fade out on scroll */}
       <div

@@ -39,7 +39,7 @@ export default function GymScene({
     if (!el) return
     const observer = new IntersectionObserver(
       ([entry]) => { setInView(entry.isIntersecting); onActive?.(entry.isIntersecting) },
-      { threshold: 0 },
+      { threshold: 0, rootMargin: '-45% 0px -45% 0px' },
     )
     observer.observe(el)
     return () => observer.disconnect()

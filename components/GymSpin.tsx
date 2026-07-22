@@ -119,7 +119,7 @@ export default function GymSpin({ onActive }: { onActive?: (active: boolean) => 
     if (!el) return
     const observer = new IntersectionObserver(
       ([entry]) => onActive?.(entry.isIntersecting),
-      { threshold: 0 },
+      { threshold: 0, rootMargin: '-45% 0px -45% 0px' },
     )
     observer.observe(el)
     return () => observer.disconnect()

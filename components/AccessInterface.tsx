@@ -73,7 +73,7 @@ export function AccessInterface() {
     <section
       ref={rootRef}
       className="relative"
-      style={{ padding: 'clamp(96px, 14vh, 180px) 24px' }}
+      style={{ position: 'relative', zIndex: 20, padding: 'clamp(96px, 14vh, 180px) 24px' }}
     >
       <div style={{ maxWidth: 960, margin: '0 auto', display: 'grid', gap: 20, gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
         {/* Panel 1 — Live Occupancy */}

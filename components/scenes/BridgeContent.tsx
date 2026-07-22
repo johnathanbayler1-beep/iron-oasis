@@ -51,6 +51,7 @@ function KineticHeadline({ window: [a, b], side, text }: { window: [number, numb
   return (
     <group ref={groupRef}>
       <Text
+        font="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfMZhrib2Bg-4.ttf"
         fontSize={0.6}
         letterSpacing={-0.03}
         maxWidth={4}

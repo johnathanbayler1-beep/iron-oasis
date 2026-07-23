@@ -74,10 +74,11 @@ export const gymSceneState = {
   invalidateRef: { current: () => {} } as { current: () => void },
   waypointsRef: { current: [] as WayPoint[] },
   curveRef: { current: null as THREE.CatmullRomCurve3 | null },
+  heightRef: { current: 0 } as { current: number }, // model bbox height, for reframe bias
 }
 
 function Model() {
-  const { waypointsRef, curveRef } = gymSceneState
+  const { waypointsRef, curveRef, heightRef } = gymSceneState
   const { scene } = useGLTF(MODEL_URL)
   const cloned = useMemo(() => scene.clone(true), [scene])
 
@@ -87,6 +88,7 @@ function Model() {
     const center = box.getCenter(new THREE.Vector3())
     const c = center
     const s = size
+    heightRef.current = s.y
 
     waypointsRef.current = [
       { pos: new THREE.Vector3(c.x,               c.y + s.y * 0.25, c.z + s.z * 1.4),  lookAt: c.clone() },
@@ -101,14 +103,14 @@ function Model() {
       false,
       'centripetal',
     )
-  }, [cloned, waypointsRef, curveRef])
+  }, [cloned, waypointsRef, curveRef, heightRef])
 
   return <primitive object={cloned} />
 }
 
 function CameraRig() {
   const { waypointsRef, curveRef, progressRef, invalidateRef } = gymSceneState
-  const { camera, invalidate } = useThree()
+  const { camera, invalidate, size } = useThree()
   const lastProgRef   = useRef(progressRef.current)
   const lastChangeRef = useRef(Date.now())
 
@@ -144,6 +146,19 @@ function CameraRig() {
     const hi     = Math.min(lo + 1, pts.length - 1)
     const t      = scaled - lo
     _lookAt.lerpVectors(pts[lo].lookAt, pts[hi].lookAt, t)
+
+    // Reframe: the scan is floor-dominant and open above, so at these waypoints
+    // the geometry is a sliver with void filling the top. Dolly the camera
+    // toward its target so the model fills the frame and the void crops off the
+    // edges, then tilt the look-target down so what void remains bleeds off the
+    // top. Portrait (more vertical void) pulls tighter than landscape.
+    // ponytail: dolly + bias are the tuning knobs — nudge if void returns or the
+    // scan reads too close on real devices.
+    const aspect = size.width / Math.max(size.height, 1)
+    const dolly  = THREE.MathUtils.clamp(0.74 - (1 - aspect) * 0.12, 0.55, 0.82)
+    const bias   = THREE.MathUtils.clamp(0.5 - (aspect - 1) * 0.15, 0.3, 0.5)
+    camera.position.sub(_lookAt).multiplyScalar(dolly).add(_lookAt)
+    _lookAt.y -= gymSceneState.heightRef.current * bias
 
     if (idle) {
       const now = Date.now()

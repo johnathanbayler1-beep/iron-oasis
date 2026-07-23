@@ -346,7 +346,13 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
           willChange: 'opacity, transform',
         }}
       >
-        <div ref={heroTextRef} style={{ opacity: 0, willChange: 'opacity, transform' }}>
+        <div ref={heroTextRef} style={{
+          opacity: 0, willChange: 'opacity, transform',
+          padding: '48px 6vw 64px',
+          // legibility scrim — dark halo lets white type read over the metallic logo below.
+          // Centered on the text block (55%) and widened so lower H1 lines + subhead stay covered.
+          background: 'radial-gradient(ellipse 88% 128% at 50% 55%, rgba(0,0,0,0.86) 0%, rgba(0,0,0,0.58) 48%, rgba(0,0,0,0.2) 72%, transparent 88%)',
+        }}>
         <span
           style={{
             fontFamily: 'monospace', fontSize: 10, letterSpacing: '0.4em',

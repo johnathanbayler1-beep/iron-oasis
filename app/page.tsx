@@ -1,7 +1,9 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { RevealObserver } from '@/components/RevealObserver';
 import { SharedCanvas, type ActiveSection } from '@/components/scenes/SharedCanvas'
 
@@ -26,6 +28,19 @@ const AgentStormWidget = dynamic(() => import('@/components/AgentStormWidget').t
 export default function Home() {
   const [gymMounted, setGymMounted] = useState(false)
   const preloadGym = useCallback(() => setGymMounted(true), [])
+
+  // Lazy (ssr:false) sections mount after gymMounted, growing page height and
+  // desyncing every ScrollTrigger — the source of the dead black bands + jitter.
+  // Watch body height and refresh triggers (debounced) whenever it settles.
+  useEffect(() => {
+    if (!gymMounted) return
+    gsap.registerPlugin(ScrollTrigger)
+    let raf = 0
+    const refresh = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => ScrollTrigger.refresh()) }
+    const ro = new ResizeObserver(refresh)
+    ro.observe(document.body)
+    return () => { cancelAnimationFrame(raf); ro.disconnect() }
+  }, [gymMounted])
 
   const [activeSection, setActiveSection] = useState<ActiveSection>('gymScene')
   const activate = useCallback((section: Exclude<ActiveSection, null>) => (active: boolean) => {

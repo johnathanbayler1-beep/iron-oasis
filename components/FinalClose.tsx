@@ -1,7 +1,6 @@
 'use client'
 
-// Brutalist placeholder — holds the slot until equipment photography lands.
-// Static by design: no motion, no glass, no gradients. 1px rules and monospace.
+// Final close — rules + CTA, no pricing. Photo bento holds until equipment photography lands.
 const SLOTS = [
   'RACK — 01',
   'PLATFORM — 02',
@@ -39,7 +38,7 @@ export function FinalClose() {
             letterSpacing: '-0.045em', color: '#fff', textTransform: 'uppercase',
           }}
         >
-          Awaiting Visual Assets
+          The space is yours.
         </h2>
 
         <div
@@ -95,6 +94,49 @@ export function FinalClose() {
         >
           Equipment photography in production. Grid populates on delivery.
         </p>
+
+        <div
+          style={{
+            marginTop: 'clamp(48px, 8vh, 96px)',
+            display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'clamp(24px, 4vw, 48px)',
+            borderTop: '1px solid rgba(255,255,255,0.14)', paddingTop: 'clamp(32px, 5vh, 56px)',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: 'var(--font-jetbrains), monospace', fontSize: 12, fontWeight: 700,
+              letterSpacing: '0.28em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)',
+            }}
+          >
+            24/7 Access · Zero Sharing · Windsor
+          </span>
+
+          {/* Showcase CTA — app-only ecosystem, no web checkout. Hover inverts + arrow translates. */}
+          <a
+            href="#"
+            className="io-final-cta"
+            style={{
+              marginLeft: 'auto',
+              display: 'inline-flex', alignItems: 'center', gap: 12,
+              padding: '18px 32px',
+              fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 800, fontSize: 15,
+              letterSpacing: '-0.01em', textTransform: 'uppercase', textDecoration: 'none',
+              color: '#fff',
+              background: 'rgba(0,0,0,0.5)',
+              backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255,255,255,0.18)',
+              transition: 'background .25s ease, color .25s ease, border-color .25s ease',
+            }}
+          >
+            Acquire Key
+            <span className="io-final-arrow" style={{ transition: 'transform .25s ease', display: 'inline-block' }}>→</span>
+          </a>
+        </div>
+
+        <style>{`
+          .io-final-cta:hover { background:#fff !important; color:#000 !important; border-color:#fff !important; }
+          .io-final-cta:hover .io-final-arrow { transform: translateX(6px); }
+        `}</style>
       </div>
     </section>
   )

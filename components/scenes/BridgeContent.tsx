@@ -159,7 +159,7 @@ export function BridgeContent() {
       <ambientLight intensity={0.25} />
       <directionalLight position={[4, 6, 5]} intensity={2.2} />
       <Suspense fallback={null}>
-        <Environment preset="studio">
+        <Environment files="/hdri/studio_small_03_1k.hdr">
           <Lightformer intensity={6} position={[0, 4, -3]} rotation-x={Math.PI / 2} scale={[12, 1.5, 1]} />
           <Lightformer intensity={3} position={[-5, 1, 2]} rotation-y={Math.PI / 2} scale={[8, 1, 1]} color="#ffffff" />
           <Lightformer intensity={2.5} position={[5, -1, 2]} rotation-y={-Math.PI / 2} scale={[8, 1, 1]} />

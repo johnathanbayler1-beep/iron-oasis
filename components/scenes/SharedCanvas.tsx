@@ -2,7 +2,7 @@
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { EffectComposer, DepthOfField } from '@react-three/postprocessing'
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { GymSceneContent } from './GymSceneContent'
 import { BridgeContent } from './BridgeContent'
 import { SpinContent, spinState } from './SpinContent'
@@ -35,6 +35,25 @@ function ScrollDOF() {
   )
 }
 
+// frameloop="demand" only renders on invalidate(). When activeSection swaps,
+// the freshly-mounted scene must be forced to draw or it shows the stale
+// (black) buffer until an unrelated invalidate fires — the black dead-zones
+// seen at every phase handoff. Kick a few frames to also cover async Suspense
+// (Environment HDR) resolving right after the swap.
+function ForceRenderOnSwap({ dep }: { dep: unknown }) {
+  const { invalidate } = useThree()
+  useEffect(() => {
+    invalidate()
+    let n = 0
+    let raf = requestAnimationFrame(function tick() {
+      invalidate()
+      if (++n < 8) raf = requestAnimationFrame(tick)
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [dep, invalidate])
+  return null
+}
+
 export function SharedCanvas({
   activeSection,
   onSpinReady,
@@ -42,6 +61,14 @@ export function SharedCanvas({
   activeSection: ActiveSection
   onSpinReady: () => void
 }) {
+  // Warm the HTTP cache for the per-scene HDRIs so the first handoff into a
+  // scene doesn't flash black while its Environment map downloads cold.
+  useEffect(() => {
+    for (const u of ['/hdri/lebombo_1k.hdr', '/hdri/studio_small_03_1k.hdr']) {
+      fetch(u, { cache: 'force-cache' }).catch(() => {})
+    }
+  }, [])
+
   return (
     <Canvas
       frameloop="demand"
@@ -57,6 +84,7 @@ export function SharedCanvas({
       {activeSection === 'gymScene' && <GymSceneContent />}
       {activeSection === 'bridge' && <BridgeContent />}
       {activeSection === 'spin' && <SpinContent onReady={onSpinReady} />}
+      <ForceRenderOnSwap dep={activeSection} />
       <ScrollDOF />
     </Canvas>
   )

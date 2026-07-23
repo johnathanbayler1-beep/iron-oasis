@@ -57,9 +57,11 @@ function ForceRenderOnSwap({ dep }: { dep: unknown }) {
 export function SharedCanvas({
   activeSection,
   onSpinReady,
+  live = true,
 }: {
   activeSection: ActiveSection
   onSpinReady: () => void
+  live?: boolean
 }) {
   // Warm the HTTP cache for the per-scene HDRIs so the first handoff into a
   // scene doesn't flash black while its Environment map downloads cold.
@@ -76,7 +78,7 @@ export function SharedCanvas({
       performance={{ min: 0.5 }}
       camera={{ fov: 45, near: 0.1, far: 1000 }}
       gl={{ antialias: false, powerPreference: 'high-performance' }}
-      style={{ position: 'fixed', inset: 0, zIndex: 1, display: 'block', width: '100%', height: '100%', background: 'transparent', pointerEvents: 'none' }}
+      style={{ position: 'fixed', inset: 0, zIndex: 1, display: 'block', width: '100%', height: '100%', background: 'transparent', pointerEvents: 'none', opacity: live ? 1 : 0, visibility: live ? 'visible' : 'hidden', transition: 'opacity 0.4s ease' }}
       onCreated={({ gl }) => {
         gl.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault() }, false)
       }}

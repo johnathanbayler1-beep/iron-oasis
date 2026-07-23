@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -50,6 +50,24 @@ export default function Home() {
   const onBridgeActive   = activate('bridge')
   const onSpinActive     = activate('spin')
 
+  // Safety net: the shared 3D canvas is z-index:1 + pointer-events:none (already
+  // behind the DOM), but enforce it — once scrolled past the last 3D section
+  // (spin/pricing), kill the canvas (opacity:0 + visibility:hidden) so it can
+  // never occlude the pricing grid or footer. Restores when scrolled back up.
+  const [canvasLive, setCanvasLive] = useState(true)
+  const pastSpinRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!gymMounted) return
+    // Live while the sentinel (end of the last 3D section) is still below the
+    // viewport top; dead once scrolled past it. Direct read per scroll — cheap,
+    // setState bails when unchanged. IntersectionObserver is unreliable here: it
+    // won't fire when the sentinel jumps between its two non-intersecting states.
+    const onScroll = () => { const el = pastSpinRef.current; if (el) setCanvasLive(el.getBoundingClientRect().top > 0) }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [gymMounted])
+
   return (
     <main className="relative min-h-screen" style={{ backgroundColor: '#000', minHeight: '100vh', position: 'relative' }}>
       <RevealObserver />
@@ -59,7 +77,7 @@ export default function Home() {
       <ScrollExplode onPreloadGym={preloadGym} />
 
       {/* Single shared Canvas — swaps content by active scroll section */}
-      {gymMounted && <SharedCanvas activeSection={activeSection} onSpinReady={() => {}} />}
+      {gymMounted && <SharedCanvas activeSection={activeSection} onSpinReady={() => {}} live={canvasLive} />}
 
       {gymMounted && <GymScene onActive={onGymSceneActive} />}
 
@@ -68,6 +86,9 @@ export default function Home() {
 
       {/* Phase 3 — 360 spin: Access Keys carry the value stack and pricing */}
       {gymMounted && <GymSpin onActive={onSpinActive} />}
+
+      {/* Kill-switch sentinel: past this point no 3D section remains, canvas dies */}
+      <div ref={pastSpinRef} aria-hidden style={{ height: 1 }} />
 
       {/* App scheduling preview — unshared blocks managed via the Iron Oasis app */}
       <BookingSpace />

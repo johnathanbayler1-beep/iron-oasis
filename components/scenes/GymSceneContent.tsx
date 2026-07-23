@@ -110,13 +110,16 @@ function Model() {
 
 function CameraRig() {
   const { waypointsRef, curveRef, progressRef, invalidateRef } = gymSceneState
-  const { camera, invalidate, size } = useThree()
+  const { camera, invalidate, size, scene } = useThree()
   const lastProgRef   = useRef(progressRef.current)
   const lastChangeRef = useRef(Date.now())
 
   useEffect(() => {
     invalidateRef.current = invalidate
   }, [invalidate, invalidateRef])
+
+  // Fog belongs to GymScene only; clear it so Bridge/Spin (shared Canvas/scene) render clean.
+  useEffect(() => () => { scene.fog = null }, [scene])
 
   useFrame(() => {
     const pts = waypointsRef.current
@@ -156,7 +159,7 @@ function CameraRig() {
     // scan reads too close on real devices.
     const aspect = size.width / Math.max(size.height, 1)
     const dolly  = THREE.MathUtils.clamp(0.74 - (1 - aspect) * 0.12, 0.55, 0.82)
-    const bias   = THREE.MathUtils.clamp(0.5 - (aspect - 1) * 0.15, 0.3, 0.5)
+    const bias   = THREE.MathUtils.clamp(0.62 - (aspect - 1) * 0.12, 0.4, 0.62)
     camera.position.sub(_lookAt).multiplyScalar(dolly).add(_lookAt)
     _lookAt.y -= gymSceneState.heightRef.current * bias
 
@@ -167,6 +170,16 @@ function CameraRig() {
     }
 
     camera.lookAt(_lookAt)
+
+    // Environment lights but draws no background, so the scan's finite far edge
+    // meets a hard black void seam. Dense exponential black fog (matches #000 bg)
+    // dissolves the finite mesh edges into a cinematic void. Distance-relative —
+    // model is raw GLB scale, so density tracks camera distance: subject stays
+    // crisp, far floor fades to black. ponytail: 0.5 is the density knob.
+    const d = camera.position.distanceTo(_lookAt)
+    const density = 0.5 / Math.max(d, 0.001)
+    if (scene.fog instanceof THREE.FogExp2) scene.fog.density = density
+    else scene.fog = new THREE.FogExp2(0x000000, density)
 
     if (idle || changed) invalidate()
   })

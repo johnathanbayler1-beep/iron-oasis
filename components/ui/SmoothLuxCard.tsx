@@ -57,8 +57,13 @@ export function SmoothLuxCard({
       style={{ rotateX: rx, rotateY: ry, transformPerspective: 1000 }}
       whileHover={{ y: -6, scale: 1.015 }}
       transition={{ type: "spring", stiffness: 300, damping: 26 }}
-      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-[#050505]/85 p-6 backdrop-blur-2xl [transform-style:preserve-3d] ${className ?? ""}`}
+      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08),0_30px_80px_-40px_rgba(0,0,0,0.9)] backdrop-blur-3xl [transform-style:preserve-3d] ${className ?? ""}`}
     >
+      {/* obsidian base so the frosted layer reads as heavy glass, not a tint */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#0b0b0b]/85 via-[#050505]/80 to-[#050505]/92"
+      />
       {/* liquid spotlight */}
       <motion.span
         aria-hidden

@@ -86,12 +86,17 @@ export default function HeroCinematic() {
       0,
     );
 
+    // True 3D entry: the copy plate rises out of depth, then recedes on exit.
     tl.fromTo(
       text,
-      { opacity: 0, y: 40 },
-      { opacity: 1, y: 0, duration: 0.25 },
+      { opacity: 0, y: 40, z: -260, rotateX: 14 },
+      { opacity: 1, y: 0, z: 0, rotateX: 0, duration: 0.25 },
       0,
-    ).to(text, { opacity: 0, y: -40, ease: "power1.in" }, 0.75);
+    ).to(
+      text,
+      { opacity: 0, y: -40, z: -180, rotateX: -10, ease: "power1.in" },
+      0.75,
+    );
 
     return () => {
       window.removeEventListener("resize", resize);
@@ -103,13 +108,18 @@ export default function HeroCinematic() {
   return (
     <section
       ref={containerRef}
-      className="relative w-full h-screen bg-[#050505] text-white overflow-hidden flex items-center justify-center"
+      className="relative w-full h-screen bg-[#050505] text-white overflow-hidden flex items-center justify-center [perspective:1200px] [transform-style:preserve-3d]"
     >
       <canvas
         ref={canvasRef}
         className="absolute inset-0 w-full h-full will-change-[transform,opacity] [transform:translateZ(0)]"
       />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(0,0,0,0.35),rgba(0,0,0,0.85))] pointer-events-none" />
+      {/* specular key light raking the chrome sequence */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_20%_0%,rgba(255,255,255,0.09),transparent_55%)]"
+      />
 
       <div
         ref={textRef}

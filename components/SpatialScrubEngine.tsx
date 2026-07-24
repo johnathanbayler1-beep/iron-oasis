@@ -18,6 +18,7 @@ import * as THREE from "three";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SmoothLuxCard } from "./ui/SmoothLuxCard";
+import { UnlumenGlowBadge } from "./ui/UnlumenGlowBadge";
 
 gsap.registerPlugin(ScrollTrigger);
 useGLTF.setDecoderPath("/draco/");
@@ -188,15 +189,34 @@ export default function SpatialScrubEngine() {
         </Canvas>
 
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60 pointer-events-none" />
-        <div className="absolute bottom-16 left-12 z-20 max-w-lg">
+        <div className="absolute bottom-16 left-6 z-20 w-[min(28rem,calc(100%-3rem))] md:left-12">
           <SmoothLuxCard eyebrow="Spatial Mechanics">
-            <h3 className="text-3xl font-bold font-syne text-white">
-              Fly Through The Facility
-            </h3>
-            <p className="text-sm text-zinc-400 mt-2">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <h3 className="text-3xl font-bold font-syne text-white">
+                Move Through The Space
+              </h3>
+              <UnlumenGlowBadge tone="live">Live</UnlumenGlowBadge>
+            </div>
+            <p className="text-sm text-zinc-400">
               Scroll to move through the commercial-grade suite — every square
               foot of the private space is yours alone.
             </p>
+            <div className="mt-5 grid grid-cols-2 gap-x-6 border-t border-white/[0.08] pt-4 font-mono text-[10px] uppercase tracking-[0.2em]">
+              {[
+                ["LAT", "42.3149° N"],
+                ["LONG", "-83.0364° W"],
+                ["ACCESS", "24 / 7"],
+                ["OCCUPANCY", "1 / 1"],
+              ].map(([k, v]) => (
+                <div
+                  key={k}
+                  className="flex items-baseline justify-between gap-3 border-b border-white/[0.05] py-1.5"
+                >
+                  <span className="text-zinc-500">{k}</span>
+                  <span className="text-zinc-200">{v}</span>
+                </div>
+              ))}
+            </div>
           </SmoothLuxCard>
         </div>
       </div>
@@ -206,7 +226,19 @@ export default function SpatialScrubEngine() {
         <span className="text-xs uppercase tracking-[0.3em] text-zinc-500 font-mono mb-6">
           Premium Equipment · Zero Sharing
         </span>
-        <div className="relative w-full h-[420px]">
+        <div className="relative h-[420px] w-[min(80rem,calc(100%-3rem))] overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.02] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.07),0_50px_120px_-60px_rgba(0,0,0,1)] backdrop-blur-3xl">
+          {/* fine hairlines */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"
+          />
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/12 to-transparent"
+          />
+          <div className="absolute right-5 top-5 z-20">
+            <UnlumenGlowBadge tone="live">Operational</UnlumenGlowBadge>
+          </div>
           <Canvas
             className="absolute inset-0"
             camera={{ position: [0, 0.5, 4], fov: 40 }}

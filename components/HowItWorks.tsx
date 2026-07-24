@@ -90,7 +90,7 @@ export function HowItWorks() {
           style={{
             margin: '20px 0 clamp(48px, 7vh, 96px)',
             fontFamily: 'var(--font-display), sans-serif', fontWeight: 800,
-            fontSize: 'clamp(52px, 8vw, 120px)', lineHeight: 0.95,
+            fontSize: 'clamp(40px, 6vw, 96px)', lineHeight: 0.95,
             letterSpacing: '-0.045em', color: '#fff',
           }}
         >
@@ -129,7 +129,7 @@ export function HowItWorks() {
               <div>
                 <h3
                   style={{
-                    margin: 0, fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 700,
+                    margin: 0, fontFamily: 'var(--font-display), sans-serif', fontWeight: 700,
                     fontSize: 'clamp(28px, 3.4vw, 44px)', lineHeight: 1.05,
                     letterSpacing: '-0.03em', color: '#fff',
                   }}
@@ -167,7 +167,7 @@ export function HowItWorks() {
         >
           <span
             style={{
-              fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 800,
+              fontFamily: 'var(--font-display), sans-serif', fontWeight: 800,
               fontSize: 'clamp(30px, 4.2vw, 56px)', lineHeight: 1.05,
               letterSpacing: '-0.035em', color: '#fff',
             }}

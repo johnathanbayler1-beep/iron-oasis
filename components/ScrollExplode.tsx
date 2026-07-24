@@ -324,7 +324,6 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
           position: 'fixed', top: 0, left: 0,
           width: '100vw', height: '100vh', zIndex: 0,
           display: 'block', opacity: 0,
-          mixBlendMode: 'screen',
         }}
       />
 
@@ -365,7 +364,7 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
         <h1
           style={{
             fontFamily: 'var(--font-display), sans-serif', fontWeight: 800,
-            fontSize: 'clamp(44px, 6.6vw, 108px)', lineHeight: 0.9,
+            fontSize: 'clamp(52px, 9vw, 148px)', lineHeight: 0.9,
             letterSpacing: '-0.045em', textTransform: 'uppercase', color: '#EAEAEA',
             textWrap: 'balance', margin: '16px 0 0',
           }}
@@ -425,7 +424,6 @@ export default function ScrollExplode({ onPreloadGym }: ScrollExplodeProps) {
           fontWeight: 900,
           color: '#EAEAEA',
           zIndex: 2,
-          mixBlendMode: 'difference',
         }}
       >
         <div className="io-hero-headline__float" style={{ maxWidth: '26vw', textAlign: 'left' }}>

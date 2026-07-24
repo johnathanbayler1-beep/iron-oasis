@@ -17,13 +17,6 @@ const PRODUCTS: Product[] = [
   { name: 'Longevity', tagline: 'Built for the long horizon.', href: '#' },
 ]
 
-const GLASS_CARD: React.CSSProperties = {
-  background: 'rgba(0,0,0,0.6)',
-  backdropFilter: 'blur(12px)',
-  WebkitBackdropFilter: 'blur(12px)',
-  border: '1px solid rgba(255,255,255,0.1)',
-}
-
 export function PeptideStore() {
   const sectionRef = useRef<HTMLElement>(null)
 
@@ -64,8 +57,7 @@ export function PeptideStore() {
           {PRODUCTS.map((product) => (
             <div
               key={product.name}
-              className="io-peptide-card rounded-2xl p-6"
-              style={GLASS_CARD}
+              className="io-peptide-card io-lux-card rounded-2xl p-6"
             >
               <h3 className="text-lg font-medium text-white">{product.name}</h3>
               <p className="mt-2 text-sm text-[#8a8a8a]">{product.tagline}</p>

@@ -304,28 +304,133 @@ html.lenis-stopped body {
   transform: translateY(0);
 }
 
-/* ── Tier cards — calm translucent glass, no ambient shadows ── */
+/* ── Tier cards — translucent glass with layered ambient depth ── */
 .io-tier {
   position: relative;
-  border: 1px solid rgba(255,255,255,0.04);
-  border-top: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-top: 1px solid rgba(255,255,255,0.12);
   background: rgba(255,255,255,0.02);
   padding: clamp(38px, 4.8vw, 58px);
   border-radius: 0;
   cursor: pointer;
   overflow: hidden;
   will-change: transform;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 24px 60px -28px rgba(0,0,0,0.9);
   transition:
     opacity 0.7s ease,
     transform 0.7s cubic-bezier(0.32, 0.72, 0, 1),
     border-color 0.35s ease,
-    background 0.35s ease;
+    background 0.35s ease,
+    box-shadow 0.4s ease;
 }
 
 .io-tier:hover {
-  border-color: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.22);
   background: rgba(255,255,255,0.04);
-  transform: translateY(-4px);
+  transform: translateY(-6px) scale(1.012);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    0 40px 80px -30px rgba(0,0,0,0.95),
+    0 0 44px -12px rgba(255,255,255,0.14);
+}
+
+/* ═══ Aceternity-tier feature card — layered shadow + radial spotlight border ═══ */
+.io-lux-card {
+  position: relative;
+  border: 1px solid rgba(255,255,255,0.1);
+  background:
+    radial-gradient(140% 120% at 50% -10%, rgba(255,255,255,0.06), transparent 55%),
+    rgba(0,0,0,0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 18px 48px -22px rgba(0,0,0,0.85),
+    0 6px 20px -12px rgba(0,0,0,0.6);
+  transition:
+    transform 0.45s cubic-bezier(0.16,1,0.3,1),
+    border-color 0.4s ease,
+    box-shadow 0.4s ease;
+  will-change: transform;
+}
+/* radial spotlight border ring — brightens on hover */
+.io-lux-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(60% 120% at 50% 0%, rgba(255,255,255,0.55), rgba(255,255,255,0.05) 60%, transparent 75%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.io-lux-card:hover {
+  transform: translateY(-6px) scale(1.015);
+  border-color: rgba(255,255,255,0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    0 30px 70px -24px rgba(0,0,0,0.92),
+    0 0 44px -10px rgba(255,255,255,0.14);
+}
+.io-lux-card:hover::before { opacity: 1; }
+
+/* ═══ Blueprint / classified empty-state for equipment grid cells ═══ */
+.io-blueprint-cell {
+  position: relative;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(0deg,  transparent 0 27px, rgba(255,255,255,0.028) 27px 28px),
+    repeating-linear-gradient(90deg, transparent 0 27px, rgba(255,255,255,0.028) 27px 28px),
+    radial-gradient(120% 120% at 50% 0%, rgba(255,255,255,0.05), transparent 60%),
+    #060606;
+}
+/* dashed instrument frame */
+.io-blueprint-cell::before {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border: 1px dashed rgba(255,255,255,0.1);
+  pointer-events: none;
+}
+/* animated scan beam */
+.io-blueprint-cell::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -45%;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
+  animation: ioScan 4.5s linear infinite;
+  pointer-events: none;
+}
+.io-blueprint-watermark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.14);
+  pointer-events: none;
+}
+@keyframes ioScan {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(340%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .io-blueprint-cell::after { animation: none; display: none; }
+  .io-lux-card { transition: none; }
 }
 
 .io-tier:active {

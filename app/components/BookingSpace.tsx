@@ -133,7 +133,7 @@ export function BookingSpace() {
         <h2
           data-space-fade
           style={{
-            color: '#ffffff', fontWeight: 700, letterSpacing: '-0.03em',
+            color: '#ffffff', fontFamily: 'var(--font-display), sans-serif', fontWeight: 700, letterSpacing: '-0.03em',
             fontSize: 'clamp(34px, 4.6vw, 64px)', lineHeight: 1.04,
             textWrap: 'balance', maxWidth: '18ch',
             marginBottom: 'clamp(16px, 2vw, 24px)',

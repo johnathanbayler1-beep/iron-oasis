@@ -33,8 +33,8 @@ export function FinalClose() {
         <h2
           style={{
             margin: '20px 0 0',
-            fontFamily: 'var(--font-grotesk), sans-serif', fontWeight: 800,
-            fontSize: 'clamp(44px, 7vw, 104px)', lineHeight: 0.95,
+            fontFamily: 'var(--font-display), sans-serif', fontWeight: 800,
+            fontSize: 'clamp(40px, 6vw, 100px)', lineHeight: 0.95,
             letterSpacing: '-0.045em', color: '#fff', textTransform: 'uppercase',
           }}
         >
@@ -53,17 +53,16 @@ export function FinalClose() {
           {SLOTS.map((label, i) => (
             <div
               key={label}
+              className="io-blueprint-cell"
               style={{
                 aspectRatio: '4 / 3',
-                background: 'rgba(0,0,0,0.6)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
                 borderRight: '1px solid rgba(255,255,255,0.14)',
                 borderBottom: '1px solid rgba(255,255,255,0.14)',
                 display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
                 padding: 20,
               }}
             >
+              <span className="io-blueprint-watermark" aria-hidden>In Production</span>
               <span
                 style={{
                   fontFamily: 'var(--font-jetbrains), monospace', fontSize: 11, fontWeight: 500,

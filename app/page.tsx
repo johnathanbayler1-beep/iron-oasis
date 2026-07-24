@@ -18,7 +18,6 @@ const InfrastructureBridge = dynamic(
 import GymSpin from '@/components/GymSpinLazy';
 import GymScene from '@/app/components/GymSceneLazy';
 import { FinalClose } from '@/components/FinalClose';
-import { PeptideStore } from '@/components/PeptideStore'
 
 const HowItWorks = dynamic(() => import('@/components/HowItWorks').then(m => m.HowItWorks), { ssr: false })
 const BookingSpace = dynamic(() => import('@/app/components/BookingSpace').then(m => m.BookingSpace), { ssr: false })
@@ -101,9 +100,6 @@ export default function Home() {
 
       {/* Phase 5 — final close: rules + CTA, no pricing */}
       <FinalClose />
-
-      {/* Wellness peptide affiliate catalog — MakeWellness routing */}
-      <PeptideStore />
 
     </main>
   );

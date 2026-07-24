@@ -22,6 +22,7 @@ import { FinalClose } from '@/components/FinalClose';
 const HowItWorks = dynamic(() => import('@/components/HowItWorks').then(m => m.HowItWorks), { ssr: false })
 const BookingSpace = dynamic(() => import('@/app/components/BookingSpace').then(m => m.BookingSpace), { ssr: false })
 const AccessInterface = dynamic(() => import('@/components/AccessInterface').then(m => m.AccessInterface), { ssr: false })
+const Pricing = dynamic(() => import('@/components/Pricing').then(m => m.Pricing), { ssr: false })
 const AgentStormWidget = dynamic(() => import('@/components/AgentStormWidget').then(m => m.AgentStormWidget), { ssr: false })
 
 export default function Home() {
@@ -98,7 +99,10 @@ export default function Home() {
       {/* Phase 4 — how it works: the process + the model, stated plainly */}
       <HowItWorks />
 
-      {/* Phase 5 — final close: rules + CTA, no pricing */}
+      {/* Pricing — Access Key tiers, lux-card grid */}
+      <Pricing />
+
+      {/* Phase 5 — final close: rules + CTA */}
       <FinalClose />
 
     </main>

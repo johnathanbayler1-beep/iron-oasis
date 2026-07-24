@@ -34,7 +34,7 @@ export function AgentStormWidget() {
           alt="Agent Storm"
           width={72}
           height={72}
-          className="mix-blend-screen"
+          className=""
           priority={false}
         />
       </button>

@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono, Geist, Syne } from 'next/font/google';
 import './globals.css';
-import { SmoothScroll } from '@/components/SmoothScroll';
 import { OverlayMenu } from '@/components/OverlayMenu';
 import { Kinetic } from '@/components/Kinetic';
 import { cn } from "@/lib/utils";
@@ -45,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-black text-white antialiased">
         <OverlayMenu />
         <Kinetic />
-        <SmoothScroll>{children}</SmoothScroll>
+        {children}
       </body>
     </html>
   );

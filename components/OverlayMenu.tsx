@@ -46,7 +46,7 @@ export function OverlayMenu() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-label={open ? 'Close menu' : 'Open menu'}
-        className="fixed right-6 top-6 z-[60] flex h-12 w-12 items-center justify-center border border-white bg-black text-white mix-blend-difference"
+        className="fixed right-6 top-6 z-[60] flex h-12 w-12 items-center justify-center border border-white bg-black text-white"
       >
         <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em]">
           {open ? 'X' : 'IO'}

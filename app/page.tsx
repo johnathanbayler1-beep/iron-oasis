@@ -77,7 +77,7 @@ export default function Home() {
       <ScrollExplode onPreloadGym={preloadGym} />
 
       {/* Single shared Canvas — swaps content by active scroll section */}
-      {gymMounted && <SharedCanvas activeSection={activeSection} onSpinReady={() => {}} live={canvasLive} />}
+      {gymMounted && canvasLive && <SharedCanvas activeSection={activeSection} onSpinReady={() => {}} live={canvasLive} />}
 
       {gymMounted && <GymScene onActive={onGymSceneActive} />}
 

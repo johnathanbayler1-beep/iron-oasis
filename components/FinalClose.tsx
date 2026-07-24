@@ -27,7 +27,7 @@ export function FinalClose() {
             letterSpacing: '0.34em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)',
           }}
         >
-          We are not a gym.
+          Not a public facility.
         </span>
 
         <h2

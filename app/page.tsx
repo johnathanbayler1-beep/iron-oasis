@@ -1,113 +1,28 @@
-'use client'
+import HeroCinematic from "@/components/HeroCinematic";
+import AntiGymMatrix from "@/components/AntiGymMatrix";
+import SpatialScrubEngine from "@/components/SpatialScrubEngine";
+import AppShowcase from "@/components/AppShowcase";
+import LocalSEOAnchor from "@/components/LocalSEOAnchor";
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import dynamic from 'next/dynamic'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { RevealObserver } from '@/components/RevealObserver';
-import { SharedCanvas, type ActiveSection } from '@/components/scenes/SharedCanvas'
+// Mathematically-generated film grain. Zero image imports, negligible bytes over the wire.
+const GRAIN =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
 
-const ScrollExplode = dynamic(
-  () => import('../components/ScrollExplode'),
-  { ssr: false, loading: () => <div style={{ width: '100%', height: '100vh', background: '#000' }} /> }
-)
-const InfrastructureBridge = dynamic(
-  () => import('../components/InfrastructureBridge'),
-  { ssr: false, loading: () => <div style={{ width: '100%', height: '160vh', background: '#000' }} /> }
-)
-import GymSpin from '@/components/GymSpinLazy';
-import GymScene from '@/app/components/GymSceneLazy';
-import { FinalClose } from '@/components/FinalClose';
-
-const HowItWorks = dynamic(() => import('@/components/HowItWorks').then(m => m.HowItWorks), { ssr: false })
-const BookingSpace = dynamic(() => import('@/app/components/BookingSpace').then(m => m.BookingSpace), { ssr: false })
-const AccessInterface = dynamic(() => import('@/components/AccessInterface').then(m => m.AccessInterface), { ssr: false })
-const Pricing = dynamic(() => import('@/components/Pricing').then(m => m.Pricing), { ssr: false })
-const AgentStormWidget = dynamic(() => import('@/components/AgentStormWidget').then(m => m.AgentStormWidget), { ssr: false })
-
-export default function Home() {
-  const [gymMounted, setGymMounted] = useState(false)
-  const preloadGym = useCallback(() => setGymMounted(true), [])
-
-  // Lazy (ssr:false) sections mount after gymMounted, growing page height and
-  // desyncing every ScrollTrigger — the source of the dead black bands + jitter.
-  // Watch body height and refresh triggers (debounced) whenever it settles.
-  useEffect(() => {
-    if (!gymMounted) return
-    gsap.registerPlugin(ScrollTrigger)
-    let raf = 0
-    const refresh = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => ScrollTrigger.refresh()) }
-    const ro = new ResizeObserver(refresh)
-    ro.observe(document.body)
-    return () => { cancelAnimationFrame(raf); ro.disconnect() }
-  }, [gymMounted])
-
-  const [activeSection, setActiveSection] = useState<ActiveSection>('gymScene')
-  const activate = useCallback((section: Exclude<ActiveSection, null>) => (active: boolean) => {
-    if (active) setActiveSection(section)
-  }, [])
-  const onGymSceneActive = activate('gymScene')
-  const onBridgeActive   = activate('bridge')
-  const onSpinActive     = activate('spin')
-
-  // Safety net: the shared 3D canvas is z-index:1 + pointer-events:none (already
-  // behind the DOM), but enforce it — once scrolled past the last 3D section
-  // (spin/pricing), kill the canvas (opacity:0 + visibility:hidden) so it can
-  // never occlude the pricing grid or footer. Restores when scrolled back up.
-  const [canvasLive, setCanvasLive] = useState(true)
-  const pastSpinRef = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    if (!gymMounted) return
-    // Live while the sentinel (end of the last 3D section) is still below the
-    // viewport top; dead once scrolled past it. Direct read per scroll — cheap,
-    // setState bails when unchanged. IntersectionObserver is unreliable here: it
-    // won't fire when the sentinel jumps between its two non-intersecting states.
-    const onScroll = () => { const el = pastSpinRef.current; if (el) setCanvasLive(el.getBoundingClientRect().top > 0) }
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [gymMounted])
-
+export default function Page() {
   return (
-    <main className="relative min-h-screen" style={{ backgroundColor: '#000', minHeight: '100vh', position: 'relative' }}>
-      <RevealObserver />
-      <AgentStormWidget />
+    <main className="relative bg-[#050505] text-[#ededed] font-sans overflow-x-hidden selection:bg-white selection:text-black">
+      {/* Global vault-texture grain overlay */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-50 opacity-[0.015] mix-blend-screen"
+        style={{ backgroundImage: GRAIN }}
+      />
 
-      {/* Phase 1 — gateway hero: 121-frame logo sequence, scrub hands off to the 3D scene */}
-      <ScrollExplode onPreloadGym={preloadGym} />
-
-      {/* Single shared Canvas — swaps content by active scroll section */}
-      {gymMounted && canvasLive && <SharedCanvas activeSection={activeSection} onSpinReady={() => {}} live={canvasLive} />}
-
-      {gymMounted && <GymScene onActive={onGymSceneActive} />}
-
-      {/* Phase 2 — infrastructure bridge: app interface + Yale Assure, keyed privacy narrative */}
-      {gymMounted && <InfrastructureBridge onActive={onBridgeActive} />}
-
-      {/* Phase 3 — 360 spin: Access Keys carry the value stack and pricing */}
-      {gymMounted && <GymSpin onActive={onSpinActive} />}
-
-      {/* Kill-switch sentinel: past this point no 3D section remains, canvas dies */}
-      <div ref={pastSpinRef} aria-hidden style={{ height: 1 }} />
-
-      {/* App scheduling preview — unshared blocks managed via the Iron Oasis app */}
-      <BookingSpace />
-
-      {/* In-app smart-lock preview — encrypted key generation */}
-      <AccessInterface />
-
-      {/* Phase 4 — how it works: the process + the model, stated plainly */}
-      <HowItWorks />
-
-      {/* Page tail — opaque wrapper blocks GymScene canvas bleed-through */}
-      <div className="relative z-30 bg-black">
-        {/* Pricing — Access Key tiers, lux-card grid */}
-        <Pricing />
-
-        {/* Phase 5 — final close: rules + CTA */}
-        <FinalClose />
-      </div>
-
+      <HeroCinematic />
+      <AntiGymMatrix />
+      <SpatialScrubEngine />
+      <AppShowcase />
+      <LocalSEOAnchor />
     </main>
   );
 }

@@ -31,26 +31,23 @@ function Grain() {
   )
 }
 
-type AccessTier = { name: string; price: string; featured: boolean; features: string[] }
+type Feature = { name: string; tagline: string; points: string[] }
 
-const TIERS: AccessTier[] = [
+const TIERS: Feature[] = [
   {
-    name: 'Oasis Lite',
-    price: '$99',
-    featured: false,
-    features: ['3 days per week', '1hr Booking Windows', 'Non-peak hours (3–8pm restricted)', 'Entire Private Space, Zero Sharing'],
+    name: 'Zero Wait Times',
+    tagline: 'The floor is never shared.',
+    points: ['Entire space, one Key at a time', 'No queues, no crowds', 'Every rep on your clock'],
   },
   {
-    name: 'Oasis Plus',
-    price: '$125',
-    featured: true,
-    features: ['4 days per week', '1hr Booking Windows', 'Peak hours included', 'Entire Private Space, Zero Sharing'],
+    name: 'Private Access',
+    tagline: 'Your Key, your hours.',
+    points: ['Encrypted Key, 24/7 entry', 'Park, walk up, the space is yours', 'Zero Sharing, ever'],
   },
   {
-    name: 'Oasis Max',
-    price: '$149',
-    featured: false,
-    features: ['7 days per week', '48hr Priority Booking Window', 'All hours, 24/7 Access', 'Entire Private Space, Zero Sharing'],
+    name: 'Climate Controlled',
+    tagline: 'Dialed to your comfort.',
+    points: ['Independent heating and cooling', 'Fresh, filtered air', 'Quiet residential setting'],
   },
 ]
 
@@ -60,9 +57,6 @@ export default function GymSpin({ onActive }: { onActive?: (active: boolean) => 
   const trackRef   = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const tiltRefs   = useRef<(HTMLDivElement | null)[]>([])
-  const btnRefs    = useRef<(HTMLButtonElement | null)[]>([])
-  const btnTextRefs = useRef<(HTMLSpanElement | null)[]>([])
-  const quickRefs  = useRef<Array<{ x: (v: number) => void; y: (v: number) => void; tx: (v: number) => void; ty: (v: number) => void } | null>>([])
 
   const canTilt = () =>
     window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
@@ -84,34 +78,6 @@ export default function GymSpin({ onActive }: { onActive?: (active: boolean) => 
     const el = tiltRefs.current[i]
     if (!el) return
     gsap.to(el, { rotateX: 0, rotateY: 0, y: 0, duration: 0.7, ease: 'power3.out', overwrite: 'auto' })
-  }
-
-  const magneticMove = (i: number) => (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (!canTilt()) return
-    const btn = btnRefs.current[i]
-    const txt = btnTextRefs.current[i]
-    if (!btn || !txt) return
-    if (!quickRefs.current[i]) {
-      quickRefs.current[i] = {
-        x:  gsap.quickTo(btn, 'x', { duration: 0.5, ease: 'power3' }),
-        y:  gsap.quickTo(btn, 'y', { duration: 0.5, ease: 'power3' }),
-        tx: gsap.quickTo(txt, 'x', { duration: 0.5, ease: 'power3' }),
-        ty: gsap.quickTo(txt, 'y', { duration: 0.5, ease: 'power3' }),
-      }
-    }
-    const r = e.currentTarget.getBoundingClientRect()
-    const relX = e.clientX - (r.left + r.width / 2)
-    const relY = e.clientY - (r.top + r.height / 2)
-    const q = quickRefs.current[i]!
-    q.x(relX * 0.2); q.y(relY * 0.2)
-    q.tx(relX * 0.35); q.ty(relY * 0.35)
-  }
-  const magneticLeave = (i: number) => () => {
-    const btn = btnRefs.current[i]
-    const txt = btnTextRefs.current[i]
-    if (!btn || !txt) return
-    gsap.to(btn, { x: 0, y: 0, duration: 0.9, ease: 'elastic.out(1, 0.3)', overwrite: 'auto' })
-    gsap.to(txt, { x: 0, y: 0, duration: 0.9, ease: 'elastic.out(1, 0.3)', overwrite: 'auto' })
   }
 
   useEffect(() => {
@@ -217,34 +183,18 @@ export default function GymSpin({ onActive }: { onActive?: (active: boolean) => 
             }}
           >
             <Grain />
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ position: 'relative', marginBottom: 12 }}>
               <h3 style={{ fontSize: 'clamp(20px, 1.6vw, 24px)', fontWeight: 800, letterSpacing: '-0.02em', margin: 0, color: '#F5F5F7' }}>{tier.name}</h3>
-              {tier.featured && (
-                <span style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(245,245,247,0.8)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 999, padding: '3px 8px' }}>
-                  Priority
-                </span>
-              )}
             </div>
-            <p style={{ position: 'relative', fontSize: 'clamp(14px, 1.2vw, 16px)', color: '#F5F5F7', marginBottom: 16 }}>
-              {tier.price}<span style={{ marginLeft: 4, color: 'rgba(245,245,247,0.5)' }}>/mo</span>
+            <p style={{ position: 'relative', fontSize: 'clamp(14px, 1.2vw, 16px)', color: 'rgba(245,245,247,0.6)', marginBottom: 16 }}>
+              {tier.tagline}
             </p>
             <div style={{ position: 'relative', height: 1, background: 'rgba(255,255,255,0.1)', marginBottom: 16 }} />
-            <ul style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 10, listStyle: 'none', margin: 0, padding: 0, marginBottom: 24 }}>
-              {tier.features.map((f) => (
+            <ul style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 10, listStyle: 'none', margin: 0, padding: 0 }}>
+              {tier.points.map((f) => (
                 <li key={f} style={{ fontSize: 'clamp(13px, 1.1vw, 15px)', fontWeight: 600, letterSpacing: '-0.01em', lineHeight: 1.3 }}>{f}</li>
               ))}
             </ul>
-            <button
-              ref={(el) => { btnRefs.current[i] = el }}
-              onMouseMove={magneticMove(i)}
-              onMouseLeave={magneticLeave(i)}
-              style={{
-                position: 'relative', width: '100%', borderRadius: 8, padding: '10px 0',
-                background: '#000', color: '#F5F5F7', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 14, border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
-              }}
-            >
-              <span ref={(el) => { btnTextRefs.current[i] = el }} style={{ display: 'inline-block' }}>Acquire Key</span>
-            </button>
           </div>
         ))}
       </div>

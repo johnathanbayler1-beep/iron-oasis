@@ -99,11 +99,14 @@ export default function Home() {
       {/* Phase 4 — how it works: the process + the model, stated plainly */}
       <HowItWorks />
 
-      {/* Pricing — Access Key tiers, lux-card grid */}
-      <Pricing />
+      {/* Page tail — opaque wrapper blocks GymScene canvas bleed-through */}
+      <div className="relative z-30 bg-black">
+        {/* Pricing — Access Key tiers, lux-card grid */}
+        <Pricing />
 
-      {/* Phase 5 — final close: rules + CTA */}
-      <FinalClose />
+        {/* Phase 5 — final close: rules + CTA */}
+        <FinalClose />
+      </div>
 
     </main>
   );

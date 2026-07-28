@@ -41,6 +41,7 @@ const scrub = {
 
 // Phase boundaries, all expressed as fractions of total scroll progress.
 const HERO_END = 0.22;
+const FRAME_SPEED = 2.0;
 const SPATIAL_START = 0.18;
 const HERO_EXIT_START = 0.16;
 const HERO_EXIT_DUR = 0.08;
@@ -243,7 +244,7 @@ export default function ScrollExperience() {
         invalidateOnRefresh: true,
         onUpdate: (self) => {
           frameState.frame =
-            gsap.utils.clamp(0, 1, self.progress / HERO_END) * (FRAME_COUNT - 1);
+            gsap.utils.clamp(0, 1, (self.progress / HERO_END) * FRAME_SPEED) * (FRAME_COUNT - 1);
           draw();
 
           scrub.progress = gsap.utils.clamp(

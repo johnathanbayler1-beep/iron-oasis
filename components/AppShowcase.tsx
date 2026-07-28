@@ -115,7 +115,7 @@ export default function AppShowcase() {
                         4892
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase font-mono tracking-widest text-emerald-400 bg-emerald-950/50 px-2 py-1 rounded-full border border-emerald-800">
+                        <span className="text-[10px] uppercase font-mono tracking-widest text-zinc-300 bg-white/5 px-2 py-1 rounded-full border border-white/15">
                           Lock Disarmed
                         </span>
                         <h3 className="text-sm font-bold text-white mt-3">Space Unlocked</h3>

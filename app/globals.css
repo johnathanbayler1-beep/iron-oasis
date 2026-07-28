@@ -18,8 +18,11 @@
   --color-zinc-400: #a1a1aa;
   --color-zinc-300: #d4d4d8;
 
-  --font-display: var(--font-display-face, var(--font-grotesk)), -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  --font-sans: var(--font-grotesk), -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  /* Display = Syne (monumental headers). Body = Inter. Metadata = JetBrains Mono.
+     All three are loaded by next/font in app/layout.tsx. */
+  --font-syne: var(--font-syne-face), 'Syne', sans-serif;
+  --font-display: var(--font-display-face, var(--font-syne-face)), 'Syne', sans-serif;
+  --font-sans: var(--font-grotesk), 'Inter', sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
   /* mechanical spring defaults consumed by Framer Motion configs */
@@ -277,8 +280,19 @@ html.lenis-stopped body {
 }
 
 /* ── Stat numbers — large editorial counters ── */
+/* ── Eyebrow / metadata token — the single source for all uppercase labels ── */
+.io-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1;
+}
+
 .io-stat-num {
-  font-family: Arial, sans-serif;
+  font-family: var(--font-display);
   font-weight: 900;
   font-size: clamp(48px, 8vw, 88px);
   letter-spacing: -0.04em;
@@ -380,6 +394,35 @@ html.lenis-stopped body {
 }
 .io-lux-card:hover::before { opacity: 1; }
 
+/* ═══ Cursor-tracked specular highlight for tier slabs ═══
+   --mx/--my are written on mousemove by the card (see AntiGymMatrix). */
+.io-spec-card { --mx: 50%; --my: 0%; }
+.io-spec-glow {
+  background: radial-gradient(
+    340px circle at var(--mx) var(--my),
+    rgba(255,255,255,0.09),
+    transparent 62%
+  );
+}
+/* dual-tone hairline ring that lights toward the cursor */
+.io-spec-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(
+    260px circle at var(--mx) var(--my),
+    rgba(255,255,255,0.6),
+    rgba(255,255,255,0.04) 55%,
+    transparent 70%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+}
+
 /* ═══ Blueprint / classified empty-state for equipment grid cells ═══ */
 .io-blueprint-cell {
   position: relative;
@@ -431,6 +474,7 @@ html.lenis-stopped body {
 @media (prefers-reduced-motion: reduce) {
   .io-blueprint-cell::after { animation: none; display: none; }
   .io-lux-card { transition: none; }
+  .io-spec-card { transition: none; }
 }
 
 .io-tier:active {

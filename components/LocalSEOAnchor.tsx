@@ -1,8 +1,6 @@
 "use client";
 
 import React from "react";
-import { RetroTelemetryPanel } from "./ui/RetroTelemetryPanel";
-import { UnlumenGlowBadge } from "./ui/UnlumenGlowBadge";
 import { MagicShimmerButton } from "./ui/MagicShimmerButton";
 
 const COORDINATES = [
@@ -95,20 +93,22 @@ export default function LocalSEOAnchor() {
           </div>
         </div>
 
-        <div className="relative space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-2xl font-bold font-syne tracking-tight">Facility Gateway</h3>
-            <UnlumenGlowBadge tone="live">Operational</UnlumenGlowBadge>
-          </div>
-          <RetroTelemetryPanel
-            title="ACCESS GATEWAY"
-            status="locked"
-            rows={[
-              { label: "TWILIO GATEWAY", value: "OPERATIONAL", status: "locked" },
-              { label: "YALE DEADBOLT", value: "ENCRYPTED 256-BIT", status: "locked" },
-              { label: "PRIVATE SPACE", value: "WINDSOR-CENTRAL (ON)" },
-            ]}
-          />
+        <div className="relative border border-white/10 bg-black/50 backdrop-blur-3xl rounded-3xl p-10">
+          <div className="absolute top-3 left-3 w-2 h-2 border-t border-l border-white/40 pointer-events-none" />
+          <div className="absolute top-3 right-3 w-2 h-2 border-t border-r border-white/40 pointer-events-none" />
+          <div className="absolute bottom-3 left-3 w-2 h-2 border-b border-l border-white/40 pointer-events-none" />
+          <div className="absolute bottom-3 right-3 w-2 h-2 border-b border-r border-white/40 pointer-events-none" />
+          <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-mono mb-5 block">
+            The Space
+          </span>
+          <h3 className="text-3xl font-bold font-syne tracking-tight mb-4">
+            Windsor-Central.
+          </h3>
+          <p className="text-zinc-400 leading-relaxed">
+            Park on the street, walk up the property, and the entire private
+            space is yours. No staff, no shared floor, no one else&rsquo;s
+            schedule to work around.
+          </p>
         </div>
       </div>
     </section>

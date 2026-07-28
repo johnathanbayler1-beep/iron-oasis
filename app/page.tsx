@@ -1,6 +1,4 @@
-import HeroCinematic from "@/components/HeroCinematic";
-import AntiGymMatrix from "@/components/AntiGymMatrix";
-import SpatialScrubEngine from "@/components/SpatialScrubEngine";
+import ScrollExperience from "@/components/ScrollExperience";
 import AppShowcase from "@/components/AppShowcase";
 import LocalSEOAnchor from "@/components/LocalSEOAnchor";
 
@@ -18,9 +16,7 @@ export default function Page() {
         style={{ backgroundImage: GRAIN }}
       />
 
-      <HeroCinematic />
-      <AntiGymMatrix />
-      <SpatialScrubEngine />
+      <ScrollExperience />
       <AppShowcase />
       <LocalSEOAnchor />
     </main>

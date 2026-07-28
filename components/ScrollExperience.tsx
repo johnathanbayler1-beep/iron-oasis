@@ -213,8 +213,9 @@ export default function ScrollExperience() {
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
       draw();
     };
 
@@ -290,8 +291,8 @@ export default function ScrollExperience() {
       ref={containerRef}
       className="relative w-full h-screen bg-[#050505] text-white overflow-hidden"
     >
-      {/* WebGL/2D canvas layer — fixed under everything, z-0 */}
-      <div className="absolute inset-0 z-0">
+      {/* WebGL/2D canvas layer — pinned right 2/3, z-0 */}
+      <div className="absolute right-0 top-0 h-full w-full md:w-2/3 z-0">
         <div ref={webglWrapRef} className="absolute inset-0">
           <Canvas
             className="absolute inset-0"
@@ -320,35 +321,35 @@ export default function ScrollExperience() {
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60 pointer-events-none" />
       </div>
 
-      {/* HTML overlay layer — hero copy + pricing tiers, z-10 */}
-      <div className="absolute inset-0 z-10 [perspective:1200px] [transform-style:preserve-3d]">
+      {/* HTML overlay layer — copy column pinned left 1/2, left-aligned, z-10 */}
+      <div className="absolute inset-y-0 left-0 z-10 w-full md:w-1/2 lg:w-[45%] [perspective:1200px] [transform-style:preserve-3d]">
         <div
           ref={heroTextRef}
-          className="absolute inset-0 z-10 flex items-center justify-center text-center px-6 will-change-[transform,opacity] [transform:translateZ(0)]"
+          className="absolute inset-0 z-10 flex items-center justify-start text-left px-6 md:px-10 lg:px-14 will-change-[transform,opacity] [transform:translateZ(0)]"
         >
-          <div className="max-w-4xl">
+          <div className="max-w-xl">
             <span className="text-[10px] uppercase tracking-[0.32em] text-white/40 font-mono mb-4 block">
               Iron Oasis — Windsor-Central (ON)
             </span>
-            <h1 className="text-[clamp(2.75rem,9vw,7.5rem)] font-extrabold tracking-[-0.035em] leading-[0.96] font-syne mb-6">
+            <h1 className="text-[clamp(2.5rem,6vw,5.5rem)] font-extrabold tracking-[-0.035em] leading-[0.96] font-syne mb-6">
               PRIVATE ACCESS. <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-300 to-zinc-600">
                 ZERO SHARING.
               </span>
             </h1>
-            <p className="text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto font-light leading-relaxed">
+            <p className="text-zinc-400 text-lg font-light leading-relaxed">
               A premium private space in a quiet residential setting. Premium
               equipment in a commercial-grade suite, unlocked instantly via the app.
             </p>
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="mt-10 flex flex-col sm:flex-row items-start justify-start gap-4">
               <MagicShimmerButton className="tracking-[0.15em]">
-                Download to Access
+                Request App Access
               </MagicShimmerButton>
               <a
-                href="#access"
+                href="#request-access"
                 className="group relative inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-7 py-3 font-syne text-sm font-semibold tracking-[0.15em] text-zinc-200 backdrop-blur-2xl transition-[color,border-color,background-color,transform] duration-300 [transition-timing-function:var(--ease-mech)] hover:border-white/25 hover:text-white hover:scale-[1.02] active:scale-[0.97]"
               >
-                Acquire Key
+                Acquire Digital Key
               </a>
             </div>
           </div>
@@ -357,7 +358,7 @@ export default function ScrollExperience() {
         <div
           style={{
             position: "absolute", inset: 0,
-            display: "flex", alignItems: "center", justifyContent: "center",
+            display: "flex", alignItems: "center", justifyContent: "flex-start",
             padding: "0 6%", perspective: 1400,
             pointerEvents: "none",
           }}
@@ -404,9 +405,17 @@ export default function ScrollExperience() {
                   </li>
                 ))}
               </ul>
-              <div className="flex items-baseline gap-1 mt-auto pt-4 border-t border-white/10">
-                <span className="text-[11px] text-zinc-500 font-mono self-start mt-1.5">$</span>
-                <span style={{ fontSize: "clamp(40px, 3.4vw, 56px)" }} className="font-black font-mono tracking-tighter tabular-nums leading-none">{tier.price}</span>
+              <div className="mt-auto pt-4 border-t border-white/10">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-[11px] text-zinc-500 font-mono self-start mt-1.5">$</span>
+                  <span style={{ fontSize: "clamp(40px, 3.4vw, 56px)" }} className="font-black font-mono tracking-tighter tabular-nums leading-none">{tier.price}</span>
+                </div>
+                <a
+                  href="#request-access"
+                  className="mt-3 block w-full rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-center font-syne text-[11px] font-semibold tracking-[0.15em] text-zinc-200 transition-colors hover:border-white/30 hover:text-white"
+                >
+                  Request App Access
+                </a>
               </div>
             </div>
           ))}

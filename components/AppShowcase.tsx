@@ -12,7 +12,7 @@ export default function AppShowcase() {
   };
 
   return (
-    <section className="relative py-24 bg-[#050505] text-white overflow-hidden border-t border-white/10">
+    <section id="request-access" className="relative py-24 bg-[#050505] text-white overflow-hidden border-t border-white/10">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/[0.02] rounded-full blur-[140px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
@@ -127,7 +127,7 @@ export default function AppShowcase() {
 
               <div className="pb-4 pt-2">
                 <MagicShimmerButton onClick={handleNext} className="w-full">
-                  {step === 1 ? "Request App Access" : step === 2 ? "Acquire Key" : "Reset Demo"}
+                  {step === 1 ? "Request App Access" : step === 2 ? "Acquire Digital Key" : "Reset Demo"}
                 </MagicShimmerButton>
               </div>
             </div>

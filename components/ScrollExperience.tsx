@@ -71,11 +71,11 @@ function Model() {
     rig.height = s.y;
 
     rig.waypoints = [
-      { pos: new THREE.Vector3(c.x, c.y + s.y * 0.25, c.z + s.z * 1.4), lookAt: c.clone() },
-      { pos: new THREE.Vector3(c.x - s.x * 0.5, c.y + s.y * 0.2, c.z + s.z * 0.5), lookAt: c.clone() },
-      { pos: new THREE.Vector3(c.x + s.x * 0.1, c.y + s.y * 0.05, c.z + s.z * 0.1), lookAt: new THREE.Vector3(c.x, c.y + s.y * 0.15, c.z - s.z * 0.3) },
-      { pos: new THREE.Vector3(c.x + s.x * 0.45, c.y + s.y * 0.2, c.z - s.z * 0.2), lookAt: c.clone() },
-      { pos: new THREE.Vector3(c.x, c.y + s.y * 0.5, c.z + s.z * 0.6), lookAt: c.clone() },
+      { pos: new THREE.Vector3(c.x - s.x * 0.65, c.y + s.y * 0.85, c.z + s.z * 1.6), lookAt: new THREE.Vector3(c.x, c.y - s.y * 0.05, c.z) },
+      { pos: new THREE.Vector3(c.x - s.x * 0.35, c.y + s.y * 0.55, c.z + s.z * 0.95), lookAt: new THREE.Vector3(c.x, c.y, c.z) },
+      { pos: new THREE.Vector3(c.x, c.y + s.y * 0.3, c.z + s.z * 0.5), lookAt: new THREE.Vector3(c.x, c.y + s.y * 0.05, c.z - s.z * 0.1) },
+      { pos: new THREE.Vector3(c.x + s.x * 0.25, c.y + s.y * 0.15, c.z + s.z * 0.15), lookAt: new THREE.Vector3(c.x, c.y + s.y * 0.1, c.z - s.z * 0.3) },
+      { pos: new THREE.Vector3(c.x + s.x * 0.1, c.y + s.y * 0.08, c.z - s.z * 0.05), lookAt: new THREE.Vector3(c.x, c.y + s.y * 0.12, c.z - s.z * 0.5) },
     ];
     rig.curve = new THREE.CatmullRomCurve3(
       rig.waypoints.map((w) => w.pos),

@@ -44,6 +44,11 @@ const HERO_END = 0.22;
 const SPATIAL_START = 0.18;
 const HERO_EXIT_START = 0.16;
 const HERO_EXIT_DUR = 0.08;
+// Logo exits fully (autoAlpha 0, visibility hidden) before text begins its own exit — no overlap.
+const LOGO_EXIT_START = HERO_EXIT_START;
+const LOGO_EXIT_DUR = HERO_EXIT_DUR / 2;
+const TEXT_EXIT_START = LOGO_EXIT_START + LOGO_EXIT_DUR;
+const TEXT_EXIT_DUR = HERO_EXIT_DUR / 2;
 const PANEL_ENTER = 0.28; // gap = HERO_EXIT_START + HERO_EXIT_DUR (0.24) -> 0.04 clean gap
 const PANEL_FADE = 0.42;
 const CARD_POS = [0.55, 0.72, 0.88] as const;
@@ -255,9 +260,11 @@ export default function ScrollExperience() {
     tl.to(canvas, { scale: 0.6, z: -400, y: -50, filter: "brightness(0.35) saturate(0.8)", ease: "power2.out" }, 0);
     tl.from(Array.from(text.children), { y: 100, opacity: 0, stagger: 0.1, duration: 0.18, ease: "power4.out" }, 0.02);
 
-    // Phase 1→2 handoff: hero fully exits (autoAlpha -> visibility:hidden) BEFORE
-    // the Spatial Mechanics panel begins to fade in, with a clean empty gap between.
-    tl.to([canvas, text], { autoAlpha: 0, duration: HERO_EXIT_DUR, ease: "power2.out" }, HERO_EXIT_START);
+    // Phase 1→2 handoff: logo (canvas) reaches autoAlpha:0/visible:false completely
+    // before the hero text begins its own exit — strict sequential separation, no
+    // overlap — then both are fully gone before the Spatial Mechanics panel fades in.
+    tl.to(canvas, { autoAlpha: 0, duration: LOGO_EXIT_DUR, ease: "power2.out" }, LOGO_EXIT_START);
+    tl.to(text, { autoAlpha: 0, duration: TEXT_EXIT_DUR, ease: "power2.out" }, TEXT_EXIT_START);
     tl.to(webglWrapRef.current, { autoAlpha: 1, duration: 0.08, ease: "power2.in" }, PANEL_ENTER);
     tl.to(panelRef.current, { autoAlpha: 1, duration: 0.08, ease: "power2.in" }, PANEL_ENTER);
 
@@ -363,6 +370,7 @@ export default function ScrollExperience() {
               className={CARD_GLASS_CLASS}
               style={{
                 position: "absolute", width: "clamp(280px, 22vw, 340px)",
+                height: "clamp(360px, 26vw, 420px)", display: "flex", flexDirection: "column",
                 padding: "clamp(24px, 2.2vw, 32px)", color: "#F5F5F7", fontFamily: "var(--font-display)",
                 pointerEvents: "auto", cursor: "default", transformStyle: "preserve-3d",
                 ...(tier.popular ? { borderColor: "rgba(255,255,255,0.25)" } : {}),
@@ -387,11 +395,7 @@ export default function ScrollExperience() {
                 )}
               </div>
               <h3 style={{ fontSize: "clamp(19px, 1.6vw, 23px)", fontWeight: 700, letterSpacing: "-0.025em", margin: 0 }}>{tier.name}</h3>
-              <div className="flex items-baseline gap-1 mt-3 mb-5 pb-4 border-b border-white/10">
-                <span className="text-[11px] text-zinc-500 font-mono self-start mt-1.5">$</span>
-                <span style={{ fontSize: "clamp(40px, 3.4vw, 56px)" }} className="font-black font-mono tracking-tighter tabular-nums leading-none">{tier.price}</span>
-              </div>
-              <ul className="space-y-2.5">
+              <ul className="space-y-2.5 mt-4">
                 {tier.features.map((f) => (
                   <li key={f} className="flex items-center gap-2 text-[13px] text-zinc-300">
                     <ShieldCheck className="w-3 h-3 text-zinc-400 shrink-0" />
@@ -399,6 +403,10 @@ export default function ScrollExperience() {
                   </li>
                 ))}
               </ul>
+              <div className="flex items-baseline gap-1 mt-auto pt-4 border-t border-white/10">
+                <span className="text-[11px] text-zinc-500 font-mono self-start mt-1.5">$</span>
+                <span style={{ fontSize: "clamp(40px, 3.4vw, 56px)" }} className="font-black font-mono tracking-tighter tabular-nums leading-none">{tier.price}</span>
+              </div>
             </div>
           ))}
         </div>

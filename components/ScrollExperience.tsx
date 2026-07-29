@@ -15,6 +15,8 @@ import {
   useGLTF,
 } from "@react-three/drei";
 import * as THREE from "three";
+import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { LoopSubdivision } from "three-subdivide";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -25,7 +27,7 @@ import { KeyRound, ShieldCheck, Zap } from "lucide-react";
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 useGLTF.setDecoderPath("/draco/");
 
-const MODEL_URL = "/gym-space-2k-opt.glb";
+const MODEL_URL = "/gym-space-2k.glb";
 
 // public/frames/logo_000.webp .. logo_120.webp
 const FRAME_COUNT = 121;
@@ -52,6 +54,9 @@ const TEXT_EXIT_START = LOGO_EXIT_START + LOGO_EXIT_DUR;
 const TEXT_EXIT_DUR = HERO_EXIT_DUR / 2;
 const PANEL_ENTER = 0.28; // gap = HERO_EXIT_START + HERO_EXIT_DUR (0.24) -> 0.04 clean gap
 const PANEL_FADE = 0.42;
+// Camera fly-through fully resolves and locks by this progress — cards must
+// never start staggering in before the architectural angle has settled.
+const CAMERA_SETTLE = 0.5;
 const CARD_POS = [0.55, 0.72, 0.88] as const;
 const CARD_FADE_GAP = 0.06;
 
@@ -68,7 +73,28 @@ const rig = {
 
 function Model() {
   const { scene } = useGLTF(MODEL_URL);
-  const cloned = useMemo(() => scene.clone(true), [scene]);
+  const cloned = useMemo(() => {
+    const clone = scene.clone(true);
+    clone.traverse((obj) => {
+      if (obj instanceof THREE.Mesh) {
+        obj.geometry = mergeVertices(obj.geometry);
+        obj.geometry = LoopSubdivision.modify(obj.geometry, 1, { split: true, uvSmooth: true });
+        obj.geometry.computeVertexNormals();
+
+        const src = obj.material as THREE.MeshStandardMaterial;
+        obj.material = new THREE.MeshPhysicalMaterial({
+          color: src?.color,
+          map: src?.map ?? null,
+          transmission: 0.95,
+          roughness: 0.05,
+          thickness: 1.2,
+          ior: 1.5,
+          envMapIntensity: 1,
+        });
+      }
+    });
+    return clone;
+  }, [scene]);
 
   useLayoutEffect(() => {
     const box = new THREE.Box3().setFromObject(cloned);
@@ -81,7 +107,7 @@ function Model() {
       { pos: new THREE.Vector3(c.x - s.x * 0.35, c.y + s.y * 0.55, c.z + s.z * 0.95), lookAt: new THREE.Vector3(c.x, c.y, c.z) },
       { pos: new THREE.Vector3(c.x, c.y + s.y * 0.3, c.z + s.z * 0.5), lookAt: new THREE.Vector3(c.x, c.y + s.y * 0.05, c.z - s.z * 0.1) },
       { pos: new THREE.Vector3(c.x + s.x * 0.25, c.y + s.y * 0.15, c.z + s.z * 0.15), lookAt: new THREE.Vector3(c.x, c.y + s.y * 0.1, c.z - s.z * 0.3) },
-      { pos: new THREE.Vector3(c.x + s.x * 0.1, c.y + s.y * 0.08, c.z - s.z * 0.05), lookAt: new THREE.Vector3(c.x, c.y + s.y * 0.12, c.z - s.z * 0.5) },
+      { pos: new THREE.Vector3(c.x + s.x * 0.18, c.y + s.y * 0.22, c.z + s.z * 0.32), lookAt: new THREE.Vector3(c.x, c.y + s.y * 0.1, c.z - s.z * 0.2) },
     ];
     rig.curve = new THREE.CatmullRomCurve3(
       rig.waypoints.map((w) => w.pos),
@@ -139,7 +165,7 @@ function CameraRig() {
 }
 
 const CARD_GLASS_CLASS =
-  "bg-white/5 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden transition-transform duration-300";
+  "bg-gradient-to-b from-white/[0.09] via-white/[0.03] to-white/[0.01] backdrop-blur-3xl border border-white/[0.12] shadow-[0_25px_60px_rgba(0,0,0,0.9)] rounded-3xl overflow-hidden transition-transform duration-300";
 
 type Tier = { name: string; price: string; badge: string; features: string[]; popular: boolean };
 
@@ -185,14 +211,10 @@ export default function ScrollExperience() {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
 
     const images: HTMLImageElement[] = [];
-    for (let i = 0; i < FRAME_COUNT; i++) {
-      const img = new Image();
-      img.src = frameUrl(i);
-      images.push(img);
-    }
-
     const frameState = { frame: 0 };
 
     const draw = () => {
@@ -214,6 +236,15 @@ export default function ScrollExperience() {
       ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
     };
 
+    for (let i = 0; i < FRAME_COUNT; i++) {
+      const img = new Image();
+      img.decoding = "async";
+      if (i === 0) img.fetchPriority = "high";
+      img.src = frameUrl(i);
+      img.onload = draw;
+      images.push(img);
+    }
+
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const rect = canvas.getBoundingClientRect();
@@ -224,15 +255,14 @@ export default function ScrollExperience() {
 
     resize();
     window.addEventListener("resize", resize);
-    images[0].onload = draw;
 
     gsap.set(canvas, { filter: "brightness(1) saturate(1)" });
     gsap.set(text, { autoAlpha: 1 });
     gsap.set(webglWrapRef.current, { autoAlpha: 0 });
-    gsap.set(panelRef.current, { autoAlpha: 0 });
+    gsap.set(panelRef.current, { clipPath: "inset(0 100% 0 0)", x: -20 });
 
     const cards = tiltRefs.current.filter(Boolean) as HTMLDivElement[];
-    gsap.set(cards, { z: -500, rotationX: -30, opacity: 0 });
+    gsap.set(cards, { z: -500, rotationX: -30, opacity: 0, y: 40, clipPath: "inset(0 0 100% 0)" });
 
     // Single pin on the container drives the whole sequence — visualLayerRef
     // and overlayRef are plain absolute children riding along with it, so
@@ -243,7 +273,7 @@ export default function ScrollExperience() {
         start: "top top",
         end: "+=350%",
         pin: true,
-        scrub: 2.5,
+        scrub: 0.6,
         anticipatePin: 1,
         invalidateOnRefresh: true,
         onUpdate: (self) => {
@@ -254,7 +284,7 @@ export default function ScrollExperience() {
           scrub.progress = gsap.utils.clamp(
             0,
             1,
-            (self.progress - SPATIAL_START) / (1 - SPATIAL_START),
+            (self.progress - SPATIAL_START) / (CAMERA_SETTLE - SPATIAL_START),
           );
           scrub.invalidate();
         },
@@ -262,7 +292,7 @@ export default function ScrollExperience() {
     });
 
     // Phase 1 (0 - 0.22): hero logo shrinks/recedes, headline clip-reveals in.
-    tl.to(canvas, { scale: 0.6, z: -400, y: -50, filter: "brightness(0.35) saturate(0.8)", ease: "power2.out" }, 0);
+    tl.to(canvas, { scale: 0.6, z: -400, y: -50, filter: "brightness(0.35) saturate(0.8)", duration: HERO_EXIT_START, ease: "power2.out" }, 0);
     tl.fromTo(
       Array.from(text.children),
       { clipPath: "inset(0 100% 0 0)", xPercent: -4, scale: 0.95 },
@@ -270,12 +300,15 @@ export default function ScrollExperience() {
       0.02,
     );
     if (bgTextRef.current) {
+      // Kinetic bg type: fades/drifts in during the hero beat, then keeps
+      // parallax-drifting across the entire fly-through — never freezes.
       tl.fromTo(
         bgTextRef.current,
-        { xPercent: -8, autoAlpha: 0 },
-        { xPercent: 8, autoAlpha: 1, ease: "none" },
+        { xPercent: -10, autoAlpha: 0 },
+        { xPercent: -2, autoAlpha: 0.1, duration: HERO_END, ease: "power2.out" },
         0,
       );
+      tl.to(bgTextRef.current, { xPercent: 18, ease: "none", duration: 1 - HERO_END }, HERO_END);
     }
 
     // Phase 1→2 handoff: logo (canvas) reaches autoAlpha:0/visible:false completely
@@ -284,14 +317,18 @@ export default function ScrollExperience() {
     tl.to(canvas, { autoAlpha: 0, duration: LOGO_EXIT_DUR, ease: "power2.out" }, LOGO_EXIT_START);
     tl.to(text, { autoAlpha: 0, duration: TEXT_EXIT_DUR, ease: "power2.out" }, TEXT_EXIT_START);
     tl.to(webglWrapRef.current, { autoAlpha: 1, duration: 0.08, ease: "power2.in" }, PANEL_ENTER);
-    tl.to(panelRef.current, { autoAlpha: 1, duration: 0.08, ease: "power2.in" }, PANEL_ENTER);
+    tl.to(panelRef.current, { clipPath: "inset(0 0% 0 0)", x: 0, duration: 0.08, ease: "power2.out" }, PANEL_ENTER);
 
     // Phase 2 (0.18 - 1.0): camera fly-through, driven by scrub.progress in onUpdate above.
     tl.to(panelRef.current, { opacity: 0, y: -24, duration: 0.06, ease: "power2.out" }, PANEL_FADE);
 
-    // Phase 3: pricing tiers materialize sequentially over the fly-through.
+    // Phase 3: pricing tiers materialize sequentially, strictly after CAMERA_SETTLE.
     CARD_POS.forEach((at, i) => {
-      tl.to(cards[i], { z: 0, rotationX: 0, opacity: 1, duration: 0.12, ease: "back.out(1.4)" }, at);
+      tl.to(
+        cards[i],
+        { z: 0, rotationX: 0, opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.12, ease: "expo.out" },
+        at,
+      );
       if (i < CARD_POS.length - 1) {
         tl.to(cards[i], { opacity: 0, duration: CARD_FADE_GAP, ease: "power2.in" }, CARD_POS[i + 1] - CARD_FADE_GAP);
       }
@@ -302,12 +339,12 @@ export default function ScrollExperience() {
     const appShowcase = document.getElementById("request-access");
     if (appShowcase && visualLayerRef.current) {
       gsap.to(visualLayerRef.current, {
-        opacity: 0.22,
+        opacity: 0,
         ease: "none",
         scrollTrigger: {
           trigger: appShowcase,
           start: "top 90%",
-          end: "top 20%",
+          end: "top 40%",
           scrub: 2.5,
         },
       });
@@ -321,10 +358,10 @@ export default function ScrollExperience() {
   return (
     <section
       ref={containerRef}
-      className="relative w-full h-screen bg-[#050505] text-white overflow-hidden"
+      className="relative w-full min-h-screen bg-[#050505] text-white overflow-hidden flex flex-col lg:flex-row"
     >
       {/* WebGL/2D canvas layer — globally pinned, right 2/3, z-0 */}
-      <div ref={visualLayerRef} className="absolute right-0 top-0 h-full w-full md:w-2/3 z-0">
+      <div ref={visualLayerRef} className="fixed inset-0 z-10 pointer-events-none bg-transparent">
         <div
           ref={bgTextRef}
           aria-hidden
@@ -338,12 +375,13 @@ export default function ScrollExperience() {
           <Canvas
             className="absolute inset-0"
             frameloop="demand"
-            gl={{ antialias: true, powerPreference: "high-performance" }}
+            gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
             onCreated={() => scrub.invalidate()}
           >
             <PerspectiveCamera makeDefault fov={45} near={0.01} far={500} />
-            <ambientLight intensity={0.6} />
-            <directionalLight position={[5, 5, 5]} intensity={1.2} />
+            <ambientLight intensity={0.9} />
+            <directionalLight position={[5, 5, 5]} intensity={0.8} />
+            <directionalLight position={[-5, 2, -3]} intensity={0.3} />
             <Suspense fallback={null}>
               <Environment files="/hdri/lebombo_1k.hdr" />
               <Model />
@@ -362,16 +400,16 @@ export default function ScrollExperience() {
       </div>
 
       {/* HTML overlay layer — copy column, transparent, floats over the 3D space, z-10 */}
-      <div ref={overlayRef} className="absolute inset-y-0 left-0 z-10 w-full md:w-1/2 lg:w-[45%] bg-transparent [perspective:1200px] [transform-style:preserve-3d]">
+      <div ref={overlayRef} className="relative w-full lg:w-5/12 min-h-screen px-6 lg:px-12 z-20 bg-transparent [perspective:1200px] [transform-style:preserve-3d]">
         <div
           ref={heroTextRef}
-          className="absolute inset-0 z-10 flex items-center justify-start text-left px-6 md:px-10 lg:px-14 will-change-[transform,opacity] [transform:translateZ(0)]"
+          className="absolute inset-0 z-20 flex items-center justify-start text-left px-6 lg:px-12 will-change-[transform,opacity] [transform:translateZ(0)]"
         >
-          <div className="max-w-xl">
+          <div className="w-full">
             <span className="text-[10px] uppercase tracking-[0.32em] text-white/40 font-mono mb-4 block">
               Iron Oasis — Windsor-Central (ON)
             </span>
-            <h1 className="text-[clamp(2.5rem,6vw,5.5rem)] font-extrabold tracking-[-0.035em] leading-[0.96] font-syne mb-6">
+            <h1 className="text-[clamp(2.25rem,4.2vw,4.75rem)] font-extrabold tracking-[-0.035em] leading-[0.96] font-syne mb-6">
               PRIVATE ACCESS. <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-300 to-zinc-600">
                 ZERO SHARING.
@@ -448,7 +486,7 @@ export default function ScrollExperience() {
               <div className="mt-auto pt-4 border-t border-white/10">
                 <div className="flex items-baseline gap-1">
                   <span className="text-[11px] text-zinc-500 font-mono self-start mt-1.5">$</span>
-                  <span style={{ fontSize: "clamp(40px, 3.4vw, 56px)" }} className="font-black font-mono tracking-tighter tabular-nums leading-none">{tier.price}</span>
+                  <span style={{ fontSize: "clamp(60px, 5.4vw, 84px)" }} className="font-black font-mono tracking-tighter tabular-nums leading-none">{tier.price}</span>
                 </div>
                 <a
                   href="#request-access"
@@ -520,8 +558,32 @@ function CornerAccents() {
 }
 
 export function LocalSeoSection() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const leftColRef = useRef<HTMLDivElement>(null);
+  const rightCardRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    if (!leftColRef.current || !rightCardRef.current) return;
+    gsap.fromTo(
+      Array.from(leftColRef.current.children),
+      { opacity: 0, y: 32, clipPath: "inset(0 0 100% 0)" },
+      {
+        opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", stagger: 0.12, duration: 0.9, ease: "power3.out",
+        scrollTrigger: { trigger: sectionRef.current, start: "top 75%" },
+      },
+    );
+    gsap.fromTo(
+      rightCardRef.current,
+      { opacity: 0, y: 40, scale: 0.96 },
+      {
+        opacity: 1, y: 0, scale: 1, duration: 1, ease: "power3.out",
+        scrollTrigger: { trigger: sectionRef.current, start: "top 75%" },
+      },
+    );
+  }, { scope: sectionRef });
+
   return (
-    <section className="relative z-10 bg-transparent text-white px-6 py-32">
+    <section ref={sectionRef} className="relative z-10 bg-transparent text-white px-6 py-32">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -553,7 +615,7 @@ export function LocalSeoSection() {
       />
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-        <div>
+        <div ref={leftColRef}>
           <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-mono mb-5 block">
             OPERATIONAL COORDINATES / WNDSR
           </span>
@@ -586,7 +648,7 @@ export function LocalSeoSection() {
           </div>
         </div>
 
-        <div className="relative border border-white/10 bg-black/50 backdrop-blur-3xl rounded-3xl p-10">
+        <div ref={rightCardRef} className="relative border border-white/10 bg-black/50 backdrop-blur-3xl rounded-3xl p-10">
           <div className="absolute top-3 left-3 w-2 h-2 border-t border-l border-white/40 pointer-events-none" />
           <div className="absolute top-3 right-3 w-2 h-2 border-t border-r border-white/40 pointer-events-none" />
           <div className="absolute bottom-3 left-3 w-2 h-2 border-b border-l border-white/40 pointer-events-none" />

@@ -1,23 +1,56 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
 import { MagicShimmerButton } from "./ui/MagicShimmerButton";
+
+gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 export default function AppShowcase() {
   const [step, setStep] = useState(1);
+  const sectionRef = useRef<HTMLElement>(null);
+  const copyRef = useRef<HTMLDivElement>(null);
+  const phoneRef = useRef<HTMLDivElement>(null);
 
   const handleNext = () => {
     setStep(step < 3 ? step + 1 : 1);
   };
 
+  useGSAP(() => {
+    if (!copyRef.current || !phoneRef.current) return;
+    gsap.fromTo(
+      Array.from(copyRef.current.children),
+      { opacity: 0, y: 28, clipPath: "inset(0 0 100% 0)" },
+      {
+        opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", stagger: 0.12, duration: 0.9, ease: "power3.out",
+        scrollTrigger: { trigger: sectionRef.current, start: "top 75%" },
+      },
+    );
+    gsap.fromTo(
+      phoneRef.current,
+      { opacity: 0, y: 40, scale: 0.96 },
+      {
+        opacity: 1, y: 0, scale: 1, duration: 1, ease: "power3.out",
+        scrollTrigger: { trigger: sectionRef.current, start: "top 75%" },
+      },
+    );
+    gsap.to(phoneRef.current, {
+      y: -50,
+      ease: "none",
+      scrollTrigger: { trigger: sectionRef.current, start: "top bottom", end: "bottom top", scrub: 1 },
+    });
+  }, { scope: sectionRef });
+
   return (
-    <section id="request-access" className="relative z-10 py-24 bg-transparent text-white overflow-hidden">
+    <section ref={sectionRef} id="request-access" className="relative z-10 py-24 bg-transparent text-white overflow-hidden">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/[0.02] rounded-full blur-[140px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div>
+          <div ref={copyRef}>
             <span className="text-xs uppercase tracking-widest text-zinc-400 font-mono mb-4 block">
               Frictionless Private Access
             </span>
@@ -31,7 +64,7 @@ export default function AppShowcase() {
           </div>
 
           <div className="flex justify-center">
-            <div className="w-[320px] h-[640px] bg-zinc-950 border border-zinc-800 rounded-[40px] p-4 shadow-2xl relative flex flex-col justify-between overflow-hidden">
+            <div ref={phoneRef} className="w-[320px] h-[640px] bg-zinc-950 border border-zinc-800 rounded-[40px] p-4 shadow-2xl relative flex flex-col justify-between overflow-hidden">
               <div className="flex justify-between items-center px-4 pt-2">
                 <span className="text-xs font-mono text-zinc-400">9:41</span>
                 <div className="w-20 h-4 bg-black rounded-full mx-auto" />

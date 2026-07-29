@@ -12,7 +12,7 @@ export default function AppShowcase() {
   };
 
   return (
-    <section id="request-access" className="relative py-24 bg-[#050505] text-white overflow-hidden border-t border-white/10">
+    <section id="request-access" className="relative z-10 py-24 bg-transparent text-white overflow-hidden">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/[0.02] rounded-full blur-[140px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">

@@ -1,6 +1,5 @@
-import ScrollExperience from "@/components/ScrollExperience";
+import ScrollExperience, { LocalSeoSection } from "@/components/ScrollExperience";
 import AppShowcase from "@/components/AppShowcase";
-import LocalSEOAnchor from "@/components/LocalSEOAnchor";
 
 // Mathematically-generated film grain. Zero image imports, negligible bytes over the wire.
 const GRAIN =
@@ -18,7 +17,7 @@ export default function Page() {
 
       <ScrollExperience />
       <AppShowcase />
-      <LocalSEOAnchor />
+      <LocalSeoSection />
     </main>
   );
 }

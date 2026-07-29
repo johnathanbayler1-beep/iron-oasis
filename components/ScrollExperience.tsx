@@ -139,7 +139,7 @@ function CameraRig() {
 }
 
 const CARD_GLASS_CLASS =
-  "bg-black/40 backdrop-blur-[40px] border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] rounded-3xl overflow-hidden";
+  "bg-white/5 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden transition-transform duration-300";
 
 type Tier = { name: string; price: string; badge: string; features: string[]; popular: boolean };
 
@@ -151,8 +151,11 @@ const TIERS: Tier[] = [
 
 export default function ScrollExperience() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const visualLayerRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const heroCanvasRef = useRef<HTMLCanvasElement>(null);
   const heroTextRef = useRef<HTMLDivElement>(null);
+  const bgTextRef = useRef<HTMLDivElement>(null);
   const webglWrapRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const tiltRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -231,16 +234,16 @@ export default function ScrollExperience() {
     const cards = tiltRefs.current.filter(Boolean) as HTMLDivElement[];
     gsap.set(cards, { z: -500, rotationX: -30, opacity: 0 });
 
-    // ONE ScrollTrigger, ONE timeline, pinned once for the whole experience.
-    // Every phase below is a scrubbed tween positioned at a literal progress
-    // threshold (0-1) — no stacked pins, no secondary triggers.
+    // Single pin on the container drives the whole sequence — visualLayerRef
+    // and overlayRef are plain absolute children riding along with it, so
+    // there's only one pin-spacer and no cross-trigger desync.
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: container,
         start: "top top",
         end: "+=350%",
         pin: true,
-        scrub: true,
+        scrub: 2.5,
         anticipatePin: 1,
         invalidateOnRefresh: true,
         onUpdate: (self) => {
@@ -258,9 +261,22 @@ export default function ScrollExperience() {
       },
     });
 
-    // Phase 1 (0 - 0.22): hero logo shrinks/recedes, headline staggers in.
+    // Phase 1 (0 - 0.22): hero logo shrinks/recedes, headline clip-reveals in.
     tl.to(canvas, { scale: 0.6, z: -400, y: -50, filter: "brightness(0.35) saturate(0.8)", ease: "power2.out" }, 0);
-    tl.from(Array.from(text.children), { y: 100, opacity: 0, stagger: 0.1, duration: 0.18, ease: "power4.out" }, 0.02);
+    tl.fromTo(
+      Array.from(text.children),
+      { clipPath: "inset(0 100% 0 0)", xPercent: -4, scale: 0.95 },
+      { clipPath: "inset(0 0% 0 0)", xPercent: 0, scale: 1, stagger: 0.08, duration: 0.22, ease: "expo.out" },
+      0.02,
+    );
+    if (bgTextRef.current) {
+      tl.fromTo(
+        bgTextRef.current,
+        { xPercent: -8, autoAlpha: 0 },
+        { xPercent: 8, autoAlpha: 1, ease: "none" },
+        0,
+      );
+    }
 
     // Phase 1→2 handoff: logo (canvas) reaches autoAlpha:0/visible:false completely
     // before the hero text begins its own exit — strict sequential separation, no
@@ -281,6 +297,22 @@ export default function ScrollExperience() {
       }
     });
 
+    // Dim the pinned visual layer to an ambient backdrop once AppShowcase
+    // scrolls into view, so it never fights the copy above it.
+    const appShowcase = document.getElementById("request-access");
+    if (appShowcase && visualLayerRef.current) {
+      gsap.to(visualLayerRef.current, {
+        opacity: 0.22,
+        ease: "none",
+        scrollTrigger: {
+          trigger: appShowcase,
+          start: "top 90%",
+          end: "top 20%",
+          scrub: 2.5,
+        },
+      });
+    }
+
     return () => {
       window.removeEventListener("resize", resize);
     };
@@ -291,8 +323,17 @@ export default function ScrollExperience() {
       ref={containerRef}
       className="relative w-full h-screen bg-[#050505] text-white overflow-hidden"
     >
-      {/* WebGL/2D canvas layer — pinned right 2/3, z-0 */}
-      <div className="absolute right-0 top-0 h-full w-full md:w-2/3 z-0">
+      {/* WebGL/2D canvas layer — globally pinned, right 2/3, z-0 */}
+      <div ref={visualLayerRef} className="absolute right-0 top-0 h-full w-full md:w-2/3 z-0">
+        <div
+          ref={bgTextRef}
+          aria-hidden
+          className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden pointer-events-none select-none opacity-0"
+        >
+          <span className="font-syne font-black uppercase leading-none text-white/[0.04] tracking-tighter text-[clamp(8rem,22vw,22rem)] whitespace-nowrap">
+            ZERO SHARING
+          </span>
+        </div>
         <div ref={webglWrapRef} className="absolute inset-0">
           <Canvas
             className="absolute inset-0"
@@ -317,12 +358,11 @@ export default function ScrollExperience() {
           className="absolute inset-0 w-full h-full will-change-[transform,opacity] [transform:translateZ(0)]"
         />
 
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(0,0,0,0.35),rgba(0,0,0,0.85))] pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60 pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(0,0,0,0.18),rgba(0,0,0,0.55))] pointer-events-none" />
       </div>
 
-      {/* HTML overlay layer — copy column pinned left 1/2, left-aligned, z-10 */}
-      <div className="absolute inset-y-0 left-0 z-10 w-full md:w-1/2 lg:w-[45%] [perspective:1200px] [transform-style:preserve-3d]">
+      {/* HTML overlay layer — copy column, transparent, floats over the 3D space, z-10 */}
+      <div ref={overlayRef} className="absolute inset-y-0 left-0 z-10 w-full md:w-1/2 lg:w-[45%] bg-transparent [perspective:1200px] [transform-style:preserve-3d]">
         <div
           ref={heroTextRef}
           className="absolute inset-0 z-10 flex items-center justify-start text-left px-6 md:px-10 lg:px-14 will-change-[transform,opacity] [transform:translateZ(0)]"
@@ -349,7 +389,7 @@ export default function ScrollExperience() {
                 href="#request-access"
                 className="group relative inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-7 py-3 font-syne text-sm font-semibold tracking-[0.15em] text-zinc-200 backdrop-blur-2xl transition-[color,border-color,background-color,transform] duration-300 [transition-timing-function:var(--ease-mech)] hover:border-white/25 hover:text-white hover:scale-[1.02] active:scale-[0.97]"
               >
-                Acquire Digital Key
+                Acquire Key
               </a>
             </div>
           </div>
@@ -452,6 +492,116 @@ export default function ScrollExperience() {
               ))}
             </div>
           </SmoothLuxCard>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const COORDINATES = [
+  { k: "FACILITY", v: "IRON OASIS — WNDSR" },
+  { k: "LOCALITY", v: "WINDSOR, ONTARIO (CA)" },
+  { k: "LAT", v: "42.3149° N" },
+  { k: "LONG", v: "-83.0364° W" },
+  { k: "HOURS", v: "24/7 — CONTINUOUS" },
+  { k: "ACCESS", v: "BIOMETRIC / DIGITAL KEY" },
+];
+
+function CornerAccents() {
+  const base = "absolute h-3 w-3 border-white/25";
+  return (
+    <>
+      <span aria-hidden className={`${base} left-0 top-0 border-l border-t`} />
+      <span aria-hidden className={`${base} right-0 top-0 border-r border-t`} />
+      <span aria-hidden className={`${base} bottom-0 left-0 border-b border-l`} />
+      <span aria-hidden className={`${base} bottom-0 right-0 border-b border-r`} />
+    </>
+  );
+}
+
+export function LocalSeoSection() {
+  return (
+    <section className="relative z-10 bg-transparent text-white px-6 py-32">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "HealthClub",
+            "name": "Iron Oasis Private Space",
+            "description": "24/7 unstaffed, private-access facility.",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Windsor",
+              "addressRegion": "ON",
+              "addressCountry": "CA"
+            },
+            "geo": {
+              "@type": "GeoCoordinates",
+              "latitude": 42.3149,
+              "longitude": -83.0364
+            },
+            "priceRange": "$$$",
+            "openingHoursSpecification": {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+              "opens": "00:00",
+              "closes": "23:59"
+            }
+          }),
+        }}
+      />
+
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div>
+          <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-mono mb-5 block">
+            OPERATIONAL COORDINATES / WNDSR
+          </span>
+          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter font-syne mb-6">
+            Flagship Location. <br />
+            <span className="text-zinc-500">A Private Space, Not a Facility.</span>
+          </h2>
+          <p className="text-zinc-400 text-lg mb-10 leading-relaxed">
+            A premium private space in a quiet Windsor residential setting. Zero staffing, zero sharing, fully automated Twilio voice/SMS handlers, and turnkey Access Key control.
+          </p>
+
+          <div className="relative border border-white/[0.08] bg-white/[0.02] p-5 mb-10">
+            <CornerAccents />
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 font-mono">
+              {COORDINATES.map(({ k, v }) => (
+                <div
+                  key={k}
+                  className="flex items-baseline justify-between gap-4 border-b border-white/[0.05] py-1.5"
+                >
+                  <dt className="text-[10px] uppercase tracking-widest text-zinc-500">{k}</dt>
+                  <dd className="text-xs tracking-wider text-zinc-200">{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div className="flex flex-wrap gap-4">
+            <MagicShimmerButton>Acquire Key</MagicShimmerButton>
+            <MagicShimmerButton>Request App Access</MagicShimmerButton>
+          </div>
+        </div>
+
+        <div className="relative border border-white/10 bg-black/50 backdrop-blur-3xl rounded-3xl p-10">
+          <div className="absolute top-3 left-3 w-2 h-2 border-t border-l border-white/40 pointer-events-none" />
+          <div className="absolute top-3 right-3 w-2 h-2 border-t border-r border-white/40 pointer-events-none" />
+          <div className="absolute bottom-3 left-3 w-2 h-2 border-b border-l border-white/40 pointer-events-none" />
+          <div className="absolute bottom-3 right-3 w-2 h-2 border-b border-r border-white/40 pointer-events-none" />
+          <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-mono mb-5 block">
+            The Space
+          </span>
+          <h3 className="text-3xl font-bold font-syne tracking-tight mb-4">
+            Windsor-Central.
+          </h3>
+          <p className="text-zinc-400 leading-relaxed">
+            Park on the street, walk up the property, and the entire private
+            space is yours. No staff, no shared floor, no one else&rsquo;s
+            schedule to work around.
+          </p>
         </div>
       </div>
     </section>

@@ -14,9 +14,9 @@ import {
   Preload,
   useGLTF,
 } from "@react-three/drei";
+import { EffectComposer, DepthOfField } from "@react-three/postprocessing";
 import * as THREE from "three";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { LoopSubdivision } from "three-subdivide";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -78,18 +78,22 @@ function Model() {
     clone.traverse((obj) => {
       if (obj instanceof THREE.Mesh) {
         obj.geometry = mergeVertices(obj.geometry);
-        obj.geometry = LoopSubdivision.modify(obj.geometry, 1, { split: true, uvSmooth: true });
         obj.geometry.computeVertexNormals();
 
         const src = obj.material as THREE.MeshStandardMaterial;
         obj.material = new THREE.MeshPhysicalMaterial({
           color: src?.color,
           map: src?.map ?? null,
-          transmission: 0.95,
-          roughness: 0.05,
-          thickness: 1.2,
-          ior: 1.5,
+          normalMap: src?.normalMap ?? null,
+          roughnessMap: src?.roughnessMap ?? null,
+          metalnessMap: src?.metalnessMap ?? null,
+          aoMap: src?.aoMap ?? null,
+          roughness: src?.roughnessMap ? 1 : 0.55,
+          metalness: src?.metalnessMap ? 1 : 0.1,
+          clearcoat: 0.3,
+          clearcoatRoughness: 0.25,
           envMapIntensity: 1,
+          side: THREE.DoubleSide,
         });
       }
     });
@@ -387,6 +391,9 @@ export default function ScrollExperience() {
               <Model />
               <CameraRig />
               <Preload all />
+              <EffectComposer multisampling={0}>
+                <DepthOfField target={_lookAt} focalLength={0.02} bokehScale={3} height={480} />
+              </EffectComposer>
             </Suspense>
           </Canvas>
         </div>

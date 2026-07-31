@@ -94,7 +94,7 @@
 }
 
 html {
-  background: var(--color-black);
+  background: #07080b;
   color: var(--color-white);
   -webkit-font-smoothing: antialiased;
 }
@@ -259,7 +259,7 @@ html.lenis-stopped body {
 .io-editorial {
   position: relative;
   overflow: hidden;
-  background: #050505;
+  background: linear-gradient(to bottom, #07080b, #11141d);
 }
 
 /* Top-edge calm hairline divider between sections */
@@ -350,50 +350,6 @@ html.lenis-stopped body {
     0 0 44px -12px rgba(255,255,255,0.14);
 }
 
-/* ═══ Aceternity-tier feature card — layered shadow + radial spotlight border ═══ */
-.io-lux-card {
-  position: relative;
-  border: 1px solid rgba(255,255,255,0.1);
-  background:
-    radial-gradient(140% 120% at 50% -10%, rgba(255,255,255,0.06), transparent 55%),
-    rgba(0,0,0,0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.06),
-    0 18px 48px -22px rgba(0,0,0,0.85),
-    0 6px 20px -12px rgba(0,0,0,0.6);
-  transition:
-    transform 0.45s cubic-bezier(0.16,1,0.3,1),
-    border-color 0.4s ease,
-    box-shadow 0.4s ease;
-  will-change: transform;
-}
-/* radial spotlight border ring — brightens on hover */
-.io-lux-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: radial-gradient(60% 120% at 50% 0%, rgba(255,255,255,0.55), rgba(255,255,255,0.05) 60%, transparent 75%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-          mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-}
-.io-lux-card:hover {
-  transform: translateY(-6px) scale(1.015);
-  border-color: rgba(255,255,255,0.28);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.12),
-    0 30px 70px -24px rgba(0,0,0,0.92),
-    0 0 44px -10px rgba(255,255,255,0.14);
-}
-.io-lux-card:hover::before { opacity: 1; }
-
 /* ═══ Cursor-tracked specular highlight for tier slabs ═══
    --mx/--my are written on mousemove by the card (see AntiGymMatrix). */
 .io-spec-card { --mx: 50%; --my: 0%; }
@@ -473,7 +429,6 @@ html.lenis-stopped body {
 }
 @media (prefers-reduced-motion: reduce) {
   .io-blueprint-cell::after { animation: none; display: none; }
-  .io-lux-card { transition: none; }
   .io-spec-card { transition: none; }
 }
 
@@ -622,7 +577,7 @@ html.lenis-stopped body {
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: #07080b;
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);

@@ -14,15 +14,12 @@ import {
   Preload,
   useGLTF,
 } from "@react-three/drei";
-import { EffectComposer, DepthOfField } from "@react-three/postprocessing";
 import * as THREE from "three";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { MagicShimmerButton } from "./ui/MagicShimmerButton";
-import { SmoothLuxCard } from "./ui/SmoothLuxCard";
-import { KeyRound, ShieldCheck, Zap } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 useGLTF.setDecoderPath("/draco/");
@@ -42,23 +39,94 @@ const scrub = {
 };
 
 // Phase boundaries, all expressed as fractions of total scroll progress.
-const HERO_END = 0.22;
+// Total pin range grew 350% -> 450% -> 800% viewport height, first to fit
+// the merged AppShowcase phase (see APPSHOWCASE_START below) and now to
+// keep the pin (and the 3D background) alive through the whole showcase
+// dwell instead of releasing the instant the fly-through ends — every
+// pre-existing fraction is scaled by SCALE so on-screen pixel timing for
+// the hero/camera/CTA phases is unchanged.
+const SCALE = 350 / 800;
+const HERO_END = 0.22 * SCALE;
 const FRAME_SPEED = 2.0;
-const SPATIAL_START = 0.18;
-const HERO_EXIT_START = 0.16;
-const HERO_EXIT_DUR = 0.08;
+const SPATIAL_START = 0.18 * SCALE;
+const HERO_EXIT_START = 0.16 * SCALE;
+const HERO_EXIT_DUR = 0.08 * SCALE;
+// Sequential entrance: logo scales/settles first, text only starts revealing
+// once the logo tween is fully done — no simultaneous clumped motion.
+const LOGO_ENTER_DUR = 0.05 * SCALE;
+const TEXT_ENTER_START = LOGO_ENTER_DUR;
+const TEXT_ENTER_DUR = 0.06 * SCALE;
 // Logo exits fully (autoAlpha 0, visibility hidden) before text begins its own exit — no overlap.
 const LOGO_EXIT_START = HERO_EXIT_START;
 const LOGO_EXIT_DUR = HERO_EXIT_DUR / 2;
 const TEXT_EXIT_START = LOGO_EXIT_START + LOGO_EXIT_DUR;
 const TEXT_EXIT_DUR = HERO_EXIT_DUR / 2;
-const PANEL_ENTER = 0.28; // gap = HERO_EXIT_START + HERO_EXIT_DUR (0.24) -> 0.04 clean gap
-const PANEL_FADE = 0.42;
-// Camera fly-through fully resolves and locks by this progress — cards must
-// never start staggering in before the architectural angle has settled.
-const CAMERA_SETTLE = 0.5;
-const CARD_POS = [0.55, 0.72, 0.88] as const;
-const CARD_FADE_GAP = 0.06;
+const PANEL_ENTER = 0.28 * SCALE;
+// CAMERA_END marks the end of the primary fly-through segment and anchors
+// the CTA phase timing below. The camera itself keeps gliding past this
+// point — see DRIFT_END and rig.waypoints' 6th "drift" point — all the way
+// through the showcase phase, so the 3D stage never freezes or cuts away.
+const CAMERA_END = 1.0 * SCALE;
+const CTA_POS = [0.42 * SCALE, 0.64 * SCALE, 0.86 * SCALE] as const;
+const CTA_SPACING = CTA_POS[1] - CTA_POS[0];
+const CTA_FADE_GAP = Math.min(0.08 * SCALE, CTA_SPACING * 0.4);
+const CTA_REVEAL_DUR = CTA_SPACING * 0.4;
+// Panel's exit must fully complete, with a clear gap, before CTA_POS[0]
+// begins the Oasis Lite entrance — previously PANEL_FADE == CTA_POS[0]
+// exactly, so the spatial-mechanics text and the first tier block animated
+// on screen at the same time.
+const PANEL_EXIT_DUR = 0.02 * SCALE;
+const PANEL_EXIT_GAP = 0.01 * SCALE;
+const PANEL_FADE = CTA_POS[0] - PANEL_EXIT_GAP - PANEL_EXIT_DUR;
+// AppShowcase phase: merged into this single master pin so the 3D canvas and
+// background persist continuously instead of handing off to a second,
+// independently-pinned section.
+const APPSHOWCASE_START = CAMERA_END + 0.02;
+const APPSHOWCASE_END = 0.85;
+const SHOWCASE_STEP_COUNT = 3;
+const SHOWCASE_SPACING = (APPSHOWCASE_END - APPSHOWCASE_START) / SHOWCASE_STEP_COUNT;
+const SHOWCASE_POS = Array.from({ length: SHOWCASE_STEP_COUNT }, (_, i) => APPSHOWCASE_START + i * SHOWCASE_SPACING);
+const SHOWCASE_FADE_GAP = Math.min(0.06, SHOWCASE_SPACING * 0.4);
+const SHOWCASE_REVEAL_DUR = SHOWCASE_SPACING * 0.4;
+// APPSHOWCASE_END -> DRIFT_END is a pure camera-drift tail: the last
+// showcase card (Access Key CTA) stays on screen while the rig keeps
+// gliding into its final waypoint, so releasing the pin never reads as an
+// abrupt stop right as the rest of the page (LocalSeoSection/FinalClose)
+// takes over.
+const DRIFT_END = 1.0;
+
+// Access-flow steps — formerly a separately-pinned AppShowcase section, now
+// the final phase of the single master timeline so the 3D stage never cuts
+// away to a new pin.
+type ShowcaseStep = { eyebrow: string; headline: string; body: string; cta?: boolean };
+
+const SHOWCASE_STEPS: ShowcaseStep[] = [
+  {
+    eyebrow: "Frictionless Private Access",
+    headline: "ONE ACCESS KEY.\nZERO SHARING. ENTIRE SPACE.",
+    body: "No front desks, no shared keycards, no waiting. Request your session instantly in the app.",
+  },
+  {
+    eyebrow: "Encrypted Key Exchange",
+    headline: "VALIDATED IN SECONDS.\nNO STAFF. NO DELAY.",
+    body: "Your Access Key is generated and cryptographically bound to your session the moment you request it.",
+  },
+  {
+    eyebrow: "On-Demand Unlock",
+    headline: "ARRIVE. UNLOCK.\nTHE SPACE IS YOURS ALONE.",
+    body: "Zero-crowd guarantee — every square foot of the private space, every session, for you only.",
+    cta: true,
+  },
+];
+
+// CSS iPhone shell screens — synced 1:1 to SHOWCASE_STEPS/SHOWCASE_POS via
+// index, but this is the on-device UI (booking flow) vs. the marketing copy.
+type PhoneScreen = { label: string };
+const PHONE_SCREENS: PhoneScreen[] = [
+  { label: "Instant Sign Up" },
+  { label: "Secure Your Session" },
+  { label: "Digital Access Key" },
+];
 
 const _camPos = new THREE.Vector3();
 const _lookAt = new THREE.Vector3();
@@ -88,11 +156,11 @@ function Model() {
           roughnessMap: src?.roughnessMap ?? null,
           metalnessMap: src?.metalnessMap ?? null,
           aoMap: src?.aoMap ?? null,
-          roughness: src?.roughnessMap ? 1 : 0.55,
-          metalness: src?.metalnessMap ? 1 : 0.1,
-          clearcoat: 0.3,
-          clearcoatRoughness: 0.25,
-          envMapIntensity: 1,
+          roughness: src?.roughnessMap ? 1 : 0.45,
+          metalness: src?.metalnessMap ? 1 : 0.15,
+          clearcoat: 0.4,
+          clearcoatRoughness: 0.2,
+          envMapIntensity: 1.6,
           side: THREE.DoubleSide,
         });
       }
@@ -106,12 +174,25 @@ function Model() {
     const c = box.getCenter(new THREE.Vector3());
     rig.height = s.y;
 
+    // All waypoints sit strictly inside the room's bounding box (|offset| <
+    // 0.4 * extent on every axis) so the fly-through never pokes through a
+    // wall/ceiling/floor — the prior path started at y=+0.85*height and
+    // z=+1.6*depth, both well outside the box, looking down at the exterior
+    // roof from above instead of the equipment inside.
     rig.waypoints = [
-      { pos: new THREE.Vector3(c.x - s.x * 0.65, c.y + s.y * 0.85, c.z + s.z * 1.6), lookAt: new THREE.Vector3(c.x, c.y - s.y * 0.05, c.z) },
-      { pos: new THREE.Vector3(c.x - s.x * 0.35, c.y + s.y * 0.55, c.z + s.z * 0.95), lookAt: new THREE.Vector3(c.x, c.y, c.z) },
-      { pos: new THREE.Vector3(c.x, c.y + s.y * 0.3, c.z + s.z * 0.5), lookAt: new THREE.Vector3(c.x, c.y + s.y * 0.05, c.z - s.z * 0.1) },
-      { pos: new THREE.Vector3(c.x + s.x * 0.25, c.y + s.y * 0.15, c.z + s.z * 0.15), lookAt: new THREE.Vector3(c.x, c.y + s.y * 0.1, c.z - s.z * 0.3) },
-      { pos: new THREE.Vector3(c.x + s.x * 0.18, c.y + s.y * 0.22, c.z + s.z * 0.32), lookAt: new THREE.Vector3(c.x, c.y + s.y * 0.1, c.z - s.z * 0.2) },
+      { pos: new THREE.Vector3(c.x - s.x * 0.3, c.y - s.y * 0.28, c.z + s.z * 0.4), lookAt: new THREE.Vector3(c.x + s.x * 0.1, c.y - s.y * 0.05, c.z - s.z * 0.2) },
+      { pos: new THREE.Vector3(c.x - s.x * 0.15, c.y - s.y * 0.22, c.z + s.z * 0.05), lookAt: new THREE.Vector3(c.x, c.y - s.y * 0.05, c.z - s.z * 0.3) },
+      // Mid-scroll waypoint: pulled back on Z and raised on Y so the fly-through
+      // clears the central equipment cluster instead of clipping into it — the
+      // prior offsets sat almost dead-center in the room, right on top of the
+      // reflective mesh, filling the viewport with distorted metal close-ups.
+      { pos: new THREE.Vector3(c.x, c.y - s.y * 0.2, c.z - s.z * 0.02), lookAt: new THREE.Vector3(c.x + s.x * 0.15, c.y - s.y * 0.02, c.z - s.z * 0.3) },
+      { pos: new THREE.Vector3(c.x + s.x * 0.2, c.y - s.y * 0.18, c.z - s.z * 0.25), lookAt: new THREE.Vector3(c.x, c.y - s.y * 0.05, c.z - s.z * 0.4) },
+      { pos: new THREE.Vector3(c.x + s.x * 0.12, c.y - s.y * 0.2, c.z - s.z * 0.15), lookAt: new THREE.Vector3(c.x, c.y - s.y * 0.05, c.z - s.z * 0.3) },
+      // Final drift waypoint: a small, slow continuation past the
+      // fly-through's last stop so the camera keeps gently gliding — never
+      // freezes — while the showcase cards reveal over the rest of the pin.
+      { pos: new THREE.Vector3(c.x + s.x * 0.05, c.y - s.y * 0.24, c.z - s.z * 0.22), lookAt: new THREE.Vector3(c.x - s.x * 0.05, c.y - s.y * 0.06, c.z - s.z * 0.35) },
     ];
     rig.curve = new THREE.CatmullRomCurve3(
       rig.waypoints.map((w) => w.pos),
@@ -152,9 +233,25 @@ function CameraRig() {
     const hi = Math.min(lo + 1, pts.length - 1);
     _lookAt.lerpVectors(pts[lo].lookAt, pts[hi].lookAt, scaled - lo);
 
+    // Continuous micro-orbit: a small sine/cosine drift on the look-at target,
+    // driven by wall-clock time (not scrub.progress) so the rig keeps
+    // breathing even while the user holds still mid-scroll — the scan never
+    // reads as frozen during a stationary waypoint hold.
+    const orbitT = performance.now() * 0.00018;
+    const orbitAmp = rig.height * 0.012;
+    _lookAt.x += Math.sin(orbitT) * orbitAmp;
+    _lookAt.y += Math.cos(orbitT * 0.7) * orbitAmp * 0.5;
+
+    // Bank into turns: roll the up vector toward the curve tangent's lateral
+    // component *before* lookAt consumes it, so the sweep reads as a
+    // physical fly-through, not a locked-gimbal pan.
+    const tangent = curve.getTangent(eased);
+    const bank = THREE.MathUtils.clamp(-tangent.x * 0.6, -0.25, 0.25);
+    camera.up.set(Math.sin(bank), Math.cos(bank), 0);
+
     const aspect = size.width / Math.max(size.height, 1);
     const dolly = THREE.MathUtils.clamp(0.74 - (1 - aspect) * 0.12, 0.55, 0.82);
-    const bias = THREE.MathUtils.clamp(0.62 - (aspect - 1) * 0.12, 0.4, 0.62);
+    const bias = THREE.MathUtils.clamp(0.08 - (aspect - 1) * 0.02, 0.05, 0.08);
     camera.position.sub(_lookAt).multiplyScalar(dolly).add(_lookAt);
     _lookAt.y -= rig.height * bias;
     camera.lookAt(_lookAt);
@@ -162,26 +259,50 @@ function CameraRig() {
     const d = camera.position.distanceTo(_lookAt);
     const density = 0.5 / Math.max(d, 0.001);
     if (scene.fog instanceof THREE.FogExp2) scene.fog.density = density;
-    else scene.fog = new THREE.FogExp2(0x000000, density);
+    else scene.fog = new THREE.FogExp2(0x07080b, density);
+
+    // Canvas runs frameloop="demand" — without a self-perpetuating
+    // invalidate the rig would freeze the instant the user stops scrolling.
+    // Re-arming every frame keeps the micro-orbit alive continuously.
+    invalidate();
   });
 
   return null;
 }
 
-const CARD_GLASS_CLASS =
-  "bg-gradient-to-b from-white/[0.09] via-white/[0.03] to-white/[0.01] backdrop-blur-3xl border border-white/[0.12] shadow-[0_25px_60px_rgba(0,0,0,0.9)] rounded-3xl overflow-hidden transition-transform duration-300";
+// Brutalist telemetry blocks sequenced across the camera fly-through — each
+// pairs a spatial-mechanics heading with its Access Key tier and price.
+type CtaBlock = { tag: string; tier: string; price: string; headline: string; body: string; cta?: boolean };
 
-type Tier = { name: string; price: string; badge: string; features: string[]; popular: boolean };
-
-const TIERS: Tier[] = [
-  { name: "Oasis Lite", price: "99", badge: "Entry Tier", popular: false, features: ["Off-Peak 1-Hour Blocks", "Digital Key Integration", "Full Equipment Access", "Zero-Crowd Guarantee"] },
-  { name: "Oasis Plus", price: "125", badge: "Most Popular", popular: true, features: ["24/7 Priority Scheduling", "Instant Key Dispatch", "Advanced Biometrics Sync", "Guest Pass Included"] },
-  { name: "Oasis Max", price: "149", badge: "Top Tier", popular: false, features: ["All Private Locations", "Multi-Hour Advanced Hold", "Dedicated VIP Support", "Custom Locker Integration"] },
+const CTA_BLOCKS: CtaBlock[] = [
+  {
+    tag: "ACCESS TIER // 01",
+    tier: "OASIS LITE",
+    price: "$99/mo",
+    headline: "NO DESK.\nNO ONE ELSE'S SCHEDULE.",
+    body: "Park on the street, walk up the property — the entire private space unlocks for you alone.",
+  },
+  {
+    tag: "ACCESS TIER // 02",
+    tier: "OASIS PLUS",
+    price: "$125/mo",
+    headline: "COMMERCIAL-GRADE.\nZERO CROWDING.",
+    body: "Full racks, plates, and machines — reserved to your session only, every time.",
+  },
+  {
+    tag: "ACCESS TIER // 03",
+    tier: "OASIS MAX",
+    price: "$149/mo",
+    headline: "REQUEST\nAPP ACCESS.",
+    body: "App-only ecosystem — no web checkout. Download to Access and generate your Key.",
+    cta: true,
+  },
 ];
 
 export default function ScrollExperience() {
   const containerRef = useRef<HTMLDivElement>(null);
   const visualLayerRef = useRef<HTMLDivElement>(null);
+  const bloomRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const heroCanvasRef = useRef<HTMLCanvasElement>(null);
   const heroTextRef = useRef<HTMLDivElement>(null);
@@ -189,23 +310,9 @@ export default function ScrollExperience() {
   const webglWrapRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const tiltRefs = useRef<(HTMLDivElement | null)[]>([]);
-
-  const tiltMove = (i: number) => (e: React.MouseEvent<HTMLDivElement>) => {
-    const el = tiltRefs.current[i];
-    if (!el) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width;
-    const py = (e.clientY - r.top) / r.height;
-    el.style.setProperty("--mx", `${px * 100}%`);
-    el.style.setProperty("--my", `${py * 100}%`);
-    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
-    gsap.to(el, { rotateY: (px - 0.5) * 8, rotateX: -(py - 0.5) * 8, y: -4, scale: 1.02, duration: 0.45, ease: "back.out(1.6)", overwrite: "auto" });
-  };
-  const tiltReset = (i: number) => () => {
-    const el = tiltRefs.current[i];
-    if (!el) return;
-    gsap.to(el, { rotateX: 0, rotateY: 0, y: 0, scale: 1, duration: 0.6, ease: "power3.out", overwrite: "auto" });
-  };
+  const showcaseRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const phoneScreenRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const phoneShellRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
     const container = containerRef.current;
@@ -228,16 +335,52 @@ export default function ScrollExperience() {
       const ch = canvas.height;
       const ir = img.naturalWidth / img.naturalHeight;
       const cr = cw / ch;
+      // Logo frame is drawn at 74% of the fitted (contain) box so the
+      // entrance animation always has breathing room and never clips.
+      const LOGO_PAD = 0.74;
       let dw: number, dh: number;
+      // Contain fit: when the canvas is relatively wider than the image
+      // (cr > ir) the image's HEIGHT is the constraining dimension — fit
+      // to height first. The inverse branch fits to width first. (Swapping
+      // these, as a prior version did, overflows the canvas on tall/narrow
+      // logo art inside a wide viewport — the top/right clipping bug.)
       if (cr > ir) {
-        dw = cw;
-        dh = cw / ir;
+        dh = ch * LOGO_PAD;
+        dw = dh * ir;
       } else {
-        dh = ch;
-        dw = ch * ir;
+        dw = cw * LOGO_PAD;
+        dh = dw / ir;
       }
       ctx.clearRect(0, 0, cw, ch);
       ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
+
+      // The source frames bake in a solid rectangular background, which
+      // shows as a hard box seam against the page's gradient backdrop.
+      // Feather the drawn image's own edges to transparent (destination-in)
+      // so the seam dissolves regardless of the page background color.
+      //
+      // A circular gradient sized off max(dw, dh) undershoots the SHORT
+      // axis of a non-square box (e.g. a portrait logo on a wide canvas):
+      // the fade radius barely reaches the short-axis edge, leaving that
+      // edge hard while only the corners soften. Fix: build the gradient
+      // in a coordinate space scaled to the box's own half-extents, so a
+      // "circle" there maps to an ellipse matching the box aspect exactly,
+      // guaranteeing full transparency before every edge.
+      const cx = cw / 2;
+      const cy = ch / 2;
+      const halfW = dw / 2;
+      const halfH = dh / 2;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(halfW, halfH);
+      const fade = ctx.createRadialGradient(0, 0, 0.4, 0, 0, 0.92);
+      fade.addColorStop(0, "rgba(0,0,0,1)");
+      fade.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.globalCompositeOperation = "destination-in";
+      ctx.fillStyle = fade;
+      ctx.fillRect(-2, -2, 4, 4);
+      ctx.restore();
+      ctx.globalCompositeOperation = "source-over";
     };
 
     for (let i = 0; i < FRAME_COUNT; i++) {
@@ -260,13 +403,43 @@ export default function ScrollExperience() {
     resize();
     window.addEventListener("resize", resize);
 
-    gsap.set(canvas, { filter: "brightness(1) saturate(1)" });
     gsap.set(text, { autoAlpha: 1 });
-    gsap.set(webglWrapRef.current, { autoAlpha: 0 });
+    gsap.set(bloomRef.current, { opacity: 0.5, scale: 1 });
+    // Continuous ambient breathing, independent of scroll — keeps the dark
+    // backdrop from ever reading as a flat, dead void behind the canvas.
+    gsap.to(bloomRef.current, {
+      scale: 1.18,
+      duration: 6,
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut",
+    });
+    gsap.set(webglWrapRef.current, { autoAlpha: 0, clipPath: "circle(0% at 50% 50%)" });
     gsap.set(panelRef.current, { clipPath: "inset(0 100% 0 0)", x: -20 });
 
-    const cards = tiltRefs.current.filter(Boolean) as HTMLDivElement[];
-    gsap.set(cards, { z: -500, rotationX: -30, opacity: 0, y: 40, clipPath: "inset(0 0 100% 0)" });
+    const blocks = tiltRefs.current.filter(Boolean) as HTMLDivElement[];
+    gsap.set(blocks, { autoAlpha: 0, y: 40, rotateX: 12, skewY: 2, clipPath: "inset(0 0 100% 0)" });
+
+    const showcaseBlocks = showcaseRefs.current.filter(Boolean) as HTMLDivElement[];
+    gsap.set(showcaseBlocks, { autoAlpha: 0, y: 40, rotateX: 12, skewY: 2, clipPath: "inset(0 0 100% 0)" });
+
+    const phoneScreens = phoneScreenRefs.current.filter(Boolean) as HTMLDivElement[];
+    gsap.set(phoneScreens, { autoAlpha: 0, y: 24 });
+    gsap.set(phoneShellRef.current, {
+      autoAlpha: 0,
+      scale: 0.75,
+      rotateY: -30,
+      rotateX: 15,
+      z: -200,
+      y: 50,
+    });
+
+    // Entrance lives INSIDE the scrubbed master timeline below (not a
+    // one-time mount tween) so it's fully reversible and always reflects the
+    // true scroll position — landing mid-scroll now shows the correct
+    // partial state instead of a frozen half-played intro.
+    gsap.set(canvas, { scale: 1.35, autoAlpha: 0, filter: "brightness(1.1) saturate(1.05)" });
+    gsap.set(Array.from(text.children), { clipPath: "inset(0 100% 0 0)", xPercent: -4, scale: 0.95, rotateX: 12, skewY: 2 });
 
     // Single pin on the container drives the whole sequence — visualLayerRef
     // and overlayRef are plain absolute children riding along with it, so
@@ -275,9 +448,9 @@ export default function ScrollExperience() {
       scrollTrigger: {
         trigger: container,
         start: "top top",
-        end: "+=350%",
+        end: "+=800%",
         pin: true,
-        scrub: 0.6,
+        scrub: 1,
         anticipatePin: 1,
         invalidateOnRefresh: true,
         onUpdate: (self) => {
@@ -288,21 +461,26 @@ export default function ScrollExperience() {
           scrub.progress = gsap.utils.clamp(
             0,
             1,
-            (self.progress - SPATIAL_START) / (CAMERA_SETTLE - SPATIAL_START),
+            (self.progress - SPATIAL_START) / (DRIFT_END - SPATIAL_START),
           );
           scrub.invalidate();
         },
       },
     });
 
-    // Phase 1 (0 - 0.22): hero logo shrinks/recedes, headline clip-reveals in.
-    tl.to(canvas, { scale: 0.6, z: -400, y: -50, filter: "brightness(0.35) saturate(0.8)", duration: HERO_EXIT_START, ease: "power2.out" }, 0);
-    tl.fromTo(
+    // Phase 0 (0 - 0.11): sequential hero entrance. Logo scales/settles
+    // FIRST; only once that tween completes does the headline start its
+    // staggered clip-reveal — no simultaneous clumped motion.
+    tl.to(canvas, { scale: 1, autoAlpha: 1, filter: "brightness(1) saturate(1)", duration: LOGO_ENTER_DUR, ease: "power3.out" }, 0);
+    tl.to(
       Array.from(text.children),
-      { clipPath: "inset(0 100% 0 0)", xPercent: -4, scale: 0.95 },
-      { clipPath: "inset(0 0% 0 0)", xPercent: 0, scale: 1, stagger: 0.08, duration: 0.22, ease: "expo.out" },
-      0.02,
+      { clipPath: "inset(0 0% 0 0)", xPercent: 0, scale: 1, rotateX: 0, skewY: 0, stagger: TEXT_ENTER_DUR / (text.children.length * 2), duration: TEXT_ENTER_DUR, ease: "expo.out" },
+      TEXT_ENTER_START,
     );
+
+    // Phase 1 (0.11 - 0.16): hero logo shrinks/recedes as the user scrolls
+    // out of the hero, once the entrance has fully settled.
+    tl.to(canvas, { scale: 0.6, z: -400, y: -50, filter: "brightness(0.35) saturate(0.8)", duration: HERO_EXIT_START - TEXT_ENTER_START - TEXT_ENTER_DUR, ease: "power2.out" }, TEXT_ENTER_START + TEXT_ENTER_DUR);
     if (bgTextRef.current) {
       // Kinetic bg type: fades/drifts in during the hero beat, then keeps
       // parallax-drifting across the entire fly-through — never freezes.
@@ -320,39 +498,74 @@ export default function ScrollExperience() {
     // overlap — then both are fully gone before the Spatial Mechanics panel fades in.
     tl.to(canvas, { autoAlpha: 0, duration: LOGO_EXIT_DUR, ease: "power2.out" }, LOGO_EXIT_START);
     tl.to(text, { autoAlpha: 0, duration: TEXT_EXIT_DUR, ease: "power2.out" }, TEXT_EXIT_START);
-    tl.to(webglWrapRef.current, { autoAlpha: 1, duration: 0.08, ease: "power2.in" }, PANEL_ENTER);
+    // Circle-wipe the 3D canvas in, overlapping the hero logo's fade-out so
+    // there's no dead black gap between the hero and the first 3D frame.
+    tl.fromTo(
+      webglWrapRef.current,
+      { autoAlpha: 0, clipPath: "circle(0% at 50% 50%)" },
+      { autoAlpha: 1, clipPath: "circle(75% at 50% 50%)", duration: PANEL_ENTER - LOGO_EXIT_START, ease: "power2.inOut" },
+      LOGO_EXIT_START,
+    );
     tl.to(panelRef.current, { clipPath: "inset(0 0% 0 0)", x: 0, duration: 0.08, ease: "power2.out" }, PANEL_ENTER);
 
     // Phase 2 (0.18 - 1.0): camera fly-through, driven by scrub.progress in onUpdate above.
-    tl.to(panelRef.current, { opacity: 0, y: -24, duration: 0.06, ease: "power2.out" }, PANEL_FADE);
+    // Fully hidden (autoAlpha) well before CTA_POS[0] — see PANEL_FADE derivation above.
+    tl.to(panelRef.current, { autoAlpha: 0, y: -24, duration: PANEL_EXIT_DUR, ease: "power2.out" }, PANEL_FADE);
 
-    // Phase 3: pricing tiers materialize sequentially, strictly after CAMERA_SETTLE.
-    CARD_POS.forEach((at, i) => {
+    // Phase 3: brutalist CTA/spatial-mechanics blocks materialize sequentially
+    // across the continuous camera fly-through — one at a time, same slot.
+    const BLOOM_INTENSITY = [0.35, 0.65, 0.45, 0.7, 0.4, 0.75];
+    CTA_POS.forEach((at, i) => {
       tl.to(
-        cards[i],
-        { z: 0, rotationX: 0, opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", duration: 0.12, ease: "expo.out" },
+        blocks[i],
+        { autoAlpha: 1, y: 0, rotateX: 0, skewY: 0, clipPath: "inset(0 0 0% 0)", duration: CTA_REVEAL_DUR, ease: "expo.out" },
         at,
       );
-      if (i < CARD_POS.length - 1) {
-        tl.to(cards[i], { opacity: 0, duration: CARD_FADE_GAP, ease: "power2.in" }, CARD_POS[i + 1] - CARD_FADE_GAP);
+      const fadeAt = i < CTA_POS.length - 1 ? CTA_POS[i + 1] - CTA_FADE_GAP : APPSHOWCASE_START - CTA_FADE_GAP;
+      tl.to(blocks[i], { autoAlpha: 0, rotateX: -8, skewY: -2, clipPath: "inset(0 0 100% 0)", duration: CTA_FADE_GAP, ease: "power2.in" }, fadeAt);
+      // Bloom shifts intensity with each tier reveal so the ambient glow
+      // breathes in step with the waypoint transition, never sitting static.
+      tl.to(bloomRef.current, { opacity: BLOOM_INTENSITY[i], duration: CTA_REVEAL_DUR, ease: "sine.inOut" }, at);
+    });
+
+    // Phase 4: access-flow steps (formerly the separately-pinned AppShowcase
+    // section) — same continuous 3D stage, camera holds its final frame while
+    // these full-bleed steps reveal one at a time.
+    tl.to(visualLayerRef.current, { opacity: 0.4, ease: "none", duration: 1 - APPSHOWCASE_START }, APPSHOWCASE_START);
+    tl.to(
+      phoneShellRef.current,
+      { autoAlpha: 1, scale: 1, rotateY: 0, rotateX: 0, z: 0, y: 0, duration: 0.08, ease: "back.out(1.5)" },
+      APPSHOWCASE_START
+    );
+    SHOWCASE_POS.forEach((at, i) => {
+      tl.to(
+        showcaseBlocks[i],
+        { autoAlpha: 1, y: 0, rotateX: 0, skewY: 0, clipPath: "inset(0 0 0% 0)", duration: SHOWCASE_REVEAL_DUR, ease: "expo.out" },
+        at,
+      );
+      tl.to(bloomRef.current, { opacity: BLOOM_INTENSITY[(i + CTA_POS.length) % BLOOM_INTENSITY.length], duration: SHOWCASE_REVEAL_DUR, ease: "sine.inOut" }, at);
+      if (i < SHOWCASE_POS.length - 1) {
+        tl.to(showcaseBlocks[i], { autoAlpha: 0, rotateX: -8, skewY: -2, clipPath: "inset(0 0 100% 0)", duration: SHOWCASE_FADE_GAP, ease: "power2.in" }, SHOWCASE_POS[i + 1] - SHOWCASE_FADE_GAP);
+      }
+
+      // Phone-shell screen crossfades in lockstep with its text block above —
+      // same waypoint, same "slide up + fade" Apple-style motion.
+      tl.to(
+        phoneScreens[i],
+        { autoAlpha: 1, y: 0, duration: SHOWCASE_REVEAL_DUR, ease: "expo.out" },
+        at,
+      );
+      if (i < SHOWCASE_POS.length - 1) {
+        tl.to(phoneScreens[i], { autoAlpha: 0, y: -16, duration: SHOWCASE_FADE_GAP, ease: "power2.in" }, SHOWCASE_POS[i + 1] - SHOWCASE_FADE_GAP);
       }
     });
 
-    // Dim the pinned visual layer to an ambient backdrop once AppShowcase
-    // scrolls into view, so it never fights the copy above it.
-    const appShowcase = document.getElementById("request-access");
-    if (appShowcase && visualLayerRef.current) {
-      gsap.to(visualLayerRef.current, {
-        opacity: 0,
-        ease: "none",
-        scrollTrigger: {
-          trigger: appShowcase,
-          start: "top 90%",
-          end: "top 40%",
-          scrub: 2.5,
-        },
-      });
-    }
+    // drift tail: phone gracefully rotates away as scroll exits the showcase dwell
+    tl.to(
+      phoneShellRef.current,
+      { rotateY: 25, scale: 0.95, autoAlpha: 0, duration: DRIFT_END - APPSHOWCASE_END, ease: "power2.in" },
+      APPSHOWCASE_END,
+    );
 
     return () => {
       window.removeEventListener("resize", resize);
@@ -362,10 +575,20 @@ export default function ScrollExperience() {
   return (
     <section
       ref={containerRef}
-      className="relative w-full min-h-screen bg-[#050505] text-white overflow-hidden flex flex-col lg:flex-row"
+      className="relative w-full min-h-screen bg-gradient-to-b from-[#07080b] to-[#11141d] text-white overflow-hidden flex flex-col lg:flex-row"
     >
       {/* WebGL/2D canvas layer — globally pinned, right 2/3, z-0 */}
       <div ref={visualLayerRef} className="fixed inset-0 z-10 pointer-events-none bg-transparent">
+        <div
+          ref={bloomRef}
+          aria-hidden
+          className="absolute inset-0 z-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(60% 55% at 30% 40%, rgba(120,140,255,0.16), transparent 70%), radial-gradient(45% 45% at 75% 65%, rgba(255,180,140,0.1), transparent 72%)",
+            willChange: "transform, opacity",
+          }}
+        />
         <div
           ref={bgTextRef}
           aria-hidden
@@ -379,21 +602,21 @@ export default function ScrollExperience() {
           <Canvas
             className="absolute inset-0"
             frameloop="demand"
-            gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+            dpr={[1, 2]}
+            gl={{ antialias: true, alpha: true, powerPreference: "high-performance", toneMappingExposure: 1.2 }}
             onCreated={() => scrub.invalidate()}
           >
             <PerspectiveCamera makeDefault fov={45} near={0.01} far={500} />
-            <ambientLight intensity={0.9} />
-            <directionalLight position={[5, 5, 5]} intensity={0.8} />
-            <directionalLight position={[-5, 2, -3]} intensity={0.3} />
+            <ambientLight intensity={0.7} />
+            <directionalLight position={[5, 5, 5]} intensity={1.1} />
+            <directionalLight position={[-5, 2, -3]} intensity={0.4} />
+            {/* charcoal bounce fill — kills pure-black shadow crush */}
+            <hemisphereLight color="#3a4252" groundColor="#0a0b0e" intensity={0.4} />
             <Suspense fallback={null}>
               <Environment files="/hdri/lebombo_1k.hdr" />
               <Model />
               <CameraRig />
               <Preload all />
-              <EffectComposer multisampling={0}>
-                <DepthOfField target={_lookAt} focalLength={0.02} bokehScale={3} height={480} />
-              </EffectComposer>
             </Suspense>
           </Canvas>
         </div>
@@ -401,9 +624,96 @@ export default function ScrollExperience() {
         <canvas
           ref={heroCanvasRef}
           className="absolute inset-0 w-full h-full will-change-[transform,opacity] [transform:translateZ(0)]"
+          style={{ mixBlendMode: "lighten" }}
         />
 
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(0,0,0,0.18),rgba(0,0,0,0.55))] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(18,22,32,0.12),rgba(10,11,14,0.45))] pointer-events-none" />
+      </div>
+
+      {/* CSS iPhone shell — booking-flow screens, floats over the dimmed 3D
+          canvas on the same z-10 layer, separated visually via ambient glow. */}
+      <div
+        aria-hidden
+        className="fixed inset-0 z-10 hidden lg:flex items-center justify-center pointer-events-none [perspective:2500px] [transform-style:preserve-3d]"
+      >
+        <div ref={phoneShellRef} className="relative">
+          <div className="absolute -inset-20 rounded-full bg-white/[0.06] blur-[100px]" />
+          <div
+            className="device-shell relative rounded-[3rem] border border-white/15 bg-gradient-to-b from-zinc-800 to-black p-[3px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_50px_120px_-30px_rgba(0,0,0,0.95)]"
+            style={{ width: "clamp(230px, 20vw, 300px)", aspectRatio: "9 / 19.5" }}
+          >
+            <div className="relative h-full w-full overflow-hidden rounded-[2.7rem] border border-black/60 bg-black">
+              {/* Dynamic Island */}
+              <div className="absolute left-1/2 top-[10px] z-30 h-[22px] w-[86px] -translate-x-1/2 rounded-full bg-black" />
+
+              {/* status bar */}
+              <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-6 pt-3 font-mono text-[11px] text-white/70">
+                <span>9:41</span>
+                <div className="flex items-center gap-1">
+                  <div className="h-[7px] w-[16px] rounded-[2px] border border-white/50" />
+                </div>
+              </div>
+
+              {PHONE_SCREENS.map((screen, i) => (
+                <div
+                  key={screen.label}
+                  ref={(el) => { phoneScreenRefs.current[i] = el; }}
+                  className="absolute inset-0 flex flex-col items-center justify-center gap-6 px-6"
+                >
+                  {i === 0 && (
+                    <>
+                      <div className="flex h-20 w-20 items-center justify-center rounded-full border border-white/20 bg-white/[0.04]">
+                        <div className="h-9 w-9 rounded-full border-2 border-white/60" />
+                      </div>
+                      <p className="font-syne text-sm font-bold uppercase tracking-[0.1em] text-white">
+                        {screen.label}
+                      </p>
+                      <div className="w-full rounded-full border border-white/15 bg-white/[0.06] py-2.5 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-white/80">
+                        Continue with Face ID
+                      </div>
+                    </>
+                  )}
+                  {i === 1 && (
+                    <>
+                      <p className="self-start font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
+                        {screen.label}
+                      </p>
+                      <div className="flex w-full flex-col gap-2">
+                        {["6:00 AM", "7:30 AM", "9:00 AM"].map((slot, idx) => (
+                          <div
+                            key={slot}
+                            className={`flex items-center justify-between rounded-xl border px-4 py-2.5 font-mono text-[11px] ${
+                              idx === 1
+                                ? "border-white/40 bg-white/[0.08] text-white"
+                                : "border-white/10 bg-white/[0.02] text-white/50"
+                            }`}
+                          >
+                            <span>{slot}</span>
+                            {idx === 1 && <span className="text-white">✓</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  {i === 2 && (
+                    <>
+                      <div className="relative flex h-24 w-24 items-center justify-center rounded-full border border-white/30">
+                        <div className="absolute inset-0 animate-pulse rounded-full border border-white/20" />
+                        <div className="h-10 w-10 rounded-md border-2 border-white/70" />
+                      </div>
+                      <p className="font-syne text-sm font-bold uppercase tracking-[0.1em] text-white">
+                        {screen.label}
+                      </p>
+                      <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-white/50">
+                        Access Granted
+                      </span>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* HTML overlay layer — copy column, transparent, floats over the 3D space, z-10 */}
@@ -441,102 +751,102 @@ export default function ScrollExperience() {
         </div>
 
         <div
+          className="max-w-7xl mx-auto"
           style={{
             position: "absolute", inset: 0,
             display: "flex", alignItems: "center", justifyContent: "flex-start",
-            padding: "0 6%", perspective: 1400,
+            padding: "0 6%",
             pointerEvents: "none",
           }}
         >
-          {TIERS.map((tier, i) => (
+          {CTA_BLOCKS.map((blk, i) => (
             <div
-              key={tier.name}
+              key={blk.tag}
               ref={(el) => { tiltRefs.current[i] = el; }}
-              onMouseMove={tiltMove(i)}
-              onMouseLeave={tiltReset(i)}
-              className={CARD_GLASS_CLASS}
-              style={{
-                position: "absolute", width: "clamp(280px, 22vw, 340px)",
-                height: "clamp(360px, 26vw, 420px)", display: "flex", flexDirection: "column",
-                padding: "clamp(24px, 2.2vw, 32px)", color: "#F5F5F7", fontFamily: "var(--font-display)",
-                pointerEvents: "auto", cursor: "default", transformStyle: "preserve-3d",
-                ...(tier.popular ? { borderColor: "rgba(255,255,255,0.25)" } : {}),
-              }}
+              className="absolute w-[clamp(320px,34vw,520px)] border-l border-white/15 pl-8"
+              style={{ pointerEvents: blk.cta ? "auto" : "none" }}
             >
-              <span
-                aria-hidden
-                style={{
-                  position: "absolute", insetInline: 0, top: 0, height: 1,
-                  background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)",
-                  pointerEvents: "none",
-                }}
-              />
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[10px] uppercase tracking-[0.32em] text-white/40 font-mono">{tier.badge}</span>
-                {tier.popular ? (
-                  <div className="px-2 py-0.5 rounded-full bg-white text-black font-mono text-[9px] uppercase tracking-widest font-bold flex items-center gap-1">
-                    <Zap className="w-2.5 h-2.5 fill-black" />
-                  </div>
-                ) : (
-                  <KeyRound className="w-3.5 h-3.5 text-zinc-400" />
-                )}
+              <span className="block font-mono text-[10px] uppercase tracking-[0.32em] text-white/50 mb-3">
+                {blk.tag}
+              </span>
+              <div className="flex items-baseline justify-between gap-3 mb-2">
+                <span className="font-syne text-sm font-bold uppercase tracking-[0.1em] text-zinc-200">
+                  {blk.tier}
+                </span>
+                <span className="font-mono text-sm text-white">{blk.price}</span>
               </div>
-              <h3 style={{ fontSize: "clamp(19px, 1.6vw, 23px)", fontWeight: 700, letterSpacing: "-0.025em", margin: 0 }}>{tier.name}</h3>
-              <ul className="space-y-2.5 mt-4">
-                {tier.features.map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-[13px] text-zinc-300">
-                    <ShieldCheck className="w-3 h-3 text-zinc-400 shrink-0" />
-                    <span>{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-auto pt-4 border-t border-white/10">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-[11px] text-zinc-500 font-mono self-start mt-1.5">$</span>
-                  <span style={{ fontSize: "clamp(60px, 5.4vw, 84px)" }} className="font-black font-mono tracking-tighter tabular-nums leading-none">{tier.price}</span>
-                </div>
+              <h3 className="font-syne font-black uppercase leading-[1.05] tracking-[-0.02em] text-[clamp(1.6rem,2.3vw,2.4rem)] text-white whitespace-pre-line break-words">
+                {blk.headline}
+              </h3>
+              <p className="mt-4 text-sm text-zinc-400 leading-relaxed max-w-[32ch]">{blk.body}</p>
+              {blk.cta && (
                 <a
                   href="#request-access"
-                  className="mt-3 block w-full rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-center font-syne text-[11px] font-semibold tracking-[0.15em] text-zinc-200 transition-colors hover:border-white/30 hover:text-white"
+                  className="mt-6 inline-flex items-center justify-center rounded-none border border-white bg-white px-7 py-3 font-syne text-sm font-bold uppercase tracking-[0.15em] text-black transition-transform duration-300 hover:scale-[1.02] active:scale-[0.97]"
                 >
                   Request App Access
                 </a>
-              </div>
+              )}
+            </div>
+          ))}
+
+          {SHOWCASE_STEPS.map((step, i) => (
+            <div
+              key={step.eyebrow}
+              ref={(el) => { showcaseRefs.current[i] = el; }}
+              id={i === 0 ? "request-access" : undefined}
+              className="absolute w-[clamp(320px,34vw,560px)] border-l border-white/15 pl-8"
+              style={{ pointerEvents: step.cta ? "auto" : "none" }}
+            >
+              <span className="block font-mono text-[10px] uppercase tracking-[0.32em] text-white/50 mb-3">
+                {step.eyebrow}
+              </span>
+              <h3 className="font-syne font-black uppercase leading-[1.05] tracking-[-0.02em] text-[clamp(1.6rem,2.3vw,2.4rem)] text-white whitespace-pre-line break-words">
+                {step.headline}
+              </h3>
+              <p className="mt-4 text-sm text-zinc-400 leading-relaxed max-w-[32ch]">{step.body}</p>
+              {step.cta && (
+                <a
+                  href="#request-access"
+                  className="mt-6 inline-flex items-center justify-center rounded-none border border-white bg-white px-7 py-3 font-syne text-sm font-bold uppercase tracking-[0.15em] text-black transition-transform duration-300 hover:scale-[1.02] active:scale-[0.97]"
+                >
+                  Request App Access
+                </a>
+              )}
             </div>
           ))}
         </div>
 
         <div
           ref={panelRef}
-          className="absolute bottom-16 left-6 z-20 w-[min(28rem,calc(100%-3rem))] md:left-12"
+          className="absolute bottom-16 left-6 z-20 w-[min(28rem,calc(100%-3rem))] md:left-12 border-t border-white/10 pt-6"
         >
-          <SmoothLuxCard eyebrow="Spatial Mechanics">
-            <div className="mb-4 flex items-start justify-between gap-4">
-              <h3 className="text-3xl font-bold font-syne text-white">
-                Move Through The Space
-              </h3>
-            </div>
-            <p className="text-sm text-zinc-400">
-              Scroll to move through the commercial-grade suite — every square
-              foot of the private space is yours alone.
-            </p>
-            <div className="mt-5 grid grid-cols-2 gap-x-6 border-t border-white/[0.08] pt-4 font-mono text-[10px] uppercase tracking-[0.2em]">
-              {[
-                ["LAT", "42.3149° N"],
-                ["LONG", "-83.0364° W"],
-                ["ACCESS", "24 / 7"],
-                ["OCCUPANCY", "1 / 1"],
-              ].map(([k, v]) => (
-                <div
-                  key={k}
-                  className="flex items-baseline justify-between gap-3 border-b border-white/[0.05] py-1.5"
-                >
-                  <span className="text-zinc-500">{k}</span>
-                  <span className="text-zinc-200">{v}</span>
-                </div>
-              ))}
-            </div>
-          </SmoothLuxCard>
+          <span className="text-[10px] uppercase tracking-[0.32em] text-white/40 font-mono mb-3 block">
+            Spatial Mechanics
+          </span>
+          <h3 className="text-3xl font-bold font-syne text-white mb-3">
+            Move Through The Space
+          </h3>
+          <p className="text-sm text-zinc-400">
+            Scroll to move through the commercial-grade suite — every square
+            foot of the private space is yours alone.
+          </p>
+          <div className="mt-5 grid grid-cols-2 gap-x-6 border-t border-white/[0.08] pt-4 font-mono text-[10px] uppercase tracking-[0.2em]">
+            {[
+              ["LAT", "42.3149° N"],
+              ["LONG", "-83.0364° W"],
+              ["ACCESS", "24 / 7"],
+              ["OCCUPANCY", "1 / 1"],
+            ].map(([k, v]) => (
+              <div
+                key={k}
+                className="flex items-baseline justify-between gap-3 border-b border-white/[0.05] py-1.5"
+              >
+                <span className="text-zinc-500">{k}</span>
+                <span className="text-zinc-200">{v}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
@@ -552,40 +862,29 @@ const COORDINATES = [
   { k: "ACCESS", v: "BIOMETRIC / DIGITAL KEY" },
 ];
 
-function CornerAccents() {
-  const base = "absolute h-3 w-3 border-white/25";
-  return (
-    <>
-      <span aria-hidden className={`${base} left-0 top-0 border-l border-t`} />
-      <span aria-hidden className={`${base} right-0 top-0 border-r border-t`} />
-      <span aria-hidden className={`${base} bottom-0 left-0 border-b border-l`} />
-      <span aria-hidden className={`${base} bottom-0 right-0 border-b border-r`} />
-    </>
-  );
-}
 
 export function LocalSeoSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const leftColRef = useRef<HTMLDivElement>(null);
-  const rightCardRef = useRef<HTMLDivElement>(null);
+  const quoteRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
-    if (!leftColRef.current || !rightCardRef.current) return;
-    gsap.fromTo(
+    if (!leftColRef.current || !quoteRef.current) return;
+    const tl = gsap.timeline({
+      scrollTrigger: { trigger: sectionRef.current, start: "top 90%", end: "bottom 40%", scrub: 1 },
+    });
+
+    tl.fromTo(
       Array.from(leftColRef.current.children),
-      { opacity: 0, y: 32, clipPath: "inset(0 0 100% 0)" },
-      {
-        opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)", stagger: 0.12, duration: 0.9, ease: "power3.out",
-        scrollTrigger: { trigger: sectionRef.current, start: "top 75%" },
-      },
+      { autoAlpha: 0, y: 32, clipPath: "inset(0 0 100% 0)" },
+      { autoAlpha: 1, y: 0, clipPath: "inset(0 0 0% 0)", stagger: 0.5, ease: "power3.out", duration: 1 },
+      0,
     );
-    gsap.fromTo(
-      rightCardRef.current,
-      { opacity: 0, y: 40, scale: 0.96 },
-      {
-        opacity: 1, y: 0, scale: 1, duration: 1, ease: "power3.out",
-        scrollTrigger: { trigger: sectionRef.current, start: "top 75%" },
-      },
+    tl.fromTo(
+      quoteRef.current,
+      { autoAlpha: 0, y: 32, clipPath: "inset(0 0 100% 0)" },
+      { autoAlpha: 1, y: 0, clipPath: "inset(0 0 0% 0)", ease: "power3.out", duration: 1 },
+      2.6,
     );
   }, { scope: sectionRef });
 
@@ -621,33 +920,30 @@ export function LocalSeoSection() {
         }}
       />
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <div className="max-w-[1400px] mx-auto">
         <div ref={leftColRef}>
-          <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-mono mb-5 block">
-            OPERATIONAL COORDINATES / WNDSR
+          <span className="text-[10px] uppercase tracking-[0.32em] text-zinc-500 font-mono mb-6 block">
+            Operational Coordinates / WNDSR
           </span>
-          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter font-syne mb-6">
-            Flagship Location. <br />
-            <span className="text-zinc-500">A Private Space, Not a Facility.</span>
+          <h2 className="text-[clamp(2.5rem,6vw,5.5rem)] font-black tracking-[-0.04em] leading-[0.95] font-syne mb-10">
+            Flagship Location.
+            <br />
+            <span className="text-zinc-500">A Private Space, Not A Facility.</span>
           </h2>
-          <p className="text-zinc-400 text-lg mb-10 leading-relaxed">
-            A premium private space in a quiet Windsor residential setting. Zero staffing, zero sharing, fully automated Twilio voice/SMS handlers, and turnkey Access Key control.
+          <p className="text-zinc-400 text-lg mb-14 leading-relaxed max-w-2xl">
+            A premium private space in a quiet Windsor residential setting.
+            Zero staffing, zero sharing, fully automated voice/SMS handlers,
+            and turnkey Access Key control.
           </p>
 
-          <div className="relative border border-white/[0.08] bg-white/[0.02] p-5 mb-10">
-            <CornerAccents />
-            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 font-mono">
-              {COORDINATES.map(({ k, v }) => (
-                <div
-                  key={k}
-                  className="flex items-baseline justify-between gap-4 border-b border-white/[0.05] py-1.5"
-                >
-                  <dt className="text-[10px] uppercase tracking-widest text-zinc-500">{k}</dt>
-                  <dd className="text-xs tracking-wider text-zinc-200">{v}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
+          <dl className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-14">
+            {COORDINATES.map(({ k, v }) => (
+              <div key={k} className="io-tier rounded-2xl px-5 py-5 backdrop-blur-2xl">
+                <dt className="text-[10px] uppercase tracking-[0.24em] text-zinc-500 font-mono mb-2">{k}</dt>
+                <dd className="text-sm tracking-wide text-zinc-100 font-mono">{v}</dd>
+              </div>
+            ))}
+          </dl>
 
           <div className="flex flex-wrap gap-4">
             <MagicShimmerButton>Acquire Key</MagicShimmerButton>
@@ -655,23 +951,81 @@ export function LocalSeoSection() {
           </div>
         </div>
 
-        <div ref={rightCardRef} className="relative border border-white/10 bg-black/50 backdrop-blur-3xl rounded-3xl p-10">
-          <div className="absolute top-3 left-3 w-2 h-2 border-t border-l border-white/40 pointer-events-none" />
-          <div className="absolute top-3 right-3 w-2 h-2 border-t border-r border-white/40 pointer-events-none" />
-          <div className="absolute bottom-3 left-3 w-2 h-2 border-b border-l border-white/40 pointer-events-none" />
-          <div className="absolute bottom-3 right-3 w-2 h-2 border-b border-r border-white/40 pointer-events-none" />
-          <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-mono mb-5 block">
+        <div ref={quoteRef} className="border-t border-white/10 mt-24 pt-16">
+          <span className="text-[10px] uppercase tracking-[0.32em] text-zinc-500 font-mono mb-6 block">
             The Space
           </span>
-          <h3 className="text-3xl font-bold font-syne tracking-tight mb-4">
-            Windsor-Central.
-          </h3>
-          <p className="text-zinc-400 leading-relaxed">
+          <p className="text-[clamp(1.75rem,3.5vw,3.25rem)] font-syne font-medium tracking-[-0.02em] leading-[1.15] max-w-4xl">
             Park on the street, walk up the property, and the entire private
             space is yours. No staff, no shared floor, no one else&rsquo;s
             schedule to work around.
           </p>
         </div>
+      </div>
+    </section>
+  );
+}
+
+export function FinalClose() {
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useGSAP(() => {
+    if (!sectionRef.current) return;
+    gsap.fromTo(
+      sectionRef.current.children,
+      { autoAlpha: 0, y: 32, clipPath: "inset(0 0 100% 0)" },
+      {
+        autoAlpha: 1, y: 0, clipPath: "inset(0 0 0% 0)", stagger: 0.15, ease: "power3.out", duration: 1,
+        scrollTrigger: { trigger: sectionRef.current, start: "top 85%", end: "bottom 60%", scrub: 1 },
+      },
+    );
+  }, { scope: sectionRef });
+
+  return (
+    <section
+      ref={sectionRef}
+      className="relative z-10 overflow-hidden bg-gradient-to-b from-transparent via-[#0a0c11] to-black text-white px-6 py-24 md:py-32 border-t border-white/10"
+    >
+      {/* Ambient glow anchors the card so the section reads as a designed
+          destination instead of a flat void once the card's own padding ends. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-80"
+        style={{
+          backgroundImage:
+            "radial-gradient(50% 60% at 50% 30%, rgba(255,255,255,0.06), transparent 70%)",
+        }}
+      />
+
+      <div className="relative io-tier max-w-4xl mx-auto rounded-3xl px-8 py-16 md:px-16 md:py-20 text-center backdrop-blur-2xl">
+        <span className="text-[10px] uppercase tracking-[0.32em] text-zinc-500 font-mono mb-6 block">
+          Request Access
+        </span>
+        <h2 className="text-[clamp(2rem,5vw,4rem)] font-black tracking-[-0.04em] leading-[0.98] font-syne mb-6">
+          The Space Is Waiting.
+        </h2>
+        <p className="text-zinc-400 text-lg leading-relaxed max-w-xl mx-auto mb-10">
+          No tours, no sales calls. Download the app, generate your Access
+          Key, and the private space unlocks the moment you arrive.
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <MagicShimmerButton>Request App Access</MagicShimmerButton>
+          <a
+            href="#request-access"
+            className="group relative inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-7 py-3 font-syne text-sm font-semibold tracking-[0.15em] text-zinc-200 backdrop-blur-2xl transition-[color,border-color,background-color,transform] duration-300 [transition-timing-function:var(--ease-mech)] hover:border-white/25 hover:text-white hover:scale-[1.02] active:scale-[0.97]"
+          >
+            Acquire Key
+          </a>
+        </div>
+      </div>
+
+      <div className="relative mt-20 flex flex-col items-center gap-3 text-center">
+        <span className="font-syne text-sm font-semibold tracking-[0.32em] text-zinc-500">
+          IRON OASIS
+        </span>
+        <span className="text-[10px] font-mono tracking-[0.28em] text-zinc-600 uppercase">
+          &copy; {new Date().getFullYear()} Iron Oasis. Private access only.
+        </span>
       </div>
     </section>
   );

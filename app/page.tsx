@@ -1,5 +1,4 @@
-import ScrollExperience, { LocalSeoSection } from "@/components/ScrollExperience";
-import AppShowcase from "@/components/AppShowcase";
+import ScrollExperience, { LocalSeoSection, FinalClose } from "@/components/ScrollExperience";
 
 // Mathematically-generated film grain. Zero image imports, negligible bytes over the wire.
 const GRAIN =
@@ -7,17 +6,26 @@ const GRAIN =
 
 export default function Page() {
   return (
-    <main className="relative bg-[#050505] text-[#ededed] font-sans overflow-x-hidden selection:bg-white selection:text-black">
+    <main className="relative bg-gradient-to-b from-[#07080b] to-[#11141d] text-[#ededed] font-sans overflow-x-hidden selection:bg-white selection:text-black">
+      {/* Atmospheric radial lighting vignette — kills flat dead-black zones */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-0 opacity-70"
+        style={{
+          backgroundImage:
+            "radial-gradient(60% 50% at 20% 0%, rgba(120,140,180,0.10), transparent 60%), radial-gradient(50% 40% at 85% 100%, rgba(90,100,140,0.08), transparent 65%)",
+        }}
+      />
       {/* Global vault-texture grain overlay */}
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 z-50 opacity-[0.015] mix-blend-screen"
+        className="pointer-events-none fixed inset-0 z-50 opacity-[0.02] mix-blend-screen"
         style={{ backgroundImage: GRAIN }}
       />
 
       <ScrollExperience />
-      <AppShowcase />
       <LocalSeoSection />
+      <FinalClose />
     </main>
   );
 }

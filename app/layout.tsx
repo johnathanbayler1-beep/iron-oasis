@@ -36,7 +36,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark bg-[#050505] text-white ${syne.variable} ${inter.variable} ${jetbrains.variable}`}
+      className={`dark bg-[#07080b] text-white ${syne.variable} ${inter.variable} ${jetbrains.variable}`}
     >
       <body className="font-sans antialiased selection:bg-white selection:text-black">
         <Providers>

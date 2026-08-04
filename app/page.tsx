@@ -1,5 +1,4 @@
 import ScrollExperience, { LocalSeoSection, FinalClose } from "@/components/ScrollExperience";
-import Navbar from "@/components/Navbar";
 
 // Mathematically-generated film grain. Zero image imports, negligible bytes over the wire.
 const GRAIN =
@@ -7,15 +6,14 @@ const GRAIN =
 
 export default function Page() {
   return (
-    <main className="relative bg-[#0d070b] text-[#ededed] font-sans overflow-x-hidden selection:bg-white selection:text-black">
-      {/* Atmospheric radial lighting vignette — moody charcoal-to-crimson underglow, kills flat dead-black zones.
-          Viewport-fixed so it never runs out no matter how far the document scrolls. */}
+    <main className="relative bg-gradient-to-b from-[#07080b] to-[#11141d] text-[#ededed] font-sans overflow-x-hidden selection:bg-white selection:text-black">
+      {/* Atmospheric radial lighting vignette — kills flat dead-black zones */}
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 z-0 opacity-90"
+        className="pointer-events-none fixed inset-0 z-0 opacity-70"
         style={{
           backgroundImage:
-            "radial-gradient(60% 50% at 20% 0%, rgba(120,140,180,0.10), transparent 60%), radial-gradient(65% 55% at 50% 100%, rgba(160,20,40,0.22), transparent 70%), radial-gradient(50% 40% at 85% 100%, rgba(90,100,140,0.10), transparent 65%), radial-gradient(70% 60% at 50% 50%, rgba(120,20,32,0.10), transparent 75%)",
+            "radial-gradient(60% 50% at 20% 0%, rgba(120,140,180,0.10), transparent 60%), radial-gradient(50% 40% at 85% 100%, rgba(90,100,140,0.08), transparent 65%)",
         }}
       />
       {/* Global vault-texture grain overlay */}
@@ -25,7 +23,6 @@ export default function Page() {
         style={{ backgroundImage: GRAIN }}
       />
 
-      <Navbar />
       <ScrollExperience />
       <LocalSeoSection />
       <FinalClose />

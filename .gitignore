@@ -15,9 +15,3 @@ next-env.d.ts
 /.next-dev.log
 .gstack/
 .vercel
-
-# Session artifacts, test runs, and auxiliary repositories
-.scroll-audit.js
-.playwright-mcp/
-.claude_session_handoff.md
-OmniRoute/

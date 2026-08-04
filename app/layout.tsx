@@ -1,4 +1,4 @@
-import { Syne, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { Syne, Inter, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import "@/app/globals.css";
 
@@ -11,7 +11,7 @@ const syne = Syne({
   variable: "--font-syne-face",
   display: "swap",
 });
-const jakarta = Plus_Jakarta_Sans({
+const inter = Inter({
   subsets: ["latin"],
   variable: "--font-grotesk",
   display: "swap",
@@ -36,7 +36,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`dark bg-[#07080b] text-white ${syne.variable} ${jakarta.variable} ${jetbrains.variable}`}
+      className={`dark bg-[#07080b] text-white ${syne.variable} ${inter.variable} ${jetbrains.variable}`}
     >
       <body className="font-sans antialiased selection:bg-white selection:text-black">
         <Providers>

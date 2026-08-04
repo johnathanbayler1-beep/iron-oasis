@@ -18,11 +18,11 @@
   --color-zinc-400: #a1a1aa;
   --color-zinc-300: #d4d4d8;
 
-  /* Display = Syne (monumental headers). Body = Inter. Metadata = JetBrains Mono.
+  /* Display = Syne (monumental headers). Body = Plus Jakarta Sans. Metadata = JetBrains Mono.
      All three are loaded by next/font in app/layout.tsx. */
   --font-syne: var(--font-syne-face), 'Syne', sans-serif;
   --font-display: var(--font-display-face, var(--font-syne-face)), 'Syne', sans-serif;
-  --font-sans: var(--font-grotesk), 'Inter', sans-serif;
+  --font-sans: var(--font-grotesk), 'Plus Jakarta Sans', sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
   /* mechanical spring defaults consumed by Framer Motion configs */
@@ -321,16 +321,17 @@ html.lenis-stopped body {
 /* ── Tier cards — translucent glass with layered ambient depth ── */
 .io-tier {
   position: relative;
-  border: 1px solid rgba(255,255,255,0.06);
-  border-top: 1px solid rgba(255,255,255,0.12);
-  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-top: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(20px);
   padding: clamp(38px, 4.8vw, 58px);
-  border-radius: 0;
   cursor: pointer;
   overflow: hidden;
   will-change: transform;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.05),
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 0 0 1px rgba(255,255,255,0.03),
     0 24px 60px -28px rgba(0,0,0,0.9);
   transition:
     opacity 0.7s ease,
@@ -338,6 +339,15 @@ html.lenis-stopped body {
     border-color 0.35s ease,
     background 0.35s ease,
     box-shadow 0.4s ease;
+}
+
+.io-tier:hover {
+  border-color: rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.045);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.1),
+    inset 0 0 0 1px rgba(255,255,255,0.05),
+    0 32px 80px -30px rgba(0,0,0,0.95);
 }
 
 .io-tier:hover {
@@ -535,7 +545,6 @@ html.lenis-stopped body {
 
 @theme inline {
   --font-heading: var(--font-sans);
-  --font-sans: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);

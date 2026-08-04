@@ -38,51 +38,55 @@ const scrub = {
   invalidate: () => {},
 };
 
-// Phase boundaries, all expressed as fractions of total scroll progress.
-// Total pin range grew 350% -> 450% -> 800% viewport height, first to fit
-// the merged AppShowcase phase (see APPSHOWCASE_START below) and now to
-// keep the pin (and the 3D background) alive through the whole showcase
-// dwell instead of releasing the instant the fly-through ends — every
-// pre-existing fraction is scaled by SCALE so on-screen pixel timing for
-// the hero/camera/CTA phases is unchanged.
-const SCALE = 350 / 800;
-const HERO_END = 0.22 * SCALE;
-const FRAME_SPEED = 2.0;
-const SPATIAL_START = 0.18 * SCALE;
-const HERO_EXIT_START = 0.16 * SCALE;
-const HERO_EXIT_DUR = 0.08 * SCALE;
-// Sequential entrance: logo scales/settles first, text only starts revealing
-// once the logo tween is fully done — no simultaneous clumped motion.
-const LOGO_ENTER_DUR = 0.05 * SCALE;
+// ─── Master timeline map ────────────────────────────────────────────────
+// Every constant below is a fraction of the single pinned range (+=800%).
+//
+//   0 ──────────────── 0.45 ─────────────────────────────────────── 1.0
+//     frame sequence 0-120   3D fly-through   tiers   showcase   drift
+//
+// The 121-frame logo sequence owns the front 45% of the pin. That is what
+// makes frame-interval text cues meaningful: a block living from frame 28
+// to frame 52 gets ~1700px of scroll, not ~90px. All sequence-phase text is
+// declared in FRAME numbers (see SEQUENCE_BLOCKS) and converted by f().
+const FRAME_SPAN = 0.45;
+const f = (frame: number) => (frame / (FRAME_COUNT - 1)) * FRAME_SPAN;
+
+// Hero: logo settles first, headline clip-reveals second, both clear well
+// before the first floating overlay arrives at frame 28 — no clumped motion.
+const LOGO_ENTER_DUR = f(3);
 const TEXT_ENTER_START = LOGO_ENTER_DUR;
-const TEXT_ENTER_DUR = 0.06 * SCALE;
-// Logo exits fully (autoAlpha 0, visibility hidden) before text begins its own exit — no overlap.
-const LOGO_EXIT_START = HERO_EXIT_START;
-const LOGO_EXIT_DUR = HERO_EXIT_DUR / 2;
-const TEXT_EXIT_START = LOGO_EXIT_START + LOGO_EXIT_DUR;
-const TEXT_EXIT_DUR = HERO_EXIT_DUR / 2;
-const PANEL_ENTER = 0.28 * SCALE;
-// CAMERA_END marks the end of the primary fly-through segment and anchors
-// the CTA phase timing below. The camera itself keeps gliding past this
-// point — see DRIFT_END and rig.waypoints' 6th "drift" point — all the way
-// through the showcase phase, so the 3D stage never freezes or cuts away.
-const CAMERA_END = 1.0 * SCALE;
-const CTA_POS = [0.42 * SCALE, 0.64 * SCALE, 0.86 * SCALE] as const;
+const TEXT_ENTER_DUR = f(6);
+const HERO_EXIT_START = f(16);
+const HERO_EXIT_DUR = f(8);
+
+// Sequence-phase motion vocabulary: fade + slide up in, fade + slide up out.
+// Deliberately flat (no skew/rotateX) — the tier/showcase phases keep the
+// kinetic 3D vocabulary, the Apple-style sequence phase stays minimal.
+const SEQ_REVEAL_DUR = f(9);
+const SEQ_FADE_DUR = f(7);
+
+// Logo canvas holds full-size across the entire sequence, then recedes as
+// the 3D stage wipes in over the top of it.
+const LOGO_EXIT_START = FRAME_SPAN;
+const LOGO_EXIT_DUR = 0.04;
+
+const SPATIAL_START = 0.44;
+const WEBGL_IN_DUR = 0.07;
+const PANEL_ENTER = 0.49;
+const PANEL_ENTER_DUR = 0.03;
+
+const CTA_POS = [0.56, 0.645, 0.73] as const;
 const CTA_SPACING = CTA_POS[1] - CTA_POS[0];
-const CTA_FADE_GAP = Math.min(0.08 * SCALE, CTA_SPACING * 0.4);
+const CTA_FADE_GAP = Math.min(0.05, CTA_SPACING * 0.4);
 const CTA_REVEAL_DUR = CTA_SPACING * 0.4;
-// Panel's exit must fully complete, with a clear gap, before CTA_POS[0]
-// begins the Oasis Lite entrance — previously PANEL_FADE == CTA_POS[0]
-// exactly, so the spatial-mechanics text and the first tier block animated
-// on screen at the same time.
-const PANEL_EXIT_DUR = 0.02 * SCALE;
-const PANEL_EXIT_GAP = 0.01 * SCALE;
-const PANEL_FADE = CTA_POS[0] - PANEL_EXIT_GAP - PANEL_EXIT_DUR;
+// Panel's exit completes before CTA_POS[0] begins the Oasis Lite entrance.
+const PANEL_EXIT_DUR = 0.02;
+const PANEL_FADE = CTA_POS[0] - CTA_FADE_GAP;
 // AppShowcase phase: merged into this single master pin so the 3D canvas and
 // background persist continuously instead of handing off to a second,
 // independently-pinned section.
-const APPSHOWCASE_START = CAMERA_END + 0.02;
-const APPSHOWCASE_END = 0.85;
+const APPSHOWCASE_START = 0.79;
+const APPSHOWCASE_END = 0.95;
 const SHOWCASE_STEP_COUNT = 3;
 const SHOWCASE_SPACING = (APPSHOWCASE_END - APPSHOWCASE_START) / SHOWCASE_STEP_COUNT;
 const SHOWCASE_POS = Array.from({ length: SHOWCASE_STEP_COUNT }, (_, i) => APPSHOWCASE_START + i * SHOWCASE_SPACING);
@@ -126,6 +130,49 @@ const PHONE_SCREENS: PhoneScreen[] = [
   { label: "Instant Sign Up" },
   { label: "Secure Your Session" },
   { label: "Digital Access Key" },
+];
+
+// Apple-style overlays that float over the frame sequence. `in`/`out` are
+// FRAME numbers against the 121-frame scrub — `in` is when the block starts
+// revealing, `out` is when it has finished clearing. Keep the windows
+// non-overlapping; f() turns them into timeline positions.
+type SequenceBlock = {
+  in: number;
+  out: number;
+  eyebrow: string;
+  heading: string;
+  body?: string;
+  features?: string[];
+  stats?: { value: string; label: string }[];
+};
+
+const SEQUENCE_BLOCKS: SequenceBlock[] = [
+  {
+    in: 28,
+    out: 52,
+    eyebrow: "Private by design",
+    heading: "The whole space.\nJust you.",
+    body: "One member per session. No queue for a rack, no waiting on a bench, no one else's schedule to work around.",
+  },
+  {
+    in: 60,
+    out: 84,
+    eyebrow: "Built around the key",
+    heading: "It opens\nthe moment\nyou arrive.",
+    features: ["Encrypted Access Key", "24/7 unstaffed entry", "Commercial-grade floor"],
+  },
+  {
+    in: 92,
+    out: 118,
+    eyebrow: "By the numbers",
+    heading: "Solitude, quantified.",
+    stats: [
+      { value: "1", label: "Member per session" },
+      { value: "24/7", label: "Continuous access" },
+      { value: "0", label: "Shared equipment" },
+      { value: "60s", label: "Signup to key" },
+    ],
+  },
 ];
 
 const _camPos = new THREE.Vector3();
@@ -309,6 +356,7 @@ export default function ScrollExperience() {
   const bgTextRef = useRef<HTMLDivElement>(null);
   const webglWrapRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const sequenceRefs = useRef<(HTMLDivElement | null)[]>([]);
   const tiltRefs = useRef<(HTMLDivElement | null)[]>([]);
   const showcaseRefs = useRef<(HTMLDivElement | null)[]>([]);
   const phoneScreenRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -418,7 +466,12 @@ export default function ScrollExperience() {
     gsap.set(panelRef.current, { clipPath: "inset(0 100% 0 0)", x: -20 });
 
     const blocks = tiltRefs.current.filter(Boolean) as HTMLDivElement[];
-    gsap.set(blocks, { autoAlpha: 0, y: 40, rotateX: 12, skewY: 2, clipPath: "inset(0 0 100% 0)" });
+    gsap.set(blocks, { autoAlpha: 0, y: 24, scale: 0.94 });
+
+    const seqBlocks = sequenceRefs.current.filter(Boolean) as HTMLDivElement[];
+    gsap.set(seqBlocks, { autoAlpha: 0, y: 0 });
+    const seqChildren = seqBlocks.map((b) => Array.from(b.children));
+    seqChildren.forEach((kids) => gsap.set(kids, { autoAlpha: 0, y: 36 }));
 
     const showcaseBlocks = showcaseRefs.current.filter(Boolean) as HTMLDivElement[];
     gsap.set(showcaseBlocks, { autoAlpha: 0, y: 40, rotateX: 12, skewY: 2, clipPath: "inset(0 0 100% 0)" });
@@ -434,12 +487,22 @@ export default function ScrollExperience() {
       y: 50,
     });
 
-    // Entrance lives INSIDE the scrubbed master timeline below (not a
-    // one-time mount tween) so it's fully reversible and always reflects the
-    // true scroll position — landing mid-scroll now shows the correct
-    // partial state instead of a frozen half-played intro.
     gsap.set(canvas, { scale: 1.35, autoAlpha: 0, filter: "brightness(1.1) saturate(1.05)" });
     gsap.set(Array.from(text.children), { clipPath: "inset(0 100% 0 0)", xPercent: -4, scale: 0.95, rotateX: 12, skewY: 2 });
+
+    // Logo + headline entrance plays once on mount — Apple-style: the visitor
+    // sees the reveal immediately on load, before any scroll input. It's
+    // deliberately kept out of the scrubbed master timeline below (which used
+    // to own this) so the page never depends on the user scrolling to see
+    // the intro, and scrolling back to top can't re-hide an already-settled
+    // hero.
+    const introTl = gsap.timeline({ delay: 0.15 });
+    introTl.to(canvas, { scale: 1, autoAlpha: 1, filter: "brightness(1) saturate(1)", duration: 1.1, ease: "power3.out" }, 0);
+    introTl.to(
+      Array.from(text.children),
+      { clipPath: "inset(0 0% 0 0)", xPercent: 0, scale: 1, rotateX: 0, skewY: 0, stagger: 0.12, duration: 1.2, ease: "expo.out" },
+      0.5,
+    );
 
     // Single pin on the container drives the whole sequence — visualLayerRef
     // and overlayRef are plain absolute children riding along with it, so
@@ -450,12 +513,12 @@ export default function ScrollExperience() {
         start: "top top",
         end: "+=800%",
         pin: true,
-        scrub: 1,
+        scrub: 1.2,
         anticipatePin: 1,
         invalidateOnRefresh: true,
         onUpdate: (self) => {
           frameState.frame =
-            gsap.utils.clamp(0, 1, (self.progress / HERO_END) * FRAME_SPEED) * (FRAME_COUNT - 1);
+            gsap.utils.clamp(0, 1, self.progress / FRAME_SPAN) * (FRAME_COUNT - 1);
           draw();
 
           scrub.progress = gsap.utils.clamp(
@@ -468,45 +531,58 @@ export default function ScrollExperience() {
       },
     });
 
-    // Phase 0 (0 - 0.11): sequential hero entrance. Logo scales/settles
-    // FIRST; only once that tween completes does the headline start its
-    // staggered clip-reveal — no simultaneous clumped motion.
-    tl.to(canvas, { scale: 1, autoAlpha: 1, filter: "brightness(1) saturate(1)", duration: LOGO_ENTER_DUR, ease: "power3.out" }, 0);
-    tl.to(
-      Array.from(text.children),
-      { clipPath: "inset(0 0% 0 0)", xPercent: 0, scale: 1, rotateX: 0, skewY: 0, stagger: TEXT_ENTER_DUR / (text.children.length * 2), duration: TEXT_ENTER_DUR, ease: "expo.out" },
-      TEXT_ENTER_START,
-    );
+    // Phase 0 (0 - 0.11) logo/headline entrance is handled by introTl above,
+    // which autoplays on mount instead of waiting on scroll.
 
-    // Phase 1 (0.11 - 0.16): hero logo shrinks/recedes as the user scrolls
-    // out of the hero, once the entrance has fully settled.
-    tl.to(canvas, { scale: 0.6, z: -400, y: -50, filter: "brightness(0.35) saturate(0.8)", duration: HERO_EXIT_START - TEXT_ENTER_START - TEXT_ENTER_DUR, ease: "power2.out" }, TEXT_ENTER_START + TEXT_ENTER_DUR);
+    // Phase 1 (frames 16-24): hero copy clears while the logo sequence keeps
+    // scrubbing at full size behind it. The canvas is the product shot for
+    // this whole phase, so it does NOT shrink here — it holds until
+    // LOGO_EXIT_START (= FRAME_SPAN), after the last frame has been drawn.
+    tl.to(text, { autoAlpha: 0, y: -32, duration: HERO_EXIT_DUR, ease: "power2.in" }, HERO_EXIT_START);
+
     if (bgTextRef.current) {
       // Kinetic bg type: fades/drifts in during the hero beat, then keeps
-      // parallax-drifting across the entire fly-through — never freezes.
+      // parallax-drifting across the entire pin — never freezes.
       tl.fromTo(
         bgTextRef.current,
         { xPercent: -10, autoAlpha: 0 },
-        { xPercent: -2, autoAlpha: 0.1, duration: HERO_END, ease: "power2.out" },
+        { xPercent: -4, autoAlpha: 0.1, duration: f(20), ease: "power2.out" },
         0,
       );
-      tl.to(bgTextRef.current, { xPercent: 18, ease: "none", duration: 1 - HERO_END }, HERO_END);
+      tl.to(bgTextRef.current, { xPercent: 18, ease: "none", duration: 1 - f(20) }, f(20));
     }
 
-    // Phase 1→2 handoff: logo (canvas) reaches autoAlpha:0/visible:false completely
-    // before the hero text begins its own exit — strict sequential separation, no
-    // overlap — then both are fully gone before the Spatial Mechanics panel fades in.
-    tl.to(canvas, { autoAlpha: 0, duration: LOGO_EXIT_DUR, ease: "power2.out" }, LOGO_EXIT_START);
-    tl.to(text, { autoAlpha: 0, duration: TEXT_EXIT_DUR, ease: "power2.out" }, TEXT_EXIT_START);
-    // Circle-wipe the 3D canvas in, overlapping the hero logo's fade-out so
-    // there's no dead black gap between the hero and the first 3D frame.
+    // Phase 2: frame-cued Apple overlays. Each block's children stagger up
+    // into place across its `in` window and the whole block slides out just
+    // before its `out` frame — one block on screen at a time, always.
+    SEQUENCE_BLOCKS.forEach((blk, i) => {
+      const el = seqBlocks[i];
+      if (!el) return;
+      tl.set(el, { autoAlpha: 1 }, f(blk.in));
+      tl.to(
+        seqChildren[i],
+        { autoAlpha: 1, y: 0, stagger: SEQ_REVEAL_DUR / 6, duration: SEQ_REVEAL_DUR, ease: "expo.out" },
+        f(blk.in),
+      );
+      tl.to(el, { autoAlpha: 0, y: -28, duration: SEQ_FADE_DUR, ease: "power2.in" }, f(blk.out) - SEQ_FADE_DUR);
+      // Bloom shifts with each block so the backdrop breathes in step.
+      tl.to(bloomRef.current, { opacity: 0.3 + i * 0.16, duration: SEQ_REVEAL_DUR, ease: "sine.inOut" }, f(blk.in));
+    });
+
+    // Phase 2→3 handoff: the logo recedes only after frame 120 is on screen,
+    // and the 3D circle-wipe overlaps that exit so there's never a dead frame.
+    tl.to(
+      canvas,
+      { scale: 0.72, y: -40, autoAlpha: 0, filter: "brightness(0.4) saturate(0.8)", duration: LOGO_EXIT_DUR, ease: "power2.inOut" },
+      LOGO_EXIT_START,
+    );
     tl.fromTo(
       webglWrapRef.current,
       { autoAlpha: 0, clipPath: "circle(0% at 50% 50%)" },
-      { autoAlpha: 1, clipPath: "circle(75% at 50% 50%)", duration: PANEL_ENTER - LOGO_EXIT_START, ease: "power2.inOut" },
-      LOGO_EXIT_START,
+      { autoAlpha: 1, clipPath: "circle(75% at 50% 50%)", duration: WEBGL_IN_DUR, ease: "power2.inOut" },
+      SPATIAL_START,
     );
-    tl.to(panelRef.current, { clipPath: "inset(0 0% 0 0)", x: 0, duration: 0.08, ease: "power2.out" }, PANEL_ENTER);
+    tl.to(panelRef.current, { clipPath: "inset(0 0% 0 0)", x: 0, duration: PANEL_ENTER_DUR, ease: "power2.out" }, PANEL_ENTER);
 
     // Phase 2 (0.18 - 1.0): camera fly-through, driven by scrub.progress in onUpdate above.
     // Fully hidden (autoAlpha) well before CTA_POS[0] — see PANEL_FADE derivation above.
@@ -518,11 +594,11 @@ export default function ScrollExperience() {
     CTA_POS.forEach((at, i) => {
       tl.to(
         blocks[i],
-        { autoAlpha: 1, y: 0, rotateX: 0, skewY: 0, clipPath: "inset(0 0 0% 0)", duration: CTA_REVEAL_DUR, ease: "expo.out" },
+        { autoAlpha: 1, y: 0, scale: 1, duration: CTA_REVEAL_DUR, ease: "power3.out" },
         at,
       );
       const fadeAt = i < CTA_POS.length - 1 ? CTA_POS[i + 1] - CTA_FADE_GAP : APPSHOWCASE_START - CTA_FADE_GAP;
-      tl.to(blocks[i], { autoAlpha: 0, rotateX: -8, skewY: -2, clipPath: "inset(0 0 100% 0)", duration: CTA_FADE_GAP, ease: "power2.in" }, fadeAt);
+      tl.to(blocks[i], { autoAlpha: 0, y: -16, scale: 0.96, duration: CTA_FADE_GAP, ease: "power2.in" }, fadeAt);
       // Bloom shifts intensity with each tier reveal so the ambient glow
       // breathes in step with the waypoint transition, never sitting static.
       tl.to(bloomRef.current, { opacity: BLOOM_INTENSITY[i], duration: CTA_REVEAL_DUR, ease: "sine.inOut" }, at);
@@ -575,17 +651,17 @@ export default function ScrollExperience() {
   return (
     <section
       ref={containerRef}
-      className="relative w-full min-h-screen bg-gradient-to-b from-[#07080b] to-[#11141d] text-white overflow-hidden flex flex-col lg:flex-row"
+      className="relative w-full min-h-screen bg-gradient-to-b from-[#1a1014] via-[#3a0f16] to-[#5c0f1a] text-white overflow-hidden flex flex-col lg:flex-row"
     >
       {/* WebGL/2D canvas layer — globally pinned, right 2/3, z-0 */}
-      <div ref={visualLayerRef} className="fixed inset-0 z-10 pointer-events-none bg-transparent">
+      <div ref={visualLayerRef} className="fixed inset-y-0 right-0 z-10 w-full lg:w-2/3 pointer-events-none bg-transparent">
         <div
           ref={bloomRef}
           aria-hidden
           className="absolute inset-0 z-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(60% 55% at 30% 40%, rgba(120,140,255,0.16), transparent 70%), radial-gradient(45% 45% at 75% 65%, rgba(255,180,140,0.1), transparent 72%)",
+              "radial-gradient(60% 55% at 30% 40%, rgba(120,140,255,0.16), transparent 70%), radial-gradient(45% 45% at 75% 65%, rgba(255,180,140,0.1), transparent 72%), radial-gradient(50% 50% at 50% 55%, rgba(180,24,44,0.16), transparent 70%)",
             willChange: "transform, opacity",
           }}
         />
@@ -627,7 +703,7 @@ export default function ScrollExperience() {
           style={{ mixBlendMode: "lighten" }}
         />
 
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(18,22,32,0.12),rgba(10,11,14,0.45))] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(60,20,30,0.12),rgba(92,15,26,0.4))] pointer-events-none" />
       </div>
 
       {/* CSS iPhone shell — booking-flow screens, floats over the dimmed 3D
@@ -638,10 +714,24 @@ export default function ScrollExperience() {
       >
         <div ref={phoneShellRef} className="relative">
           <div className="absolute -inset-20 rounded-full bg-white/[0.06] blur-[100px]" />
+          <div className="absolute -inset-24 rounded-full bg-[radial-gradient(circle,rgba(180,24,44,0.14),transparent_70%)] blur-[80px]" />
           <div
             className="device-shell relative rounded-[3rem] border border-white/15 bg-gradient-to-b from-zinc-800 to-black p-[3px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_50px_120px_-30px_rgba(0,0,0,0.95)]"
             style={{ width: "clamp(230px, 20vw, 300px)", aspectRatio: "9 / 19.5" }}
           >
+            {/* Specular rim light — thin gradient ring tracing the glass edge */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 rounded-[3rem] opacity-80"
+              style={{
+                padding: "1px",
+                background:
+                  "conic-gradient(from 200deg at 50% 0%, rgba(255,255,255,0.55), transparent 30%, transparent 70%, rgba(255,255,255,0.25))",
+                WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+                WebkitMaskComposite: "xor",
+                maskComposite: "exclude",
+              }}
+            />
             <div className="relative h-full w-full overflow-hidden rounded-[2.7rem] border border-black/60 bg-black">
               {/* Dynamic Island */}
               <div className="absolute left-1/2 top-[10px] z-30 h-[22px] w-[86px] -translate-x-1/2 rounded-full bg-black" />
@@ -717,26 +807,35 @@ export default function ScrollExperience() {
       </div>
 
       {/* HTML overlay layer — copy column, transparent, floats over the 3D space, z-10 */}
-      <div ref={overlayRef} className="relative w-full lg:w-5/12 min-h-screen px-6 lg:px-12 z-20 bg-transparent [perspective:1200px] [transform-style:preserve-3d]">
+      <div ref={overlayRef} className="relative w-full min-h-screen z-20 bg-transparent [perspective:1200px] [transform-style:preserve-3d]">
         <div
           ref={heroTextRef}
-          className="absolute inset-0 z-20 flex items-center justify-start text-left px-6 lg:px-12 will-change-[transform,opacity] [transform:translateZ(0)]"
+          className="absolute inset-0 z-20 flex items-center justify-center px-6 text-center will-change-[transform,opacity] [transform:translateZ(0)]"
         >
-          <div className="w-full">
+          <div
+            aria-hidden
+            className="absolute inset-0 -z-10 pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(62% 68% at 50% 48%, rgba(5,6,9,0.94) 0%, rgba(5,6,9,0.78) 42%, rgba(5,6,9,0) 80%)",
+            }}
+          />
+          <div className="relative w-full max-w-3xl">
             <span className="text-[10px] uppercase tracking-[0.32em] text-white/40 font-mono mb-4 block">
               Iron Oasis — Windsor-Central (ON)
             </span>
-            <h1 className="text-[clamp(2.25rem,4.2vw,4.75rem)] font-extrabold tracking-[-0.035em] leading-[0.96] font-syne mb-6">
-              PRIVATE ACCESS. <br />
+            <h1 className="text-[clamp(2.75rem,7vw,6rem)] font-semibold tracking-[-0.045em] leading-[0.98] font-syne mb-8">
+              Private access.
+              <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-300 to-zinc-600">
-                ZERO SHARING.
+                Zero sharing.
               </span>
             </h1>
-            <p className="text-zinc-400 text-lg font-light leading-relaxed">
+            <p className="mx-auto max-w-xl text-zinc-400 text-lg font-light leading-relaxed">
               A premium private space in a quiet residential setting. Premium
               equipment in a commercial-grade suite, unlocked instantly via the app.
             </p>
-            <div className="mt-10 flex flex-col sm:flex-row items-start justify-start gap-4">
+            <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
               <MagicShimmerButton className="tracking-[0.15em]">
                 Request App Access
               </MagicShimmerButton>
@@ -759,11 +858,52 @@ export default function ScrollExperience() {
             pointerEvents: "none",
           }}
         >
+          {SEQUENCE_BLOCKS.map((blk, i) => (
+            <div
+              key={blk.eyebrow}
+              ref={(el) => { sequenceRefs.current[i] = el; }}
+              className="absolute w-[clamp(320px,34vw,560px)] border-l border-white/15 pl-8"
+              style={{ pointerEvents: "none" }}
+            >
+              <span className="block font-mono text-[10px] uppercase tracking-[0.32em] text-white/50 mb-3">
+                {blk.eyebrow}
+              </span>
+              <h3 className="font-syne font-black uppercase leading-[1.05] tracking-[-0.02em] text-[clamp(1.6rem,2.3vw,2.4rem)] text-white whitespace-pre-line break-words">
+                {blk.heading}
+              </h3>
+              {blk.body && (
+                <p className="mt-4 text-sm text-zinc-400 leading-relaxed max-w-[32ch]">{blk.body}</p>
+              )}
+              {blk.features && (
+                <ul className="mt-5 space-y-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-zinc-300">
+                  {blk.features.map((feat) => (
+                    <li key={feat} className="flex items-center gap-2.5">
+                      <span className="h-1 w-1 rounded-full bg-white/60 shrink-0" />
+                      {feat}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {blk.stats && (
+                <div className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4">
+                  {blk.stats.map((stat) => (
+                    <div key={stat.label}>
+                      <div className="font-syne text-3xl font-bold text-white">{stat.value}</div>
+                      <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                        {stat.label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+
           {CTA_BLOCKS.map((blk, i) => (
             <div
               key={blk.tag}
               ref={(el) => { tiltRefs.current[i] = el; }}
-              className="absolute w-[clamp(320px,34vw,520px)] border-l border-white/15 pl-8"
+              className="absolute w-[clamp(320px,34vw,520px)] rounded-2xl border border-white/15 bg-white/[0.06] backdrop-blur-2xl px-8 py-8 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)]"
               style={{ pointerEvents: blk.cta ? "auto" : "none" }}
             >
               <span className="block font-mono text-[10px] uppercase tracking-[0.32em] text-white/50 mb-3">
@@ -825,7 +965,7 @@ export default function ScrollExperience() {
             Spatial Mechanics
           </span>
           <h3 className="text-3xl font-bold font-syne text-white mb-3">
-            Move Through The Space
+            Move through the space
           </h3>
           <p className="text-sm text-zinc-400">
             Scroll to move through the commercial-grade suite — every square
@@ -863,15 +1003,47 @@ const COORDINATES = [
 ];
 
 
+function useTiltHandlers() {
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>, index: number) => {
+    const card = cardRefs.current[index];
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const xc = rect.width / 2;
+    const yc = rect.height / 2;
+    gsap.to(card, {
+      rotateX: ((y - yc) / yc) * -8,
+      rotateY: ((x - xc) / xc) * 8,
+      transformPerspective: 1000,
+      duration: 0.4,
+      ease: "power2.out",
+    });
+    card.style.setProperty("--mouse-x", `${x}px`);
+    card.style.setProperty("--mouse-y", `${y}px`);
+  };
+
+  const onMouseLeave = (index: number) => {
+    const card = cardRefs.current[index];
+    if (!card) return;
+    gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.8, ease: "elastic.out(1, 0.4)" });
+  };
+
+  return { cardRefs, onMouseMove, onMouseLeave };
+}
+
 export function LocalSeoSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const leftColRef = useRef<HTMLDivElement>(null);
   const quoteRef = useRef<HTMLDivElement>(null);
+  const { cardRefs, onMouseMove, onMouseLeave } = useTiltHandlers();
 
   useGSAP(() => {
     if (!leftColRef.current || !quoteRef.current) return;
     const tl = gsap.timeline({
-      scrollTrigger: { trigger: sectionRef.current, start: "top 90%", end: "bottom 40%", scrub: 1 },
+      scrollTrigger: { trigger: sectionRef.current, start: "top 90%", end: "bottom 40%", scrub: 1.2 },
     });
 
     tl.fromTo(
@@ -886,10 +1058,40 @@ export function LocalSeoSection() {
       { autoAlpha: 1, y: 0, clipPath: "inset(0 0 0% 0)", ease: "power3.out", duration: 1 },
       2.6,
     );
+
+    const coordCards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
+    if (coordCards.length) {
+      const coordTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: coordCards[0].parentElement,
+          start: "top 90%",
+          end: "top 30%",
+          scrub: 1.2,
+        },
+      });
+      coordCards.forEach((card, i) => {
+        const dir = i % 2 === 0 ? -1 : 1;
+        coordTl.fromTo(
+          card,
+          { autoAlpha: 0, z: -900, rotateY: dir * 35, rotateX: 14, scale: 0.75 },
+          { autoAlpha: 1, z: 0, rotateY: 0, rotateX: 0, scale: 1, ease: "power2.out", duration: 1 },
+          i * 0.18,
+        );
+      });
+    }
   }, { scope: sectionRef });
 
   return (
-    <section ref={sectionRef} className="relative z-10 bg-transparent text-white px-6 py-32">
+    <section ref={sectionRef} className="relative z-10 bg-transparent text-white px-6 py-32 [perspective:2500px]">
+      {/* Section-local underglow — the global fixed vignette alone reads too flat this deep in the page. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-80"
+        style={{
+          backgroundImage:
+            "radial-gradient(55% 45% at 15% 10%, rgba(160,20,40,0.16), transparent 65%), radial-gradient(45% 40% at 90% 80%, rgba(120,140,180,0.08), transparent 65%)",
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -926,9 +1128,9 @@ export function LocalSeoSection() {
             Operational Coordinates / WNDSR
           </span>
           <h2 className="text-[clamp(2.5rem,6vw,5.5rem)] font-black tracking-[-0.04em] leading-[0.95] font-syne mb-10">
-            Flagship Location.
+            Flagship location.
             <br />
-            <span className="text-zinc-500">A Private Space, Not A Facility.</span>
+            <span className="text-zinc-500">A private space, not a facility.</span>
           </h2>
           <p className="text-zinc-400 text-lg mb-14 leading-relaxed max-w-2xl">
             A premium private space in a quiet Windsor residential setting.
@@ -936,11 +1138,28 @@ export function LocalSeoSection() {
             and turnkey Access Key control.
           </p>
 
-          <dl className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-14">
-            {COORDINATES.map(({ k, v }) => (
-              <div key={k} className="io-tier rounded-2xl px-5 py-5 backdrop-blur-2xl">
-                <dt className="text-[10px] uppercase tracking-[0.24em] text-zinc-500 font-mono mb-2">{k}</dt>
-                <dd className="text-sm tracking-wide text-zinc-100 font-mono">{v}</dd>
+          <dl className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-14 [perspective:2000px]" style={{ transformStyle: "preserve-3d" }}>
+            {COORDINATES.map(({ k, v }, i) => (
+              <div
+                key={k}
+                ref={(el) => {
+                  cardRefs.current[i] = el;
+                }}
+                onMouseMove={(e) => onMouseMove(e, i)}
+                onMouseLeave={() => onMouseLeave(i)}
+                className="io-tier relative group rounded-2xl px-5 py-5 backdrop-blur-2xl overflow-hidden"
+                style={{ transformStyle: "preserve-3d" }}
+              >
+                <div
+                  className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  style={{
+                    background: `radial-gradient(300px circle at var(--mouse-x) var(--mouse-y), rgba(120,140,255,0.15), transparent 80%)`,
+                  }}
+                />
+                <div style={{ transform: "translateZ(30px)" }} className="relative">
+                  <dt className="text-[10px] uppercase tracking-[0.24em] text-zinc-500 font-mono mb-2">{k}</dt>
+                  <dd className="text-sm tracking-wide text-zinc-100 font-mono">{v}</dd>
+                </div>
               </div>
             ))}
           </dl>
@@ -966,8 +1185,41 @@ export function LocalSeoSection() {
   );
 }
 
+const FOOTER_LINKS = [
+  { label: "The Space", href: "/" },
+  { label: "The Shop", href: "/shop" },
+  { label: "Access Terms", href: "#request-access" },
+];
+
 export function FinalClose() {
   const sectionRef = useRef<HTMLElement>(null);
+  const legalRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = cardRef.current;
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const xc = rect.width / 2;
+    const yc = rect.height / 2;
+    gsap.to(card, {
+      rotateX: ((y - yc) / yc) * -4,
+      rotateY: ((x - xc) / xc) * 4,
+      transformPerspective: 1200,
+      duration: 0.4,
+      ease: "power2.out",
+    });
+    card.style.setProperty("--mouse-x", `${x}px`);
+    card.style.setProperty("--mouse-y", `${y}px`);
+  };
+
+  const onMouseLeave = () => {
+    const card = cardRef.current;
+    if (!card) return;
+    gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.8, ease: "elastic.out(1, 0.4)" });
+  };
 
   useGSAP(() => {
     if (!sectionRef.current) return;
@@ -976,54 +1228,105 @@ export function FinalClose() {
       { autoAlpha: 0, y: 32, clipPath: "inset(0 0 100% 0)" },
       {
         autoAlpha: 1, y: 0, clipPath: "inset(0 0 0% 0)", stagger: 0.15, ease: "power3.out", duration: 1,
-        scrollTrigger: { trigger: sectionRef.current, start: "top 85%", end: "bottom 60%", scrub: 1 },
+        scrollTrigger: { trigger: sectionRef.current, start: "top 85%", end: "bottom 60%", scrub: 1.2 },
       },
     );
+
+    if (cardRef.current) {
+      gsap.fromTo(
+        cardRef.current,
+        { z: -1600, rotateX: 22, rotateY: -18, scale: 0.68 },
+        {
+          z: 0, rotateX: 0, rotateY: 0, scale: 1, ease: "power2.out",
+          scrollTrigger: { trigger: cardRef.current, start: "top 92%", end: "top 35%", scrub: 1.2 },
+        },
+      );
+    }
+
+    if (legalRef.current) {
+      gsap.fromTo(
+        legalRef.current.querySelectorAll("[data-footer-item]"),
+        { autoAlpha: 0, y: 24, rotateX: 15, transformPerspective: 600 },
+        {
+          autoAlpha: 1, y: 0, rotateX: 0, stagger: 0.08, ease: "expo.out", duration: 0.9,
+          scrollTrigger: { trigger: legalRef.current, start: "top 92%", end: "bottom 70%", scrub: 1 },
+        },
+      );
+    }
   }, { scope: sectionRef });
 
   return (
     <section
       ref={sectionRef}
-      className="relative z-10 overflow-hidden bg-gradient-to-b from-transparent via-[#0a0c11] to-black text-white px-6 py-24 md:py-32 border-t border-white/10"
+      className="relative z-10 overflow-hidden bg-gradient-to-b from-transparent via-[#0d0509] to-[#0d070b] text-white px-6 py-24 md:py-32 border-t border-white/10 [perspective:2500px]"
     >
       {/* Ambient glow anchors the card so the section reads as a designed
           destination instead of a flat void once the card's own padding ends. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-80"
+        className="pointer-events-none absolute inset-0 opacity-90"
         style={{
           backgroundImage:
-            "radial-gradient(50% 60% at 50% 30%, rgba(255,255,255,0.06), transparent 70%)",
+            "radial-gradient(55% 65% at 50% 25%, rgba(255,255,255,0.07), transparent 70%), radial-gradient(60% 50% at 50% 100%, rgba(160,20,40,0.16), transparent 70%)",
         }}
       />
 
-      <div className="relative io-tier max-w-4xl mx-auto rounded-3xl px-8 py-16 md:px-16 md:py-20 text-center backdrop-blur-2xl">
-        <span className="text-[10px] uppercase tracking-[0.32em] text-zinc-500 font-mono mb-6 block">
-          Request Access
-        </span>
-        <h2 className="text-[clamp(2rem,5vw,4rem)] font-black tracking-[-0.04em] leading-[0.98] font-syne mb-6">
-          The Space Is Waiting.
-        </h2>
-        <p className="text-zinc-400 text-lg leading-relaxed max-w-xl mx-auto mb-10">
-          No tours, no sales calls. Download the app, generate your Access
-          Key, and the private space unlocks the moment you arrive.
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-4">
-          <MagicShimmerButton>Request App Access</MagicShimmerButton>
-          <a
-            href="#request-access"
-            className="group relative inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-7 py-3 font-syne text-sm font-semibold tracking-[0.15em] text-zinc-200 backdrop-blur-2xl transition-[color,border-color,background-color,transform] duration-300 [transition-timing-function:var(--ease-mech)] hover:border-white/25 hover:text-white hover:scale-[1.02] active:scale-[0.97]"
-          >
-            Acquire Key
-          </a>
+      <div
+        ref={cardRef}
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
+        className="relative io-tier group max-w-4xl mx-auto rounded-3xl px-8 py-16 md:px-16 md:py-20 text-center backdrop-blur-2xl overflow-hidden"
+        style={{ transformStyle: "preserve-3d" }}
+      >
+        <div
+          className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          style={{
+            background: `radial-gradient(500px circle at var(--mouse-x) var(--mouse-y), rgba(120,140,255,0.12), transparent 80%)`,
+          }}
+        />
+        <div style={{ transform: "translateZ(50px)" }} className="relative">
+          <span className="text-[10px] uppercase tracking-[0.32em] text-zinc-500 font-mono mb-6 block">
+            Request Access
+          </span>
+          <h2 className="text-[clamp(2rem,5vw,4rem)] font-black tracking-[-0.04em] leading-[0.98] font-syne mb-6">
+            The space is waiting.
+          </h2>
+          <p className="text-zinc-400 text-lg leading-relaxed max-w-xl mx-auto mb-10">
+            No tours, no sales calls. Download the app, generate your Access
+            Key, and the private space unlocks the moment you arrive.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <MagicShimmerButton>Request App Access</MagicShimmerButton>
+            <a
+              href="#request-access"
+              className="group/link relative inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-7 py-3 font-syne text-sm font-semibold tracking-[0.15em] text-zinc-200 backdrop-blur-2xl transition-[color,border-color,background-color,transform] duration-300 [transition-timing-function:var(--ease-mech)] hover:border-white/25 hover:text-white hover:scale-[1.02] active:scale-[0.97]"
+            >
+              Acquire Key
+            </a>
+          </div>
         </div>
       </div>
 
-      <div className="relative mt-20 flex flex-col items-center gap-3 text-center">
-        <span className="font-syne text-sm font-semibold tracking-[0.32em] text-zinc-500">
+      <div
+        ref={legalRef}
+        className="relative mt-20 flex flex-col items-center gap-6 text-center [perspective:600px]"
+      >
+        <nav className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+          {FOOTER_LINKS.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              data-footer-item
+              className="font-mono text-[11px] uppercase tracking-[0.24em] text-zinc-500 transition-colors duration-300 hover:text-white"
+            >
+              {link.label}
+            </a>
+          ))}
+        </nav>
+        <span data-footer-item className="font-syne text-sm font-semibold tracking-[0.32em] text-zinc-500">
           IRON OASIS
         </span>
-        <span className="text-[10px] font-mono tracking-[0.28em] text-zinc-600 uppercase">
+        <span data-footer-item className="text-[10px] font-mono tracking-[0.28em] text-zinc-600 uppercase">
           &copy; {new Date().getFullYear()} Iron Oasis. Private access only.
         </span>
       </div>

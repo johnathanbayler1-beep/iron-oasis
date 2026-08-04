@@ -597,8 +597,29 @@ export default function ScrollExperience() {
       APPSHOWCASE_END,
     );
 
+    // The hero entrance lives inside this scrubbed timeline (not a one-time mount
+    // tween) so a mid-scroll page load still lands in the correct partial state.
+    // But that means a fresh visitor at scroll 0 sees the timeline's progress-0
+    // frame — logo, headline, and bloom all hidden — until they touch the wheel.
+    // Nudge the ScrollTrigger's own scroll position forward on mount so the same
+    // scrub logic plays the entrance once automatically, then hand off to real
+    // scroll input from wherever it lands.
+    const introRaf = requestAnimationFrame(() => {
+      const st = tl.scrollTrigger;
+      if (!st) return;
+      const proxy = { p: 0 };
+      gsap.to(proxy, {
+        p: 1,
+        duration: 1.4,
+        delay: 0.2,
+        ease: "power3.out",
+        onUpdate: () => st.scroll(st.start + (st.end - st.start) * HERO_END * proxy.p),
+      });
+    });
+
     return () => {
       window.removeEventListener("resize", resize);
+      cancelAnimationFrame(introRaf);
     };
   }, { scope: containerRef });
 
@@ -767,9 +788,6 @@ export default function ScrollExperience() {
               equipment in a commercial-grade suite, unlocked instantly via the app.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-start justify-start gap-4">
-              <MagicShimmerButton className="tracking-[0.15em]">
-                Request App Access
-              </MagicShimmerButton>
               <a
                 href="#request-access"
                 className="group relative inline-flex items-center justify-center rounded-full border border-white/10 bg-white px-7 py-3 font-syne text-sm font-semibold tracking-[0.15em] text-zinc-900 transition-[color,border-color,background-color,transform] duration-300 [transition-timing-function:var(--ease-mech)] hover:border-white/25 hover:text-black hover:scale-[1.02] active:scale-[0.97]"
@@ -793,7 +811,7 @@ export default function ScrollExperience() {
             <div
               key={blk.tag}
               ref={(el) => { tiltRefs.current[i] = el; }}
-              className="absolute w-[clamp(320px,34vw,520px)] rounded-2xl border border-white/10 border-l-white/25 bg-white/[0.035] backdrop-blur-2xl px-8 py-9 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_40px_90px_-40px_rgba(0,0,0,0.92)]"
+              className="absolute w-[clamp(320px,34vw,520px)] rounded-2xl border border-white/10 border-l-white/25 bg-black/10 px-8 py-9 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_40px_90px_-40px_rgba(0,0,0,0.92)]"
               style={{ pointerEvents: blk.cta ? "auto" : "none" }}
             >
               <span className="block font-mono text-[10px] uppercase tracking-[0.32em] text-white/50 mb-3">
@@ -814,7 +832,7 @@ export default function ScrollExperience() {
                   href="#request-access"
                   className="mt-6 inline-flex items-center justify-center rounded-none border border-white bg-white px-7 py-3 font-syne text-sm font-bold uppercase tracking-[0.15em] text-black transition-transform duration-300 hover:scale-[1.02] active:scale-[0.97]"
                 >
-                  Request App Access
+                  Get Access
                 </a>
               )}
             </div>
@@ -825,7 +843,7 @@ export default function ScrollExperience() {
               key={step.eyebrow}
               ref={(el) => { showcaseRefs.current[i] = el; }}
               id={i === 0 ? "request-access" : undefined}
-              className="absolute w-[clamp(320px,34vw,560px)] rounded-2xl border border-white/10 border-l-white/25 bg-white/[0.035] backdrop-blur-2xl px-8 py-9 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_40px_90px_-40px_rgba(0,0,0,0.92)]"
+              className="absolute w-[clamp(320px,34vw,560px)] rounded-2xl border border-white/10 border-l-white/25 bg-black/10 px-8 py-9 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_40px_90px_-40px_rgba(0,0,0,0.92)]"
               style={{ pointerEvents: step.cta ? "auto" : "none" }}
             >
               <span className="block font-mono text-[10px] uppercase tracking-[0.32em] text-white/50 mb-3">
@@ -840,7 +858,7 @@ export default function ScrollExperience() {
                   href="#request-access"
                   className="mt-6 inline-flex items-center justify-center rounded-none border border-white bg-white px-7 py-3 font-syne text-sm font-bold uppercase tracking-[0.15em] text-black transition-transform duration-300 hover:scale-[1.02] active:scale-[0.97]"
                 >
-                  Request App Access
+                  Get Access
                 </a>
               )}
             </div>
@@ -1045,7 +1063,7 @@ export function FinalClose() {
 
       <div className="relative io-tier max-w-4xl mx-auto rounded-3xl px-8 py-16 md:px-16 md:py-20 text-center backdrop-blur-2xl">
         <span className="text-[10px] uppercase tracking-[0.32em] text-zinc-500 font-mono mb-6 block">
-          Request Access
+          Get Access
         </span>
         <h2 className="text-[clamp(2rem,5vw,4rem)] font-black tracking-[-0.04em] leading-[0.98] font-syne mb-6">
           The Space Is Waiting.

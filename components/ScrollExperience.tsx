@@ -123,7 +123,7 @@ const SHOWCASE_STEPS: ShowcaseStep[] = [
 // index, but this is the on-device UI (booking flow) vs. the marketing copy.
 type PhoneScreen = { label: string };
 const PHONE_SCREENS: PhoneScreen[] = [
-  { label: "Instant Sign Up" },
+  { label: "Instant Access" },
   { label: "Secure Your Session" },
   { label: "Digital Access Key" },
 ];
@@ -299,6 +299,9 @@ const CTA_BLOCKS: CtaBlock[] = [
   },
 ];
 
+const CHILD_IN = { autoAlpha: 0, y: 34, scale: 0.96, rotateX: 10, transformPerspective: 900, clipPath: "inset(0 0 100% 0)" };
+const CHILD_OUT = { autoAlpha: 1, y: 0, scale: 1, rotateX: 0, clipPath: "inset(0 0 0% 0)" };
+
 export default function ScrollExperience() {
   const containerRef = useRef<HTMLDivElement>(null);
   const visualLayerRef = useRef<HTMLDivElement>(null);
@@ -315,6 +318,7 @@ export default function ScrollExperience() {
   const phoneShellRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
+
     const container = containerRef.current;
     const canvas = heroCanvasRef.current;
     const text = heroTextRef.current;
@@ -417,14 +421,23 @@ export default function ScrollExperience() {
     gsap.set(webglWrapRef.current, { autoAlpha: 0, clipPath: "circle(0% at 50% 50%)" });
     gsap.set(panelRef.current, { clipPath: "inset(0 100% 0 0)", x: -20 });
 
+    // Cards carry only the slab-level fade; every line inside them owns its own
+    // fade + scale + shift so the reveal cascades line by line instead of the
+    // whole slab snapping in as one rigid unit.
+    // transformPerspective is per-line: the overlay's [perspective:1200px] only
+    // reaches the slab itself, not the lines nested inside it.
     const blocks = tiltRefs.current.filter(Boolean) as HTMLDivElement[];
-    gsap.set(blocks, { autoAlpha: 0, y: 40, rotateX: 12, skewY: 2, clipPath: "inset(0 0 100% 0)" });
+    const blockLines = blocks.map((b) => Array.from(b.children) as HTMLElement[]);
+    gsap.set(blocks, { autoAlpha: 0, y: 24, scale: 0.985 });
+    blockLines.forEach((lines) => gsap.set(lines, CHILD_IN));
 
     const showcaseBlocks = showcaseRefs.current.filter(Boolean) as HTMLDivElement[];
-    gsap.set(showcaseBlocks, { autoAlpha: 0, y: 40, rotateX: 12, skewY: 2, clipPath: "inset(0 0 100% 0)" });
+    const showcaseLines = showcaseBlocks.map((b) => Array.from(b.children) as HTMLElement[]);
+    gsap.set(showcaseBlocks, { autoAlpha: 0, y: 24, scale: 0.985 });
+    showcaseLines.forEach((lines) => gsap.set(lines, CHILD_IN));
 
     const phoneScreens = phoneScreenRefs.current.filter(Boolean) as HTMLDivElement[];
-    gsap.set(phoneScreens, { autoAlpha: 0, y: 24 });
+    gsap.set(phoneScreens, { autoAlpha: 0, y: 24, scale: 0.97 });
     gsap.set(phoneShellRef.current, {
       autoAlpha: 0,
       scale: 0.75,
@@ -450,7 +463,7 @@ export default function ScrollExperience() {
         start: "top top",
         end: "+=800%",
         pin: true,
-        scrub: 1,
+        scrub: 1.2,
         anticipatePin: 1,
         invalidateOnRefresh: true,
         onUpdate: (self) => {
@@ -474,7 +487,7 @@ export default function ScrollExperience() {
     tl.to(canvas, { scale: 1, autoAlpha: 1, filter: "brightness(1) saturate(1)", duration: LOGO_ENTER_DUR, ease: "power3.out" }, 0);
     tl.to(
       Array.from(text.children),
-      { clipPath: "inset(0 0% 0 0)", xPercent: 0, scale: 1, rotateX: 0, skewY: 0, stagger: TEXT_ENTER_DUR / (text.children.length * 2), duration: TEXT_ENTER_DUR, ease: "expo.out" },
+      { clipPath: "inset(0 0% 0 0)", xPercent: 0, scale: 1, rotateX: 0, skewY: 0, stagger: TEXT_ENTER_DUR / (text.children.length * 2), duration: TEXT_ENTER_DUR, ease: "power3.out" },
       TEXT_ENTER_START,
     );
 
@@ -506,7 +519,10 @@ export default function ScrollExperience() {
       { autoAlpha: 1, clipPath: "circle(75% at 50% 50%)", duration: PANEL_ENTER - LOGO_EXIT_START, ease: "power2.inOut" },
       LOGO_EXIT_START,
     );
-    tl.to(panelRef.current, { clipPath: "inset(0 0% 0 0)", x: 0, duration: 0.08, ease: "power2.out" }, PANEL_ENTER);
+    // Duration must be SCALE-relative: at the old raw 0.08 the panel finished
+    // clipping in at 0.2025, *after* PANEL_FADE (0.1706) had already begun its
+    // exit — the panel was arriving and leaving at the same time.
+    tl.to(panelRef.current, { clipPath: "inset(0 0% 0 0)", x: 0, duration: 0.08 * SCALE, ease: "power3.out" }, PANEL_ENTER);
 
     // Phase 2 (0.18 - 1.0): camera fly-through, driven by scrub.progress in onUpdate above.
     // Fully hidden (autoAlpha) well before CTA_POS[0] — see PANEL_FADE derivation above.
@@ -515,14 +531,20 @@ export default function ScrollExperience() {
     // Phase 3: brutalist CTA/spatial-mechanics blocks materialize sequentially
     // across the continuous camera fly-through — one at a time, same slot.
     const BLOOM_INTENSITY = [0.35, 0.65, 0.45, 0.7, 0.4, 0.75];
+    // Slab lifts first, then its lines cascade in. Stagger is expressed as a
+    // fraction of the reveal window so it stays proportional at any scroll
+    // speed; 4 lines * 0.13 + 0.7 = 1.09 * CTA_REVEAL_DUR, which still lands
+    // well clear of the next waypoint's fade-out.
+    const CTA_LINE_STAGGER = CTA_REVEAL_DUR * 0.13;
     CTA_POS.forEach((at, i) => {
+      tl.to(blocks[i], { autoAlpha: 1, y: 0, scale: 1, duration: CTA_REVEAL_DUR * 0.35, ease: "power3.out" }, at);
       tl.to(
-        blocks[i],
-        { autoAlpha: 1, y: 0, rotateX: 0, skewY: 0, clipPath: "inset(0 0 0% 0)", duration: CTA_REVEAL_DUR, ease: "expo.out" },
+        blockLines[i],
+        { ...CHILD_OUT, duration: CTA_REVEAL_DUR * 0.7, stagger: CTA_LINE_STAGGER, ease: "power3.out" },
         at,
       );
       const fadeAt = i < CTA_POS.length - 1 ? CTA_POS[i + 1] - CTA_FADE_GAP : APPSHOWCASE_START - CTA_FADE_GAP;
-      tl.to(blocks[i], { autoAlpha: 0, rotateX: -8, skewY: -2, clipPath: "inset(0 0 100% 0)", duration: CTA_FADE_GAP, ease: "power2.in" }, fadeAt);
+      tl.to(blocks[i], { autoAlpha: 0, y: -18, scale: 0.98, duration: CTA_FADE_GAP, ease: "power2.in" }, fadeAt);
       // Bloom shifts intensity with each tier reveal so the ambient glow
       // breathes in step with the waypoint transition, never sitting static.
       tl.to(bloomRef.current, { opacity: BLOOM_INTENSITY[i], duration: CTA_REVEAL_DUR, ease: "sine.inOut" }, at);
@@ -531,28 +553,36 @@ export default function ScrollExperience() {
     // Phase 4: access-flow steps (formerly the separately-pinned AppShowcase
     // section) — same continuous 3D stage, camera holds its final frame while
     // these full-bleed steps reveal one at a time.
-    tl.to(visualLayerRef.current, { opacity: 0.4, ease: "none", duration: 1 - APPSHOWCASE_START }, APPSHOWCASE_START);
+    // Dim the *geometry* to push the phone forward, NOT the whole visual layer:
+    // bloomRef and the ambient radial both live inside visualLayerRef, so
+    // fading that layer to 0.4 drained the atmosphere and left the entire
+    // showcase phase reading as flat black. Glow is lifted instead.
+    tl.to(webglWrapRef.current, { opacity: 0.45, ease: "none", duration: 1 - APPSHOWCASE_START }, APPSHOWCASE_START);
+    // power3.out, not back.out — overshoot easing on a scrubbed timeline reads
+    // as a bounce-back artifact the moment the user scrolls against it.
     tl.to(
       phoneShellRef.current,
-      { autoAlpha: 1, scale: 1, rotateY: 0, rotateX: 0, z: 0, y: 0, duration: 0.08, ease: "back.out(1.5)" },
+      { autoAlpha: 1, scale: 1, rotateY: 0, rotateX: 0, z: 0, y: 0, duration: 0.08, ease: "power3.out" },
       APPSHOWCASE_START
     );
+    const SHOWCASE_LINE_STAGGER = SHOWCASE_REVEAL_DUR * 0.13;
     SHOWCASE_POS.forEach((at, i) => {
+      tl.to(showcaseBlocks[i], { autoAlpha: 1, y: 0, scale: 1, duration: SHOWCASE_REVEAL_DUR * 0.35, ease: "power3.out" }, at);
       tl.to(
-        showcaseBlocks[i],
-        { autoAlpha: 1, y: 0, rotateX: 0, skewY: 0, clipPath: "inset(0 0 0% 0)", duration: SHOWCASE_REVEAL_DUR, ease: "expo.out" },
+        showcaseLines[i],
+        { ...CHILD_OUT, duration: SHOWCASE_REVEAL_DUR * 0.7, stagger: SHOWCASE_LINE_STAGGER, ease: "power3.out" },
         at,
       );
       tl.to(bloomRef.current, { opacity: BLOOM_INTENSITY[(i + CTA_POS.length) % BLOOM_INTENSITY.length], duration: SHOWCASE_REVEAL_DUR, ease: "sine.inOut" }, at);
       if (i < SHOWCASE_POS.length - 1) {
-        tl.to(showcaseBlocks[i], { autoAlpha: 0, rotateX: -8, skewY: -2, clipPath: "inset(0 0 100% 0)", duration: SHOWCASE_FADE_GAP, ease: "power2.in" }, SHOWCASE_POS[i + 1] - SHOWCASE_FADE_GAP);
+        tl.to(showcaseBlocks[i], { autoAlpha: 0, y: -18, scale: 0.98, duration: SHOWCASE_FADE_GAP, ease: "power2.in" }, SHOWCASE_POS[i + 1] - SHOWCASE_FADE_GAP);
       }
 
       // Phone-shell screen crossfades in lockstep with its text block above —
       // same waypoint, same "slide up + fade" Apple-style motion.
       tl.to(
         phoneScreens[i],
-        { autoAlpha: 1, y: 0, duration: SHOWCASE_REVEAL_DUR, ease: "expo.out" },
+        { autoAlpha: 1, y: 0, scale: 1, duration: SHOWCASE_REVEAL_DUR, ease: "power3.out" },
         at,
       );
       if (i < SHOWCASE_POS.length - 1) {
@@ -742,7 +772,7 @@ export default function ScrollExperience() {
               </MagicShimmerButton>
               <a
                 href="#request-access"
-                className="group relative inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-7 py-3 font-syne text-sm font-semibold tracking-[0.15em] text-zinc-200 backdrop-blur-2xl transition-[color,border-color,background-color,transform] duration-300 [transition-timing-function:var(--ease-mech)] hover:border-white/25 hover:text-white hover:scale-[1.02] active:scale-[0.97]"
+                className="group relative inline-flex items-center justify-center rounded-full border border-white/10 bg-white px-7 py-3 font-syne text-sm font-semibold tracking-[0.15em] text-zinc-900 transition-[color,border-color,background-color,transform] duration-300 [transition-timing-function:var(--ease-mech)] hover:border-white/25 hover:text-black hover:scale-[1.02] active:scale-[0.97]"
               >
                 Acquire Key
               </a>
@@ -763,7 +793,7 @@ export default function ScrollExperience() {
             <div
               key={blk.tag}
               ref={(el) => { tiltRefs.current[i] = el; }}
-              className="absolute w-[clamp(320px,34vw,520px)] border-l border-white/15 pl-8"
+              className="absolute w-[clamp(320px,34vw,520px)] rounded-2xl border border-white/10 border-l-white/25 bg-white/[0.035] backdrop-blur-2xl px-8 py-9 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_40px_90px_-40px_rgba(0,0,0,0.92)]"
               style={{ pointerEvents: blk.cta ? "auto" : "none" }}
             >
               <span className="block font-mono text-[10px] uppercase tracking-[0.32em] text-white/50 mb-3">
@@ -795,7 +825,7 @@ export default function ScrollExperience() {
               key={step.eyebrow}
               ref={(el) => { showcaseRefs.current[i] = el; }}
               id={i === 0 ? "request-access" : undefined}
-              className="absolute w-[clamp(320px,34vw,560px)] border-l border-white/15 pl-8"
+              className="absolute w-[clamp(320px,34vw,560px)] rounded-2xl border border-white/10 border-l-white/25 bg-white/[0.035] backdrop-blur-2xl px-8 py-9 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_40px_90px_-40px_rgba(0,0,0,0.92)]"
               style={{ pointerEvents: step.cta ? "auto" : "none" }}
             >
               <span className="block font-mono text-[10px] uppercase tracking-[0.32em] text-white/50 mb-3">
@@ -920,6 +950,15 @@ export function LocalSeoSection() {
         }}
       />
 
+      <div
+        aria-hidden
+        className="io-ambient-glow pointer-events-none absolute -top-40 left-[10%] h-[36rem] w-[36rem] rounded-full bg-[radial-gradient(circle,rgba(120,140,255,0.14),transparent_70%)] blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="io-ambient-glow-b pointer-events-none absolute bottom-0 right-[5%] h-[30rem] w-[30rem] rounded-full bg-[radial-gradient(circle,rgba(255,180,140,0.10),transparent_70%)] blur-3xl"
+      />
+
       <div className="max-w-[1400px] mx-auto">
         <div ref={leftColRef}>
           <span className="text-[10px] uppercase tracking-[0.32em] text-zinc-500 font-mono mb-6 block">
@@ -947,7 +986,6 @@ export function LocalSeoSection() {
 
           <div className="flex flex-wrap gap-4">
             <MagicShimmerButton>Acquire Key</MagicShimmerButton>
-            <MagicShimmerButton>Request App Access</MagicShimmerButton>
           </div>
         </div>
 
@@ -990,10 +1028,18 @@ export function FinalClose() {
           destination instead of a flat void once the card's own padding ends. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-80"
+        className="io-ambient-glow pointer-events-none absolute inset-0"
         style={{
           backgroundImage:
             "radial-gradient(50% 60% at 50% 30%, rgba(255,255,255,0.06), transparent 70%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="io-ambient-glow-b pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            "radial-gradient(40% 50% at 70% 70%, rgba(120,140,255,0.08), transparent 70%)",
         }}
       />
 
@@ -1009,10 +1055,9 @@ export function FinalClose() {
           Key, and the private space unlocks the moment you arrive.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4">
-          <MagicShimmerButton>Request App Access</MagicShimmerButton>
           <a
             href="#request-access"
-            className="group relative inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-7 py-3 font-syne text-sm font-semibold tracking-[0.15em] text-zinc-200 backdrop-blur-2xl transition-[color,border-color,background-color,transform] duration-300 [transition-timing-function:var(--ease-mech)] hover:border-white/25 hover:text-white hover:scale-[1.02] active:scale-[0.97]"
+            className="group relative inline-flex items-center justify-center rounded-full border border-white/10 bg-white px-7 py-3 font-syne text-sm font-semibold tracking-[0.15em] text-zinc-900 transition-[color,border-color,background-color,transform] duration-300 [transition-timing-function:var(--ease-mech)] hover:border-white/25 hover:text-black hover:scale-[1.02] active:scale-[0.97]"
           >
             Acquire Key
           </a>

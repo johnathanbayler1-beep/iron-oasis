@@ -7,13 +7,23 @@ const GRAIN =
 export default function Page() {
   return (
     <main className="relative bg-gradient-to-b from-[#07080b] to-[#11141d] text-[#ededed] font-sans overflow-x-hidden selection:bg-white selection:text-black">
-      {/* Atmospheric radial lighting vignette — kills flat dead-black zones */}
+      {/* Atmospheric radial lighting vignette — kills flat dead-black zones, and
+          drifts continuously so the very first paint (before the 3D scene or
+          any scroll input) already reads as alive, not a stale black screen. */}
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 z-0 opacity-70"
+        className="io-ambient-glow pointer-events-none fixed inset-0 z-0"
         style={{
           backgroundImage:
-            "radial-gradient(60% 50% at 20% 0%, rgba(120,140,180,0.10), transparent 60%), radial-gradient(50% 40% at 85% 100%, rgba(90,100,140,0.08), transparent 65%)",
+            "radial-gradient(65% 55% at 20% 0%, rgba(120,140,180,0.22), transparent 60%), radial-gradient(55% 45% at 85% 100%, rgba(90,100,140,0.16), transparent 65%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="io-ambient-glow-b pointer-events-none fixed inset-0 z-0"
+        style={{
+          backgroundImage:
+            "radial-gradient(45% 40% at 60% 15%, rgba(160,150,220,0.12), transparent 65%)",
         }}
       />
       {/* Global vault-texture grain overlay */}

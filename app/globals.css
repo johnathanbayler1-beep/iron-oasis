@@ -430,6 +430,27 @@ html.lenis-stopped body {
 @media (prefers-reduced-motion: reduce) {
   .io-blueprint-cell::after { animation: none; display: none; }
   .io-spec-card { transition: none; }
+  .io-ambient-glow, .io-ambient-glow-b { animation: none; }
+}
+
+/* ── Continuous ambient motion for otherwise-static sections ── */
+@keyframes ioAmbientDrift {
+  0%   { transform: translate3d(-4%, -3%, 0) scale(1); opacity: 0.55; }
+  50%  { transform: translate3d(4%, 3%, 0) scale(1.15); opacity: 0.85; }
+  100% { transform: translate3d(-4%, -3%, 0) scale(1); opacity: 0.55; }
+}
+@keyframes ioAmbientDriftB {
+  0%   { transform: translate3d(3%, 4%, 0) scale(1.1); opacity: 0.4; }
+  50%  { transform: translate3d(-3%, -4%, 0) scale(0.95); opacity: 0.7; }
+  100% { transform: translate3d(3%, 4%, 0) scale(1.1); opacity: 0.4; }
+}
+.io-ambient-glow {
+  animation: ioAmbientDrift 14s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.io-ambient-glow-b {
+  animation: ioAmbientDriftB 18s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 .io-tier:active {

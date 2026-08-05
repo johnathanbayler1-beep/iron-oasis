@@ -811,22 +811,39 @@ export default function ScrollExperience() {
             <div
               key={blk.tag}
               ref={(el) => { tiltRefs.current[i] = el; }}
-              className="absolute w-[clamp(320px,34vw,520px)] rounded-2xl border border-white/10 border-l-white/25 bg-black/10 px-8 py-9 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_40px_90px_-40px_rgba(0,0,0,0.92)]"
+              className={
+                i === 0
+                  ? "absolute w-[clamp(320px,34vw,520px)] px-8 py-9"
+                  : "absolute w-[clamp(320px,34vw,520px)] rounded-2xl border border-white/10 border-l-white/25 bg-black/10 px-8 py-9 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_40px_90px_-40px_rgba(0,0,0,0.92)]"
+              }
               style={{ pointerEvents: blk.cta ? "auto" : "none" }}
             >
-              <span className="block font-mono text-[10px] uppercase tracking-[0.32em] text-white/50 mb-3">
+              <span
+                className="block font-mono text-[10px] uppercase tracking-[0.32em] text-white/50 mb-3"
+                style={i === 0 ? { textShadow: "0 2px 12px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.95)" } : undefined}
+              >
                 {blk.tag}
               </span>
               <div className="flex items-baseline justify-between gap-3 mb-2">
-                <span className="font-syne text-sm font-bold uppercase tracking-[0.1em] text-zinc-200">
+                <span
+                  className="font-syne text-sm font-bold uppercase tracking-[0.1em] text-zinc-200"
+                  style={i === 0 ? { textShadow: "0 2px 12px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.95)" } : undefined}
+                >
                   {blk.tier}
                 </span>
-                <span className="font-mono text-sm text-white">{blk.price}</span>
               </div>
-              <h3 className="font-syne font-black uppercase leading-[1.05] tracking-[-0.02em] text-[clamp(1.6rem,2.3vw,2.4rem)] text-white whitespace-pre-line break-words">
+              <h3
+                className="font-syne font-black uppercase leading-[1.05] tracking-[-0.02em] text-[clamp(1.6rem,2.3vw,2.4rem)] text-white whitespace-pre-line break-words"
+                style={i === 0 ? { textShadow: "0 4px 24px rgba(0,0,0,0.85), 0 2px 8px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,0.95)" } : undefined}
+              >
                 {blk.headline}
               </h3>
-              <p className="mt-4 text-sm text-zinc-400 leading-relaxed max-w-[32ch]">{blk.body}</p>
+              <p
+                className="mt-4 text-sm text-zinc-400 leading-relaxed max-w-[32ch]"
+                style={i === 0 ? { textShadow: "0 2px 10px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.95)" } : undefined}
+              >
+                {blk.body}
+              </p>
               {blk.cta && (
                 <a
                   href="#request-access"

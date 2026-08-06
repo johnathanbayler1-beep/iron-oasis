@@ -1,5 +1,7 @@
 import { Syne, Inter, JetBrains_Mono } from "next/font/google";
+import { Metadata } from "next";
 import { Providers } from "./providers";
+import { organizationSchema } from "@/lib/structured-data";
 import "@/app/globals.css";
 
 // Display / body / metadata. These define the CSS vars the whole app already
@@ -23,9 +25,47 @@ const jetbrains = JetBrains_Mono({
   display: "swap",
 });
 
-export const metadata = {
-  title: "Iron Oasis | Private Access",
-  description: "A private space in Windsor. Zero sharing, 24/7 access.",
+export const metadata: Metadata = {
+  title: "Iron Oasis | Premium Private Fitness Experience",
+  description: "Premium private fitness facility in Windsor with 24/7 access, zero sharing, and immersive 3D training experience. Join the elite community.",
+  keywords: ["fitness", "gym", "private training", "Windsor", "24/7 fitness", "premium fitness"],
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-icon.png",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://ironnedoasis.com",
+    siteName: "Iron Oasis",
+    title: "Iron Oasis | Premium Private Fitness Experience",
+    description: "Premium private fitness facility in Windsor with 24/7 access, zero sharing, and immersive 3D training experience.",
+    images: [
+      {
+        url: "https://ironnedoasis.com/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Iron Oasis",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Iron Oasis | Premium Private Fitness Experience",
+    description: "Premium private fitness facility in Windsor with 24/7 access and immersive training.",
+    creator: "@ironoasis",
+    images: ["https://ironnedoasis.com/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    "max-snippet": -1,
+    "max-image-preview": "large",
+    "max-video-preview": -1,
+  },
+  alternates: {
+    canonical: "https://ironnedoasis.com",
+  },
 };
 
 export default function RootLayout({
@@ -38,6 +78,14 @@ export default function RootLayout({
       lang="en"
       className={`dark bg-[#07080b] text-white ${syne.variable} ${inter.variable} ${jetbrains.variable}`}
     >
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema()),
+          }}
+        />
+      </head>
       <body className="font-sans antialiased selection:bg-white selection:text-black">
         <Providers>
           {children}

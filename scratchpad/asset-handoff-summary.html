@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iron Oasis V3 — Production Asset Map</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+      color: #e0e0e0;
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 50px;
+      border-bottom: 2px solid #C9A84C;
+      padding-bottom: 30px;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      font-weight: 700;
+      color: #C9A84C;
+      margin-bottom: 10px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 1.1em;
+      color: #888;
+      margin-bottom: 15px;
+    }
+
+    .meta {
+      font-size: 0.95em;
+      color: #666;
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+
+    .scene-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 25px;
+      margin-bottom: 50px;
+    }
+
+    .scene-card {
+      background: rgba(20, 20, 20, 0.8);
+      border: 1px solid rgba(201, 168, 76, 0.2);
+      border-radius: 12px;
+      padding: 25px;
+      transition: all 0.3s ease;
+    }
+
+    .scene-card:hover {
+      border-color: rgba(201, 168, 76, 0.5);
+      background: rgba(30, 30, 30, 0.9);
+      transform: translateY(-2px);
+    }
+
+    .scene-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 15px;
+      gap: 10px;
+    }
+
+    .scene-title {
+      font-size: 1.3em;
+      font-weight: 600;
+      color: #C9A84C;
+    }
+
+    .priority-badge {
+      font-size: 0.75em;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .priority-high {
+      background: rgba(220, 38, 38, 0.2);
+      color: #ff6b6b;
+      border: 1px solid #ff6b6b;
+    }
+
+    .priority-medium {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+      border: 1px solid #fbbf24;
+    }
+
+    .priority-none {
+      background: rgba(34, 197, 94, 0.2);
+      color: #86efac;
+      border: 1px solid #86efac;
+    }
+
+    .scene-description {
+      font-size: 0.95em;
+      color: #aaa;
+      margin-bottom: 15px;
+      line-height: 1.5;
+    }
+
+    .asset-info {
+      background: rgba(0, 0, 0, 0.3);
+      border-left: 3px solid #C9A84C;
+      padding: 12px 15px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      font-size: 0.9em;
+    }
+
+    .asset-info strong {
+      color: #C9A84C;
+    }
+
+    .asset-list {
+      list-style: none;
+      margin: 10px 0;
+      padding: 0;
+    }
+
+    .asset-list li {
+      padding: 6px 0;
+      color: #bbb;
+      border-bottom: 1px solid rgba(201, 168, 76, 0.1);
+    }
+
+    .asset-list li:last-child {
+      border-bottom: none;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    .status-complete {
+      background: #86efac;
+    }
+
+    .status-pending {
+      background: #fbbf24;
+    }
+
+    .status-missing {
+      background: #ff6b6b;
+    }
+
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+      background: rgba(20, 20, 20, 0.8);
+      border: 1px solid rgba(201, 168, 76, 0.2);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .summary-table th {
+      background: rgba(201, 168, 76, 0.1);
+      color: #C9A84C;
+      padding: 15px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 1px solid rgba(201, 168, 76, 0.3);
+    }
+
+    .summary-table td {
+      padding: 12px 15px;
+      border-bottom: 1px solid rgba(201, 168, 76, 0.1);
+      color: #ccc;
+    }
+
+    .summary-table tr:hover {
+      background: rgba(201, 168, 76, 0.05);
+    }
+
+    .file-count {
+      color: #C9A84C;
+      font-weight: 600;
+    }
+
+    .size-estimate {
+      color: #888;
+      font-size: 0.9em;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 50px;
+      padding-top: 30px;
+      border-top: 1px solid rgba(201, 168, 76, 0.2);
+      color: #666;
+      font-size: 0.9em;
+    }
+
+    .checklist {
+      background: rgba(34, 197, 94, 0.05);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 30px;
+    }
+
+    .checklist h3 {
+      color: #86efac;
+      margin-bottom: 15px;
+      font-size: 1em;
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 0.9em;
+      color: #bbb;
+    }
+
+    .checklist-item input {
+      cursor: pointer;
+      accent-color: #C9A84C;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 1.8em;
+      }
+
+      .scene-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-table {
+        font-size: 0.9em;
+      }
+
+      .summary-table th,
+      .summary-table td {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Iron Oasis V3</h1>
+      <p class="subtitle">Production Asset Specification & Handoff Map</p>
+      <div class="meta">
+        <span>Build: Passing ✓</span>
+        <span>3D Canvas: Refactored ✓</span>
+        <span>Date: 2026-08-06</span>
+      </div>
+    </header>
+
+    <div class="scene-grid">
+      <!-- Scene 0 -->
+      <div class="scene-card">
+        <div class="scene-header">
+          <span class="scene-title">Scene 0: Loading</span>
+          <span class="priority-badge priority-none">Complete</span>
+        </div>
+        <p class="scene-description">Initial splash screen with loading text and brand foundation.</p>
+        <div class="asset-info">
+          <strong><span class="status-indicator status-complete"></span>Existing:</strong> Text-only (code-rendered)
+        </div>
+        <div class="asset-info">
+          <strong><span class="status-indicator status-complete"></span>Missing:</strong> None
+        </div>
+      </div>
+
+      <!-- Scene 1 -->
+      <div class="scene-card">
+        <div class="scene-header">
+          <span class="scene-title">Scene 1: Logo Reveal</span>
+          <span class="priority-badge priority-none">Complete</span>
+        </div>
+        <p class="scene-description">Scroll-driven frame sequence reveal with settled easing (121 frames).</p>
+        <div class="asset-info">
+          <strong><span class="status-indicator status-complete"></span>Existing:</strong>
+          <ul class="asset-list">
+            <li>logo_000.webp → logo_120.webp (121 frames)</li>
+            <li>Size: ~7.2 MB total</li>
+            <li>Location: /public/frames/</li>
+          </ul>
+        </div>
+        <div class="asset-info">
+          <strong><span class="status-indicator status-complete"></span>Missing:</strong> None
+        </div>
+      </div>
+
+      <!-- Scene 2 -->
+      <div class="scene-card">
+        <div class="scene-header">
+          <span class="scene-title">Scene 2: Gym Reveal (3D)</span>
+          <span class="priority-badge priority-none">Complete</span>
+        </div>
+        <p class="scene-description">Camera choreography through gym space (entrance → hero pose).</p>
+        <div class="asset-info">
+          <strong><span class="status-indicator status-complete"></span>Existing:</strong>
+          <ul class="asset-list">
+            <li>gym-space-2k.glb (4.2 MB)</li>
+            <li>gym-space-2k-opt.glb (607 KB, mobile)</li>
+            <li>studio_small_03_1k.hdr (1.6 MB, HDRI lighting)</li>
+          </ul>
+        </div>
+        <div class="asset-info">
+          <strong><span class="status-indicator status-complete"></span>Missing:</strong> None
+        </div>
+      </div>
+
+      <!-- Scene 3 -->
+      <div class="scene-card">
+        <div class="scene-header">
+          <span class="scene-title">Scene 3: Private Experience (3D)</span>
+          <span class="priority-badge priority-none">Complete</span>
+        </div>
+        <p class="scene-description">Static hero pose with emotional text overlay. "THE SPACE IS YOURS."</p>
+        <div class="asset-info">
+          <strong><span class="status-indicator status-complete"></span>Existing:</strong>
+          <ul class="asset-list">
+            <li>Reuses gym model from Scene 2</li>
+            <li>Text overlay (code-rendered)</li>
+            <li>HDRI environment (reused)</li>
+          </ul>
+        </div>
+        <div class="asset-info">
+          <strong><span class="status-indicator status-complete"></span>Missing:</strong> None
+        </div>
+      </div>
+
+      <!-- Scene 4 -->
+      <div class="scene-card">
+        <div class="scene-header">
+          <span class="scene-title">Scene 4: How It Works</span>
+          <span class="priority-badge priority-high">High Priority</span>
+        </div>
+        <p class="scene-description">5-step carousel with feature demonstrations (download, book, reserve, access, train).</p>
+        <div class="asset-info">
+          <strong><span class="status-indicator status-complete"></span>Existing:</strong>
+          <ul class="asset-list">
+            <li>Layout, timing, typography</li>
+            <li>Device frame placeholder</li>
+          </ul>
+        </div>
+        <div class="asset-info">
+          <strong><span class="status-indicator status-missing"></span>Missing:</strong>
+          <ul class="asset-list">
+            <li>5 × feature demo images/videos (400 × 600 px)</li>
+            <li>Format: PNG/WebP or WebM/MP4</li>
+            <li>Target: &lt; 250 KB (img), &lt; 500 KB (vid)</li>
+            <li>Location: /public/features/</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Scene 5 -->
+      <div class="scene-card">
+        <div class="scene-header">
+          <span class="scene-title">Scene 5: App Experience</span>
+          <span class="priority-badge priority-high">High Priority</span>
+        </div>
+        <p class="scene-description">5-step app screenshot carousel (book, access, arrive, unlock, train).</p>
+        <div class="asset-info">
+          <strong><span class="status-indicator status-complete"></span>Existing:</strong>
+          <ul class="asset-list">
+            <li>Device frame (192 × 380 px phone outline)</li>
+            <li>Captions and glow effect</li>
+          </ul>
+        </div>
+        <div class="asset-info">
+          <strong><span class="status-indicator status-missing"></span>Missing:</strong>
+          <ul class="asset-list">
+            <li>5 × app screenshots (192 × 380 px each)</li>
+            <li>Format: PNG/WebP (WebP recommended)</li>
+            <li>Target: &lt; 200 KB (PNG), &lt; 120 KB (WebP)</li>
+            <li>Location: /public/app-screenshots/</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Scene 6 -->
+      <div class="scene-card">
+        <div class="scene-header">
+          <span class="scene-title">Scene 6: Location & Trust</span>
+          <span class="priority-badge priority-medium">Medium Priority</span>
+        </div>
+        <p class="scene-description">Rotating gallery of facility photography (exterior, gym spaces, detail shots).</p>
+        <div class="asset-info">
+          <strong><span class="status-indicator status-complete"></span>Existing:</strong>
+          <ul class="asset-list">
+            <li>Gallery layout and timing</li>
+            <li>Typography and styling</li>
+          </ul>
+        </div>
+        <div class="asset-info">
+          <strong><span class="status-indicator status-missing"></span>Missing:</strong>
+          <ul class="asset-list">
+            <li>3–5 × location photos (1200 × 800 px)</li>
+            <li>Format: JPEG/WebP (WebP recommended)</li>
+            <li>Target: &lt; 300 KB (JPEG), &lt; 150 KB (WebP)</li>
+            <li>Location: /public/location/</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Scene 7 -->
+      <div class="scene-card">
+        <div class="scene-header">
+          <span class="scene-title">Scene 7: Final Access</span>
+          <span class="priority-badge priority-high">High Priority</span>
+        </div>
+        <p class="scene-description">Emotional close + store badges + CTA button. "Request Private Access."</p>
+        <div class="asset-info">
+          <strong><span class="status-indicator status-complete"></span>Existing:</strong>
+          <ul class="asset-list">
+            <li>CTA button and text overlays</li>
+            <li>Gym backdrop (3D)</li>
+          </ul>
+        </div>
+        <div class="asset-info">
+          <strong><span class="status-indicator status-missing"></span>Missing:</strong>
+          <ul class="asset-list">
+            <li>2 × store badges (152 × 48 px each)</li>
+            <li>Format: SVG (or PNG fallback)</li>
+            <li>Target: &lt; 50 KB (SVG), &lt; 100 KB (PNG)</li>
+            <li>Location: /public/badges/</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Table -->
+    <div style="margin-top: 40px;">
+      <h2 style="color: #C9A84C; margin-bottom: 20px; font-size: 1.5em;">Asset Delivery Summary</h2>
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Scene</th>
+            <th>Asset Type</th>
+            <th style="text-align: center;">Files</th>
+            <th>Dimensions</th>
+            <th>Format</th>
+            <th>Size Target</th>
+            <th style="text-align: center;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Scene 4</strong></td>
+            <td>Feature Demos</td>
+            <td style="text-align: center;"><span class="file-count">5</span></td>
+            <td>400 × 600 px</td>
+            <td>PNG/WebP or WebM/MP4</td>
+            <td><span class="size-estimate">&lt; 250 KB (img)<br>&lt; 500 KB (vid)</span></td>
+            <td style="text-align: center;"><span class="status-indicator status-missing"></span></td>
+          </tr>
+          <tr>
+            <td><strong>Scene 5</strong></td>
+            <td>App Screenshots</td>
+            <td style="text-align: center;"><span class="file-count">5</span></td>
+            <td>192 × 380 px</td>
+            <td>PNG/WebP</td>
+            <td><span class="size-estimate">&lt; 120 KB (WebP)</span></td>
+            <td style="text-align: center;"><span class="status-indicator status-missing"></span></td>
+          </tr>
+          <tr>
+            <td><strong>Scene 6</strong></td>
+            <td>Location Photos</td>
+            <td style="text-align: center;"><span class="file-count">3–5</span></td>
+            <td>1200 × 800 px</td>
+            <td>JPEG/WebP</td>
+            <td><span class="size-estimate">&lt; 150 KB (WebP)</span></td>
+            <td style="text-align: center;"><span class="status-indicator status-pending"></span></td>
+          </tr>
+          <tr>
+            <td><strong>Scene 7</strong></td>
+            <td>Store Badges</td>
+            <td style="text-align: center;"><span class="file-count">2</span></td>
+            <td>152 × 48 px</td>
+            <td>SVG</td>
+            <td><span class="size-estimate">&lt; 50 KB</span></td>
+            <td style="text-align: center;"><span class="status-indicator status-missing"></span></td>
+          </tr>
+          <tr style="font-weight: 600; background: rgba(201, 168, 76, 0.1);">
+            <td colspan="2">TOTAL ASSETS NEEDED</td>
+            <td style="text-align: center;"><span class="file-count">15–17</span></td>
+            <td>—</td>
+            <td>Mixed</td>
+            <td><span class="size-estimate">&lt; 5 MB combined</span></td>
+            <td style="text-align: center;">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Delivery Timeline -->
+    <div class="checklist" style="margin-top: 30px;">
+      <h3>Delivery Timeline</h3>
+      <div class="checklist-item">
+        <input type="checkbox" id="phase1">
+        <label for="phase1"><strong>Week 1 (High Priority):</strong> Store badges (Scene 7) + App screenshots (Scene 5)</label>
+      </div>
+      <div class="checklist-item">
+        <input type="checkbox" id="phase2">
+        <label for="phase2"><strong>Week 2 (High Priority):</strong> Feature demos (Scene 4)</label>
+      </div>
+      <div class="checklist-item">
+        <input type="checkbox" id="phase3">
+        <label for="phase3"><strong>Week 3 (Medium Priority):</strong> Location photography (Scene 6)</label>
+      </div>
+      <div class="checklist-item">
+        <input type="checkbox" id="phase4">
+        <label for="phase4"><strong>Post-Launch (Optional):</strong> Alternative 3D models, cinematic shots</label>
+      </div>
+    </div>
+
+    <!-- Key Information -->
+    <div class="checklist" style="background: rgba(201, 168, 76, 0.05); border-color: rgba(201, 168, 76, 0.3); margin-top: 30px;">
+      <h3 style="color: #C9A84C;">Key Points for Production Team</h3>
+      <ul style="list-style: none; color: #bbb; font-size: 0.95em;">
+        <li style="margin-bottom: 10px;">✓ <strong>No code changes required</strong> — only asset swaps in designated folders</li>
+        <li style="margin-bottom: 10px;">✓ <strong>Shared 3D canvas</strong> — Scene 2, 3, and 7 backdrop use same gym model</li>
+        <li style="margin-bottom: 10px;">✓ <strong>All timing locked</strong> — animations are finalized, assets don't change pacing</li>
+        <li style="margin-bottom: 10px;">✓ <strong>WebP format recommended</strong> — saves 30–40% file size vs. PNG/JPEG</li>
+        <li style="margin-bottom: 10px;">✓ <strong>Total budget: &lt; 5 MB</strong> — all assets combined for optimal web performance</li>
+      </ul>
+    </div>
+
+    <div class="footer">
+      <p style="margin-bottom: 10px;">📄 See <strong>PRODUCTION_ASSET_SPECIFICATION.md</strong> for complete details, folder structure, compression tools, and troubleshooting.</p>
+      <p>Asset delivery pipeline ready. Production assets awaited for Scenes 4, 5, 6, 7.</p>
+    </div>
+  </div>
+</body>
+</html>

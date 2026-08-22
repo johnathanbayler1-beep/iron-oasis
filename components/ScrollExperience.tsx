@@ -24,11 +24,11 @@ import { MagicShimmerButton } from "./ui/MagicShimmerButton";
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 useGLTF.setDecoderPath("/draco/");
 
-const MODEL_URL = "/gym-space-2k.glb";
+const MODEL_URL = "/gym/gym-space-2k.glb";
 
-// public/frames/logo_000.webp .. logo_120.webp
+// public/logo/logo_000.webp .. logo_120.webp
 const FRAME_COUNT = 121;
-const frameUrl = (i: number) => `/frames/logo_${String(i).padStart(3, "0")}.webp`;
+const frameUrl = (i: number) => `/logo/logo_${String(i).padStart(3, "0")}.webp`;
 
 // Single master timeline drives everything below via self.progress (0-1
 // across the whole pinned range) — this object is the only bridge between
@@ -664,7 +664,7 @@ export default function ScrollExperience() {
             {/* charcoal bounce fill — kills pure-black shadow crush */}
             <hemisphereLight color="#3a4252" groundColor="#0a0b0e" intensity={0.4} />
             <Suspense fallback={null}>
-              <Environment files="/hdri/lebombo_1k.hdr" />
+              <Environment files="/gym/hdri/lebombo_1k.hdr" />
               <Model />
               <CameraRig />
               <Preload all />

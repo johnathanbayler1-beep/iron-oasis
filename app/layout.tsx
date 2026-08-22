@@ -30,8 +30,8 @@ export const metadata: Metadata = {
   description: "Premium private fitness facility in Windsor with 24/7 access, zero sharing, and immersive 3D training experience. Join the elite community.",
   keywords: ["fitness", "gym", "private training", "Windsor", "24/7 fitness", "premium fitness"],
   icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-icon.png",
+    icon: "/logo/favicon.ico",
+    apple: "/logo/apple-icon.png",
   },
   openGraph: {
     type: "website",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     description: "Premium private fitness facility in Windsor with 24/7 access, zero sharing, and immersive 3D training experience.",
     images: [
       {
-        url: "https://ironnedoasis.com/og-image.png",
+        url: "https://ironnedoasis.com/hero/og-image.png",
         width: 1200,
         height: 630,
         alt: "Iron Oasis",
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     title: "Iron Oasis | Premium Private Fitness Experience",
     description: "Premium private fitness facility in Windsor with 24/7 access and immersive training.",
     creator: "@ironoasis",
-    images: ["https://ironnedoasis.com/og-image.png"],
+    images: ["https://ironnedoasis.com/hero/og-image.png"],
   },
   robots: {
     index: true,

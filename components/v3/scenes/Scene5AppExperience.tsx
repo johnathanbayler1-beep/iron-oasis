@@ -116,7 +116,7 @@ const Scene5AppExperience = forwardRef<SceneHandle>(function Scene5AppExperience
       <div className="absolute inset-0 bg-[#050505]/70" />
 
       {/* App experience device frame — carousel of screenshots with captions.
-          When real screenshots are available (/public/app-screenshots/screen-*.png),
+          When real screenshots are available (/public/app/screenshots/screen-*.png),
           they will load automatically and fade in/out with the captions. The frame
           and timing remain unchanged; only the inner image content swaps. */}
       <div className="relative flex h-[380px] w-[192px] flex-col items-center justify-center rounded-[30px] border border-[#C9A84C]/30 bg-black overflow-hidden">
@@ -130,7 +130,7 @@ const Scene5AppExperience = forwardRef<SceneHandle>(function Scene5AppExperience
             ref={(el) => {
               screenshotRefs.current[i] = el;
             }}
-            src={`/app-screenshots/screen-${i + 1}.png`}
+            src={`/app/screenshots/screen-${i + 1}.png`}
             alt={step.label}
             width={192}
             height={380}

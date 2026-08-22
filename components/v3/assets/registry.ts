@@ -30,7 +30,7 @@ export const ASSET_REGISTRY = {
   logoFrames: {
     type: "frame-sequence",
     id: "logoFrames",
-    basePath: "/frames/logo_",
+    basePath: "/logo/logo_",
     frameCount: 121,
     padLength: 3,
     extension: "webp",
@@ -38,18 +38,18 @@ export const ASSET_REGISTRY = {
   gymSpace: {
     type: "model",
     id: "gymSpace",
-    path: "/gym-space-2k.glb",
-    optimizedPath: "/gym-space-2k-opt.glb",
+    path: "/gym/gym-space-2k.glb",
+    optimizedPath: "/gym/gym-space-2k-opt.glb",
   },
   hdriStudio: {
     type: "hdri",
     id: "hdriStudio",
-    path: "/hdri/studio_small_03_1k.hdr",
+    path: "/gym/hdri/studio_small_03_1k.hdr",
   },
   hdriLebombo: {
     type: "hdri",
     id: "hdriLebombo",
-    path: "/hdri/lebombo_1k.hdr",
+    path: "/gym/hdri/lebombo_1k.hdr",
   },
 } as const satisfies Record<string, AssetDescriptor>;
 

@@ -126,9 +126,15 @@ const Scene6LocationTrust = forwardRef<SceneHandle>(function Scene6LocationTrust
             set of real-estate listing photos. */}
         <div className="relative aspect-video w-full max-w-xl overflow-hidden rounded-[18px] border border-[#C9A84C]/30 bg-white/[0.02]">
           <img
-            src="/location-trust/exterior-entrance.jpg"
+            src="/gym/photography/exterior-entrance.jpg"
             alt="Iron Oasis private gym entrance"
             className="absolute inset-0 h-full w-full object-cover"
+            onError={(e) => {
+              // Graceful fallback if photography doesn't exist yet — the
+              // reserved frame and glow still read as an intentional beat.
+              const img = e.target as HTMLImageElement;
+              img.style.display = "none";
+            }}
           />
           <div
             ref={frameGlowRef}

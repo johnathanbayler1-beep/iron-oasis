@@ -159,14 +159,23 @@ const Scene7FinalAccess = forwardRef<SceneHandle>(function Scene7FinalAccess(_pr
             </p>
             <div className="flex items-center gap-4">
               <img
-                src="/store-badges/app-store-badge.png"
+                src="/app/badges/app-store-badge.png"
                 alt="Download on the App Store"
                 className="h-12 w-[152px]"
+                onError={(e) => {
+                  // Graceful fallback if the official badge doesn't exist yet.
+                  const img = e.target as HTMLImageElement;
+                  img.style.display = "none";
+                }}
               />
               <img
-                src="/store-badges/google-play-badge.png"
+                src="/app/badges/google-play-badge.png"
                 alt="Get it on Google Play"
                 className="h-12 w-[152px]"
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  img.style.display = "none";
+                }}
               />
             </div>
           </div>

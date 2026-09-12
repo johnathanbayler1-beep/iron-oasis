@@ -7,8 +7,8 @@ interface FormData {
   name: string;
   email: string;
   phone: string;
-  fitnessGoal: string;
-  trainingExperience: string;
+  sessionFocus: string;
+  experienceLevel: string;
   commitmentLevel: string;
 }
 
@@ -21,8 +21,8 @@ export default function MembershipForm({ onSuccess }: MembershipFormProps) {
     name: "",
     email: "",
     phone: "",
-    fitnessGoal: "",
-    trainingExperience: "",
+    sessionFocus: "",
+    experienceLevel: "",
     commitmentLevel: "",
   });
 
@@ -52,8 +52,8 @@ export default function MembershipForm({ onSuccess }: MembershipFormProps) {
       newErrors.phone = "Enter a valid phone number";
     }
 
-    if (!formData.fitnessGoal) newErrors.fitnessGoal = "Fitness goal is required";
-    if (!formData.trainingExperience) newErrors.trainingExperience = "Training experience is required";
+    if (!formData.sessionFocus) newErrors.sessionFocus = "Session goal is required";
+    if (!formData.experienceLevel) newErrors.experienceLevel = "Experience level is required";
     if (!formData.commitmentLevel) newErrors.commitmentLevel = "Commitment level is required";
 
     setErrors(newErrors);
@@ -142,9 +142,9 @@ export default function MembershipForm({ onSuccess }: MembershipFormProps) {
   };
 
   const inputClass =
-    "w-full bg-white/[0.03] border border-[#C9A84C]/30 rounded-[8px] px-4 py-3 text-white placeholder-[#b8b8b8]/50 focus:border-[#C9A84C]/60 focus:outline-none focus:ring-1 focus:ring-[#C9A84C]/30 transition-all duration-200 text-[14px]";
+    "w-full bg-white/[0.03] border border-white/15 rounded-[8px] px-4 py-3 text-white placeholder-[#b8b8b8]/50 focus:border-white/30 focus:outline-none focus:ring-1 focus:ring-white/20 transition-all duration-200 text-[14px]";
 
-  const labelClass = "block text-[12px] font-medium uppercase tracking-[0.15em] text-[#b8b8b8] mb-2";
+  const labelClass = "block text-[13px] font-medium text-[#b8b8b8] mb-2";
 
   const errorClass = "block text-[12px] text-red-400/80 mt-1";
 
@@ -203,36 +203,36 @@ export default function MembershipForm({ onSuccess }: MembershipFormProps) {
 
       {/* Fitness Goal */}
       <div>
-        <label htmlFor="fitnessGoal" className={labelClass}>
-          Primary Fitness Goal
+        <label htmlFor="sessionFocus" className={labelClass}>
+          How will you use your sessions?
         </label>
         <select
-          id="fitnessGoal"
-          name="fitnessGoal"
-          value={formData.fitnessGoal}
+          id="sessionFocus"
+          name="sessionFocus"
+          value={formData.sessionFocus}
           onChange={handleChange}
           className={inputClass}
         >
-          <option value="">Select your goal</option>
-          <option value="strength">Build Strength</option>
-          <option value="endurance">Build Endurance</option>
-          <option value="flexibility">Improve Flexibility</option>
-          <option value="weight">Weight Management</option>
-          <option value="sport">Sport Performance</option>
-          <option value="general">General Fitness</option>
+          <option value="">Select an option</option>
+          <option value="strength">Strength-focused sessions</option>
+          <option value="endurance">Conditioning</option>
+          <option value="flexibility">Mobility & recovery</option>
+          <option value="weight">Weight management</option>
+          <option value="sport">Sport-specific sessions</option>
+          <option value="general">General sessions</option>
         </select>
-        {errors.fitnessGoal && <span className={errorClass}>{errors.fitnessGoal}</span>}
+        {errors.sessionFocus && <span className={errorClass}>{errors.sessionFocus}</span>}
       </div>
 
       {/* Training Experience */}
       <div>
-        <label htmlFor="trainingExperience" className={labelClass}>
-          Training Experience
+        <label htmlFor="experienceLevel" className={labelClass}>
+          Experience level
         </label>
         <select
-          id="trainingExperience"
-          name="trainingExperience"
-          value={formData.trainingExperience}
+          id="experienceLevel"
+          name="experienceLevel"
+          value={formData.experienceLevel}
           onChange={handleChange}
           className={inputClass}
         >
@@ -240,15 +240,15 @@ export default function MembershipForm({ onSuccess }: MembershipFormProps) {
           <option value="beginner">Beginner</option>
           <option value="intermediate">Intermediate</option>
           <option value="advanced">Advanced</option>
-          <option value="athlete">Athlete</option>
+          <option value="athlete">Highly experienced</option>
         </select>
-        {errors.trainingExperience && <span className={errorClass}>{errors.trainingExperience}</span>}
+        {errors.experienceLevel && <span className={errorClass}>{errors.experienceLevel}</span>}
       </div>
 
       {/* Commitment Level */}
       <div>
         <label htmlFor="commitmentLevel" className={labelClass}>
-          Weekly Commitment
+          Sessions per week
         </label>
         <select
           id="commitmentLevel"
@@ -257,7 +257,7 @@ export default function MembershipForm({ onSuccess }: MembershipFormProps) {
           onChange={handleChange}
           className={inputClass}
         >
-          <option value="">Select commitment</option>
+          <option value="">Select frequency</option>
           <option value="3x">3x per week</option>
           <option value="4x">4x per week</option>
           <option value="5x">5+ per week</option>
@@ -276,13 +276,13 @@ export default function MembershipForm({ onSuccess }: MembershipFormProps) {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full rounded-full border border-[#C9A84C] bg-[#C9A84C]/10 px-6 py-3 font-display text-[13px] font-medium uppercase tracking-[0.2em] text-[#C9A84C] transition-all duration-300 hover:bg-[#C9A84C] hover:text-black disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full rounded-full border border-white/10 bg-white px-6 py-3 font-sans text-sm font-medium tracking-[0.02em] text-zinc-900 transition-all duration-300 hover:border-white/25 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isLoading ? "Submitting..." : "Submit Application"}
+        {isLoading ? "Submitting..." : "Get Access Key"}
       </button>
 
-      <p className="text-center text-[11px] font-light uppercase tracking-[0.15em] text-[#b8b8b8]/60">
-        We typically review applications within 48 hours
+      <p className="text-center text-[12px] font-light text-[#b8b8b8]/60">
+        We typically respond within 48 hours.
       </p>
     </form>
   );

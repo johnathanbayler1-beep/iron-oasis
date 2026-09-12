@@ -15,8 +15,8 @@ interface SubmissionData {
   name: string;
   email: string;
   phone: string;
-  fitnessGoal: string;
-  trainingExperience: string;
+  sessionFocus: string;
+  experienceLevel: string;
   commitmentLevel: string;
 }
 
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const { name, email, phone, fitnessGoal, trainingExperience, commitmentLevel } = body;
+    const { name, email, phone, sessionFocus, experienceLevel, commitmentLevel } = body;
 
     // Validation
     if (!name || typeof name !== "string" || !name.trim()) {
@@ -53,12 +53,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Valid phone number is required" }, { status: 400 });
     }
 
-    if (!fitnessGoal || typeof fitnessGoal !== "string" || !fitnessGoal.trim()) {
-      return NextResponse.json({ error: "Fitness goal is required" }, { status: 400 });
+    if (!sessionFocus || typeof sessionFocus !== "string" || !sessionFocus.trim()) {
+      return NextResponse.json({ error: "Please select how you'll use your sessions" }, { status: 400 });
     }
 
-    if (!trainingExperience || typeof trainingExperience !== "string" || !trainingExperience.trim()) {
-      return NextResponse.json({ error: "Training experience is required" }, { status: 400 });
+    if (!experienceLevel || typeof experienceLevel !== "string" || !experienceLevel.trim()) {
+      return NextResponse.json({ error: "Please select your experience level" }, { status: 400 });
     }
 
     if (!commitmentLevel || typeof commitmentLevel !== "string" || !commitmentLevel.trim()) {
@@ -70,8 +70,8 @@ export async function POST(request: NextRequest) {
       name: name.trim(),
       email: email.trim().toLowerCase(),
       phone: phone.trim(),
-      fitnessGoal,
-      trainingExperience,
+      sessionFocus,
+      experienceLevel,
       commitmentLevel,
       timestamp: new Date().toISOString(),
     };
@@ -84,8 +84,8 @@ export async function POST(request: NextRequest) {
     // Track form completion event
     logAnalyticsEvent("form_submit_success", {
       email: submission.email,
-      fitnessGoal: submission.fitnessGoal,
-      trainingExperience: submission.trainingExperience,
+      sessionFocus: submission.sessionFocus,
+      experienceLevel: submission.experienceLevel,
       commitmentLevel: submission.commitmentLevel,
       timestamp: submission.timestamp,
     });
